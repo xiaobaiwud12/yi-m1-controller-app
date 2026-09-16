@@ -295,7 +295,7 @@
   },
   "@_section4": "Asset viewer",
   "viewerSaveToPhone": "Save this shot to the phone",
-  "viewerQueued": "Added to the sync queue. Start sync from the album bar.",
+  "viewerQueued": "Added to the sync queue. Start sync from the sync bar.",
   "viewerUndecodable": "This image could not be decoded.",
   "viewerNotOnPhone": "Not on this phone yet.",
   "viewerFetchPreview": "Load a preview from the camera",

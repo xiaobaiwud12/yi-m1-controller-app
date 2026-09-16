@@ -719,7 +719,7 @@ abstract class AppLocalizations {
   /// No description provided for @viewerQueued.
   ///
   /// In en, this message translates to:
-  /// **'Added to the sync queue. Start sync from the album bar.'**
+  /// **'Added to the sync queue. Start sync from the sync bar.'**
   String get viewerQueued;
 
   /// No description provided for @viewerUndecodable.

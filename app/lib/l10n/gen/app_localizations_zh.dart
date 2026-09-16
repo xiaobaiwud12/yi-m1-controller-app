@@ -414,7 +414,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get viewerSaveToPhone => '把这张存到本机';
 
   @override
-  String get viewerQueued => '已加入同步队列，请在相册栏里开始同步。';
+  String get viewerQueued => '已加入同步队列，请在同步栏里开始同步。';
 
   @override
   String get viewerUndecodable => '这张图片无法解码。';

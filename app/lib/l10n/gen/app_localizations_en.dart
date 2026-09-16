@@ -442,7 +442,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewerQueued =>
-      'Added to the sync queue. Start sync from the album bar.';
+      'Added to the sync queue. Start sync from the sync bar.';
 
   @override
   String get viewerUndecodable => 'This image could not be decoded.';

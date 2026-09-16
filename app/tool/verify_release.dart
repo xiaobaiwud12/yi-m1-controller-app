@@ -138,6 +138,10 @@ final List<ContentRule> kContentRules = <ContentRule>[
       'signing key material cannot be un-published',
       exempt: const <String>{
         'README.md', // it has to tell a contributor that a release build needs a key
+        // The Chinese README is a translation of the same section, so it names the
+        // same four fields for the same reason. Exempting one and not the other
+        // would make the translated page the only one that fails the scan.
+        'README.zh-CN.md',
         'RELEASING.md', // the runbook: it has to name the fields
         'app/android/.gitignore', // the policy that keeps keys out
         'app/android/app/build.gradle.kts', // the code that reads the key

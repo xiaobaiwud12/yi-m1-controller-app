@@ -3,6 +3,9 @@ contact_links:
   - name: Read the README first
     url: https://github.com/xiaobaiwud12/yi-m1-controller-app/blob/main/README.md
     about: What the app does, what has been verified and what has not, the hardware and toolchain you need, and the safety rules the camera imposes.
+  - name: 先读中文 README
+    url: https://github.com/xiaobaiwud12/yi-m1-controller-app/blob/main/README.zh-CN.md
+    about: 上面那份 README 的中文版 —— 应用能做什么、哪些验证过、哪些没有、需要什么硬件与工具链，以及相机带来的安全规则。The rest of this repository is English only.
   - name: Report a security vulnerability
     url: https://github.com/xiaobaiwud12/yi-m1-controller-app/security/advisories/new
     about: Please use private reporting, not a public issue. See SECURITY.md.

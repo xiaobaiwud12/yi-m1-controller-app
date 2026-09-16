@@ -1,3 +1,5 @@
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 # yi-m1-controller-app
 
 An open-source Android controller for the **YI M1** (小蚁微单, model `C59Y1`)
@@ -16,10 +18,13 @@ This repository contains the application. Nothing else.
 > one person, on one phone. `CHANGELOG.md` and the sections below separate what has
 > evidence from what does not.
 >
-> The app ships **English and Simplified Chinese**, following the phone's language by
-> default, with a picker in Settings. It states its own licences in-app: the info
-> button in the app bar (`btn-licences`) opens the licence page, which lists every
-> bundled component and says plainly that this is not the manufacturer's app.
+> The app ships **English and Simplified Chinese**. It follows the phone's language by
+> default; the picker is at **Settings → Sync → System and diagnostics → Language**
+> (`setting-locale`), it takes effect immediately, and it is remembered. One line the
+> user reads is English in both locales — see "Not verified, and not claimed" below.
+> It states its own licences in-app: the info button in the app bar (`btn-licences`)
+> opens the licence page, which lists every bundled component and says plainly that
+> this is not the manufacturer's app.
 
 ---
 
@@ -37,9 +42,12 @@ This repository contains the application. Nothing else.
 
   Build       : a **debug** build of the app source in this repository, run with
                 `flutter run -d emulator-5554 --dart-define=MARIONETTE=1
-                --dart-define=FAKE_CAMERA=1`. All four carry the app's own
-                `dev` build stamp in the app bar, which is how a reader can tell
-                they are not a release build. `FAKE_CAMERA` fabricates the
+                --dart-define=FAKE_CAMERA=1`. `live-view.png` carries the app's
+                own build stamp in its app bar and it reads `dev`, which is what
+                `BUILD_STAMP` defaults to, so a build with no stamp passed reads
+                as a development build rather than a release one. **The other
+                three do not show that chip** — do not send a reader looking for
+                it in them. `FAKE_CAMERA` fabricates the
                 connection and the camera's answers; the camera protocol is not
                 exercised by these images and they are not evidence that any
                 command works.
@@ -65,9 +73,14 @@ This repository contains the application. Nothing else.
                 **Nothing here is presented as a photograph of a real scene
                 through the app.** The alternative was photographing a desk with
                 the maintainer's home in it, which is worse.
-  Grid        : `dials-landscape.png` has the composition grid switched on,
-                which is why rule-of-thirds lines are visible over the picture.
-                The histogram is on in every shot.
+  Grid        : **off in both shots that have a preview.** The grid toggle in
+                `live-view.png` and `dials-landscape.png` draws the struck-through
+                icon (`Icons.grid_off`), which is what the app draws while the grid
+                is off, and no rule-of-thirds lines are drawn over the picture in
+                either one. Do not describe the grid as visible here; re-shoot with
+                the toggle on if that is the shot you want. The histogram is on in
+                both of those shots; `album-sync.png` and `first-run.png` have no
+                preview at all, so neither toggle appears in them.
 
   Captions are bilingual on purpose: the camera is a Chinese product (小蚁微单)
   and its users are the reason the app is being localised, while the
@@ -109,12 +122,13 @@ between it and the picture. Shown here in **English**; `album-sync.png` and
 
 **Landscape full screen with the dials · 横屏全屏与拨盘.** S is the mode the
 camera reported here, so the right rail is EV plus the parameter S controls
-(shutter) and ISO/Mode stay on the left. The composition grid is on, which is why
-rule-of-thirds lines are drawn over the picture, and the histogram sits below the
-shutter.
+(shutter) and ISO/Mode stay on the left. The composition grid is **off** in this
+shot — the top bar's grid toggle draws the struck-through icon — and the histogram
+sits below the shutter.
 
 **中文**：这里的模式是相机回报的 S 档，因此右侧拨盘为 EV 加 S 档控制的参数（快门），
-ISO 与模式固定在左侧。构图网格已打开，所以画面上有三分线；直方图在快门下方。
+ISO 与模式固定在左侧。这一张里构图网格是**关**的（顶栏的网格开关画的是带斜杠的
+图标）；直方图在快门下方。
 
 </td>
 </tr>
@@ -140,8 +154,8 @@ queueing never starts one.
 reopenable from the app bar. Pairing needs a physical **Accept** on the camera
 body, and the camera stores only one pairing.
 
-**中文**：三步、可跳过，也能从应用栏重开。配对需要在**相机机身上按 Accept**，
-而且相机只保存一个配对。
+**中文**：三步、可跳过，也能从顶栏重开。配对需要在**相机机身上按一次「接受」**
+（Accept），而且相机只保存一个配对。
 
 </td>
 </tr>
@@ -263,8 +277,12 @@ obvious-looking features are absent.
 - **USB and HDMI live-view output.** Analysis concluded both are infeasible; the
   complete UVC descriptor in the camera's firmware is dead code with zero
   references. Do not expect this feature.
-- **The Chinese localisation and the haptic feedback** described as in progress
-  in `CHANGELOG.md`. Neither is in a commit, so neither is in a build.
+- **A fully Chinese interface.** Both locales ship and a check asserts that every
+  key exists in both files, but one line a user reads is English in either
+  language: the sync bar's summary, which the Flutter-free sync layer builds
+  (`SyncSummary.toString()`) and which that file documents as not localized. It is
+  visible in `album-sync.png` above (`0 of 1 — 0 originals, 0 previews`). Whether
+  the Chinese *reads* well is a judgement, not an observation.
 
 ---
 
@@ -463,7 +481,7 @@ caught it, and that check stays. See `CONTRIBUTING.md`.
 | Path | What it is |
 |---|---|
 | `app/lib/protocol/` | Wire formats, the 45-command table, parameter pools, coordinate mapping, layout maths. **No Flutter.** |
-| `app/lib/transport/` | BLE, HTTP, live view, album, Wi-Fi join, capture interlock. **No Flutter.** |
+| `app/lib/transport/` | BLE, HTTP, live view, album, Wi-Fi join, capture interlock. Four files import Flutter (`file_pairing_store.dart`, `flutter_ble_transport.dart`, `screen_control.dart`, `wifi_joiner.dart`); the two pure-VM verifiers do not import them. |
 | `app/lib/sync/` | Transfer queue, sync ledger, pause contract. **No Flutter.** |
 | `app/lib/platform/` | The implementations that do need Flutter: MediaStore, file sinks. |
 | `app/lib/state/` | `AppState`, the single source of truth. |
@@ -476,8 +494,11 @@ caught it, and that check stays. See `CONTRIBUTING.md`.
 | `app/docs/PROTOCOL.md` | The wire-protocol reference the client is written against, with a confidence marker on every entry. |
 
 The three Flutter-free layers are a hard constraint, not a style preference:
-keeping `protocol`, `transport` and `sync` free of `package:flutter` is what
-makes 674 assertions runnable in a plain Dart VM in seconds.
+`dart tool/verify_transport.dart` and `dart tool/verify_sync.dart` must keep
+compiling — and running — in a plain Dart VM with no Flutter engine, and neither
+imports the four files in `app/lib/transport/` that do import Flutter. That is what
+makes 674 assertions finish in seconds. `app/lib/protocol/` and `app/lib/sync/`
+carry no `package:flutter` import at all.
 
 ---
 

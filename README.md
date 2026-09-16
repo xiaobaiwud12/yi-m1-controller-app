@@ -26,20 +26,65 @@ This repository contains the application. Nothing else.
 ## Screenshots
 
 <!--
-  PENDING. These four images are RESERVED but not yet captured, so this section
-  currently renders as broken links. Do not change the paths, the alt text or the
-  captions — just drop the PNGs in at the paths below.
+  PROVENANCE — what these four PNGs are, and what they are not.
 
-  Capture at the AVD's native device pixels (Pixel 6: 1080x2400 @ 420 dpi) and do
-  NOT downscale; the <img width> attributes below control how large they display.
-  If you would rather use plain markdown, replace each <img> with
-  ![alt](path) and accept that GitHub renders portrait shots at ~880 px wide.
+  They are screenshots of the app, at its native device pixels (1080x2400 and
+  2400x1080 @ 420 dpi, Pixel-6-class AVD `yi_m1_test`), captured with
+  `adb shell screencap` and NOT downscaled; the <img width> attributes below
+  control display size only. Do not upscale or re-encode them to a different
+  size — that would make the captions' claim about the preview and the dial
+  geometry untrue.
+
+  Build       : a **debug** build of the app source in this repository, run with
+                `flutter run -d emulator-5554 --dart-define=MARIONETTE=1
+                --dart-define=FAKE_CAMERA=1`. All four carry the app's own
+                `dev` build stamp in the app bar, which is how a reader can tell
+                they are not a release build. `FAKE_CAMERA` fabricates the
+                connection and the camera's answers; the camera protocol is not
+                exercised by these images and they are not evidence that any
+                command works.
+  Camera      : **none.** No M1 was connected or used. There is no real camera
+                anywhere in these shots.
+  Locale      : `live-view.png` and `dials-landscape.png` are the **English**
+                interface; `album-sync.png` and `first-run.png` are
+                **简体中文**. The app follows the phone's language by default
+                (Settings → Language), so the Chinese shots are what a Chinese
+                phone shows with no configuration, and the two together are the
+                evidence that both locales are really drawn — not only claimed.
+  Preview     : **synthetic, and deliberately so.** The app's own live-view
+                receiver, JPEG decode, readout strip and histogram are all real
+                and running — but the picture in the preview is a public-domain
+                painting, not the camera's output. It is fed to the running app
+                as datagrams in the measured live-view format (frame index,
+                timestamp, `0x79CE4283`, 2272-byte parameter block, SOI at
+                +2284), so what is rendered is the app's real pipeline operating
+                on a still life. The camera state in the readout strip is a real
+                capture from the maintainer's M1 (its RAW+JPEG, ISO, shutter and
+                battery values), replayed for the frame.
+
+                **Nothing here is presented as a photograph of a real scene
+                through the app.** The alternative was photographing a desk with
+                the maintainer's home in it, which is worse.
+  Grid        : `dials-landscape.png` has the composition grid switched on,
+                which is why rule-of-thirds lines are visible over the picture.
+                The histogram is on in every shot.
 
   Captions are bilingual on purpose: the camera is a Chinese product (小蚁微单)
   and its users are the reason the app is being localised, while the
   application's code and commit history are English. If you prefer one language,
   delete the other line from each caption — nothing else depends on it.
 -->
+
+> **What these four images are — read this before judging the app by them.**
+> They are screenshots of this app's own UI, at native device resolution
+> (1080x2400 and 2400x1080), from an emulator, with **no camera connected**. The
+> connection is stubbed (`FAKE_CAMERA`) and the picture in the preview is a
+> public-domain still life fed through the app's real live-view path — so the
+> layout, the readout, the dials and the histogram are the app's own rendering,
+> while **the photograph is not the camera's**. Two shots are in English and two
+> are in 简体中文, because the app follows the phone's language. The full
+> provenance — build flags, locales, and the exact JPEG fixture — is in the HTML
+> comment above.
 
 <table>
 <tr>
@@ -48,10 +93,13 @@ This repository contains the application. Nothing else.
 <img src="docs/screens/live-view.png" width="300"
      alt="Portrait shooting screen: the camera's live preview fills the upper area, with the state readout, the shutter button and the settings panel below it.">
 
-**Live view · 取景页.** Portrait, connected, preview running. The readout bar
-carries the camera's own state; the histogram sits below the shutter button.
+**Live view · 取景页.** Portrait, connected, preview running — the app's own
+render. The readout bar carries the camera's own state; the histogram sits
+between it and the picture. Shown here in **English**; `album-sync.png` and
+`first-run.png` below are the same app in **简体中文**.
 
-**中文**：竖屏取景页，已连接、预览在跑。读数栏显示相机自己的状态，直方图在快门下方。
+**中文**：竖屏取景页，已连接、预览在跑。读数栏显示相机自己的状态，直方图在预览上方。
+本图为**英文**界面；下方 `album-sync.png` 与 `first-run.png` 为**简体中文**界面。
 
 </td>
 <td width="50%">
@@ -59,12 +107,14 @@ carries the camera's own state; the histogram sits below the shutter button.
 <img src="docs/screens/dials-landscape.png" width="700"
      alt="Landscape full screen: the preview fills the display and the mode-aware exposure dial rail runs down both sides.">
 
-**Landscape full screen with the dials · 横屏全屏与拨盘.** The rail changes with
-the shooting mode — M shows aperture and shutter with EV as a hint, A/S show EV
-plus the parameter that mode controls, P shows EV only.
+**Landscape full screen with the dials · 横屏全屏与拨盘.** S is the mode the
+camera reported here, so the right rail is EV plus the parameter S controls
+(shutter) and ISO/Mode stay on the left. The composition grid is on, which is why
+rule-of-thirds lines are drawn over the picture, and the histogram sits below the
+shutter.
 
-**中文**：拨盘随拍摄模式变化。M 档显示光圈与快门、EV 只作提示；A/S 档显示 EV 加该模式
-控制的参数；P 档只显示 EV。
+**中文**：这里的模式是相机回报的 S 档，因此右侧拨盘为 EV 加 S 档控制的参数（快门），
+ISO 与模式固定在左侧。构图网格已打开，所以画面上有三分线；直方图在快门下方。
 
 </td>
 </tr>

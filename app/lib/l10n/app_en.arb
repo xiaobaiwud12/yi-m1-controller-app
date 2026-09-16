@@ -1,0 +1,1224 @@
+{
+  "@@locale": "en",
+  "appTitle": "M1 Controller",
+  "startupFailedTitle": "The app failed to start",
+  "startupFailedBody": "This is a problem in the app, not the camera. The text below is what went wrong and is worth reporting.",
+  "startupUnknownError": "unknown error",
+  "continueToApp": "Continue to the app",
+  "disconnectTitle": "Disconnect?",
+  "disconnectBody": "This stops the preview and releases the camera's Wi-Fi, which is what it wants when nobody is using it. The pairing is kept, so reconnecting will not need a confirmation on the camera.",
+  "cancel": "Cancel",
+  "disconnect": "Disconnect",
+  "dismiss": "Dismiss",
+  "guideTooltip": "First run & pairing guide",
+  "disconnectTooltip": "Disconnect from the camera",
+  "checkCameraTooltip": "Check the camera is still there",
+  "licencesTooltip": "Licences, credits and who made this",
+  "licencesLegalese": "An unofficial, third-party app for the YI M1 (C59Y1) camera — not affiliated with, authorised by, or endorsed by YI Technology. The app itself is Apache-2.0; the open-source components bundled in this build are listed below, each under its own licence.",
+  "cameraResponding": "Camera is responding.",
+  "cameraSilent": "No answer from the camera.",
+  "navCapture": "Capture",
+  "navSync": "Sync",
+  "firmwareNotConnected": "not connected",
+  "@_section": "Album grid",
+  "albumListingRejected": "The camera rejected the listing parameters, which points at a protocol mismatch:\n{detail}",
+  "@albumListingRejected": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "albumUnreachable": "Could not reach the camera.\n{detail}",
+  "@albumUnreachable": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "albumOnThisPhone": "On this phone ({name})",
+  "@albumOnThisPhone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "albumNotOnPhone": "Not on this phone yet",
+  "actionShare": "Share",
+  "actionShareSubtitleOnPhone": "Send to another app",
+  "actionShareSubtitleNotOnPhone": "Sync it first",
+  "actionOpen": "Open",
+  "actionOpenSubtitleOnPhone": "In the phone's own viewer",
+  "actionSyncThis": "Sync this shot",
+  "actionRemoveFromPhone": "Remove from this phone",
+  "actionRemoveFromPhoneSubtitle": "Keeps it on the camera",
+  "actionDeleteFromCamera": "Delete from the camera",
+  "actionDeleteFromCameraSubtitle": "Cannot be undone; the camera has no undo",
+  "albumShareSheetTitle": "{count, plural, =1{Share shot} other{Share {count} shots}}",
+  "@albumShareSheetTitle": {
+    "description": "Title of the Android share sheet, which is drawn by the system outside the app.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumRemoveConfirmTitle": "Remove from this phone?",
+  "albumRemoveConfirmBody": "The copy in your gallery is deleted. The shot stays on the camera's card — this is the opposite of Delete.\n\n{path}",
+  "@albumRemoveConfirmBody": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "Remove",
+  "albumDeleteStarting": "starting",
+  "albumSelectedCount": "{count} selected",
+  "@albumSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumTitleCount": "Album  ·  {count} shots",
+  "@albumTitleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumSyncSelectedTooltip": "Sync the selected shots",
+  "albumDeleteSelectedTooltip": "Delete the selected shots from the camera",
+  "albumDeleteBusyTooltip": "A delete is already running",
+  "albumSelectTooltip": "Select shots",
+  "albumReloadTooltip": "Reload everything, from the first page",
+  "albumSyncCount": "Sync {count}",
+  "@albumSyncCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumShareCount": "Share {count}",
+  "@albumShareCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumDeleteCount": "Delete {count}",
+  "@albumDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumNotConnectedTitle": "Not connected",
+  "albumNotConnectedBody": "The album is served over the camera's own Wi-Fi network. Connect to the camera first.",
+  "albumReadFailedTitle": "Could not read the card",
+  "albumReadFailedBody": "{error}\n\nThe camera serves photos over a slow link. Asking again usually works.",
+  "@albumReadFailedBody": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "albumRetryListing": "Retry the listing",
+  "albumEmptyTitle": "No photos found",
+  "albumEmptyBody": "The card reports nothing. If the camera does have photos, the listing may have been cut short by a busy link.",
+  "albumLookAgain": "Look for photos again",
+  "albumPreviewPending": "A preview is saved; the full-resolution file is still pending.",
+  "albumPathTooLong": "This path exceeds the 50-byte buffer the firmware copies it into, so it cannot be fetched.",
+  "albumNotConnectedShort": "not connected to the camera",
+  "albumLoadFailed": "loading from the camera failed: {error}",
+  "@albumLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSavedCopyGone": "This shot is recorded as saved, but its copy is no longer on the phone — it may have been deleted from the gallery.",
+  "@_section2": "Sync bar and sync list",
+  "syncNothingQueued": "Nothing queued",
+  "syncPause": "Pause",
+  "syncResume": "Resume",
+  "syncStart": "{count, plural, =1{Start sync (1 photo)} other{Start sync ({count} photos)}}",
+  "@syncStart": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncPreviewPausedWhileTransfer": "The preview is paused while photos transfer.",
+  "syncLabel": "Sync: ",
+  "syncModeAutoPreviewThenOriginal": "Automatic — preview first, then full size",
+  "syncModeAutoOriginalOnly": "Automatic — full size only",
+  "syncModeManualOnly": "Manual — only what I pick",
+  "syncHideList": "Hide list",
+  "syncListCount": "List ({count})",
+  "@syncListCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncPauseStreamTitle": "Pause the preview while syncing",
+  "syncPauseStreamDetail": "The best speed for both. Turn this off to keep watching the preview, which makes the transfer slower.",
+  "syncRawTitle": "RAW (.DNG) too — ~32 MB a shot",
+  "@syncRawTitle": {
+    "description": "Label of the sync bar's RAW opt-in, on the album page. The cost is in the label rather than only in the note below it, because the note is dropped on a short screen (landscape) and capped at two lines on a tall one — and the one thing this switch must never do is spend 32 MB a shot without saying so. The number sits in the first half of the label on purpose: the label is capped at one line, so an ellipsized tail must not be where the number lives."
+  },
+  "syncRawDetail": "About 32 MB a shot against the JPEG's 5 MB, over the camera's own access point.",
+  "@syncRawDetail": {
+    "description": "The note under the RAW opt-in. Dropped on short screens and capped at two lines, which is why the label above it carries the number too."
+  },
+  "syncRawQueued": "{count, plural, =1{RAW added for 1 shot already listed. Nothing transfers until you start it.} other{RAW added for {count} shots already listed. Nothing transfers until you start it.}}",
+  "@syncRawQueued": {
+    "description": "Snackbar after the RAW opt-in is switched on. It says what was added to the list AND that queued is not transferring, because one tap on this switch can add hundreds of megabytes to the queue.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncRetryFailed": "Retry failed",
+  "syncNothingLeftToFetch": "Nothing left to fetch.",
+  "syncStillToFetch": "{count, plural, =1{1 shot still to fetch} other{{count} shots still to fetch}}",
+  "@syncStillToFetch": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncRemovedFromList": "{count, plural, =1{1 shot removed from the sync list. Nothing was deleted from the camera.} other{{count} shots removed from the sync list. Nothing was deleted from the camera.}}",
+  "@syncRemovedFromList": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncClearList": "Clear the list",
+  "syncRemoveRowNote": "Removing a row only cancels the transfer. The shot stays on the camera and nothing is sent to it.",
+  "syncCancelTransfer": "Cancel this transfer",
+  "syncRetrying": "Retrying…",
+  "syncStageInFlight": "in flight — cancels when this request finishes",
+  "syncStagePreviewSaved": "preview saved, full size pending",
+  "@_section3": "Delete from the camera",
+  "deleteNothingHereTitle": "Nothing here can be deleted",
+  "deleteConfirmTitle": "{count, plural, =1{Delete 1 shot from the camera?} other{Delete {count} shots from the camera?}}",
+  "@deleteConfirmTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteConfirmBody": "{files, plural, =1{This removes 1 file from the SD card in the camera} other{This removes {files} files from the SD card in the camera}}{pairs} in {requests, plural, =1{1 request} other{{requests} requests}}.",
+  "@deleteConfirmBody": {
+    "placeholders": {
+      "files": {
+        "type": "int"
+      },
+      "pairs": {
+        "type": "String"
+      },
+      "requests": {
+        "type": "int"
+      }
+    }
+  },
+  "deletePairsSuffix": "{count, plural, =1{ (1 RAW+JPEG shot, where both halves go together)} other{ ({count} RAW+JPEG shots, where both halves go together)}}",
+  "@deletePairsSuffix": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteIrreversibleWarning": "It cannot be undone from this app: the photos are not copied anywhere first, the camera keeps no copy, and this protocol has no way to restore them. Sync anything you want to keep before deleting.",
+  "deleteWillNotBeTouched": "Will not be touched:",
+  "deleteKeepThem": "Keep them",
+  "deleteConfirmAction": "Delete {count} from camera",
+  "@deleteConfirmAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteProgress": "Deleting — request {index} of {total} ({label})",
+  "@deleteProgress": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteNothingSent": "Nothing was sent to the camera.",
+  "deleteHide": "Hide",
+  "deleteDetails": "Details",
+  "deleteUnconfirmed": "{count} file(s) could not be confirmed either way — the camera accepted the request, but the card could not be listed again. Reload the album to see what is actually left.",
+  "@deleteUnconfirmed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteStillOnCard": "{count} file(s) are still on the card and were not deleted.",
+  "@deleteStillOnCard": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@_section4": "Asset viewer",
+  "viewerSaveToPhone": "Save this shot to the phone",
+  "viewerQueued": "Added to the sync queue. Start sync from the album bar.",
+  "viewerUndecodable": "This image could not be decoded.",
+  "viewerNotOnPhone": "Not on this phone yet.",
+  "viewerFetchPreview": "Load a preview from the camera",
+  "viewerCameraNotConnected": "Camera not connected",
+  "viewerLocalCopy": "Showing the copy saved on this phone.",
+  "viewerLoadingFromCamera": "Loading from the camera — {size}",
+  "@viewerLoadingFromCamera": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "qualityOriginal": "Full resolution",
+  "qualityPreview": "Preview only",
+  "@_section5": "Histogram",
+  "histogramNoData": "no exposure data yet",
+  "histogramUnavailable": "histogram unavailable",
+  "histogramTooltip": "Exposure histogram",
+  "histogramStats": "mean {mean}{blown}{crushed}",
+  "@histogramStats": {
+    "description": "Numeric readout under the histogram. {blown} and {crushed} are empty strings when the clipped fractions are below the display threshold.",
+    "placeholders": {
+      "mean": {
+        "type": "String"
+      },
+      "blown": {
+        "type": "String"
+      },
+      "crushed": {
+        "type": "String"
+      }
+    }
+  },
+  "histogramBlown": "  blown {percent}%",
+  "@histogramBlown": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "histogramCrushed": "  crushed {percent}%",
+  "@histogramCrushed": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "@_section6": "Live view",
+  "liveConnectionLost": "Camera connection lost",
+  "liveCheckAgain": "Check again",
+  "livePreviewPausedForTransfer": "Preview paused for the transfer",
+  "liveFps": "{fps} fps",
+  "@liveFps": {
+    "placeholders": {
+      "fps": {
+        "type": "String"
+      }
+    }
+  },
+  "liveHideThis": "Hide this",
+  "livePausedBannerBody": "Photos are being copied. The preview shares one Wi-Fi link with the transfer, so it is held still until the copy finishes.",
+  "liveKeepPreviewRunning": "Keep the preview running",
+  "liveStopPreview": "Stop the preview",
+  "liveNoFrames": "no frames",
+  "liveDrawnOfReceivedFps": "{drawn}/{received} fps",
+  "@liveDrawnOfReceivedFps": {
+    "description": "Frame rate actually drawn out of the frames the camera sent. Replaces the average, which never falls to zero and therefore cannot show that the stream stopped.",
+    "placeholders": {
+      "drawn": {
+        "type": "String"
+      },
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "liveLossPercent": "{percent}% loss",
+  "@liveLossPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "liveCompositionGrid": "Composition grid",
+  "liveFocusAtCentre": "Focus at the centre",
+  "liveStartPreview": "Start preview",
+  "liveStopPreviewTooltip": "Stop preview",
+  "liveFullScreen": "Full screen",
+  "liveExitFullScreen": "Exit full screen",
+  "liveShutterReady": "The shutter is ready again.",
+  "liveStillBlocked": "Still blocked: {reason}",
+  "@liveStillBlocked": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "liveReleaseAnyway": "Release anyway",
+  "liveFixShutter": "Fix the shutter",
+  "liveStartPreviewForSettings": "Start the preview to read the camera settings.",
+  "liveCameraSettings": "Camera settings",
+  "liveHideSettings": "Hide settings",
+  "liveSettings": "Settings",
+  "liveVideoTab": "Video",
+  "liveAlbumTab": "Album",
+  "liveEvReference": "· reference",
+  "liveRetry": "Retry",
+  "liveConnectToCamera": "Connect to camera",
+  "joinOutcomeGranted": "Joined. Looking for the camera...",
+  "joinOutcomeSaved": "Android saved the network. Allow the notification, or pick it in Wi-Fi.",
+  "@joinOutcomeSaved": {
+    "description": "The platform registered the network as a suggestion instead of joining; the passkey is already filled in, so the only missing step is the user allowing it."
+  },
+  "joinOutcomeDismissed": "Join prompt dismissed.",
+  "joinOutcomeTimeout": "Android timed out joining.",
+  "liveRetryJoinLabel": "Settings",
+  "@liveRetryJoinLabel": {
+    "description": "The snackbar action that opens the system permission screen, shown after a join the user can fix."
+  },
+  "liveConnectRetry": "Retry",
+  "liveBleDiagnostics": "BLE diagnostics",
+  "liveWifiDiagnostics": "Wi-Fi diagnostics",
+  "liveOpenWifi": "Open Wi-Fi",
+  "liveRetryJoin": "Retry join",
+  "liveAppPermissions": "App permissions",
+  "liveReRead": "Re-read",
+  "liveNothingLoggedYet": "(nothing logged yet)",
+  "liveBleDiagnosticsBody": "The camera advertises these properties itself. A write failure here is usually a write-type or permission mismatch, not a protocol error.",
+  "liveWifiDiagnosticsBody": "The camera shows no passkey of its own, so this is where to read it. Nothing here is guessed: each line was measured on this phone just now.",
+  "liveCameraAccessPoint": "Camera access point",
+  "liveAccessPointUnknown": "Not known yet — the credentials arrive over Bluetooth when the camera switches its Wi-Fi on.",
+  "liveSsid": "SSID",
+  "livePasskey": "Passkey",
+  "liveNotReadYet": "(not read yet)",
+  "liveOpenedWifiPanel": "Opened the Wi-Fi panel. Pick the camera network there.",
+  "liveOpenedWifiSettings": "Opened Wi-Fi settings. Pick the camera network there.",
+  "liveMeasuredState": "Measured state",
+  "liveAndroidOnly": "Android only — nothing to report on this platform.",
+  "liveLocationServicesOffNote": "Location services are switched OFF while the permission is granted. Android reports this as a missing permission, but the fix is the location tile in quick settings — granting the permission again will not help.",
+  "diagAndroid": "Android",
+  "diagTargetSdk": "Target SDK",
+  "diagDevice": "Device",
+  "diagLocationPermission": "Location permission",
+  "diagNearbyWifiPermission": "Nearby-Wi-Fi permission",
+  "diagChangeWifiPermission": "Change-Wi-Fi permission",
+  "diagChangeNetworkPermission": "Change-network permission",
+  "diagLocationServices": "Location services",
+  "diagWifiRadio": "Wi-Fi radio",
+  "diagNotifications": "Notifications",
+  "diagAddNetworkSheet": "“Add network” sheet",
+  "diagGranted": "granted",
+  "diagNotGranted": "NOT granted",
+  "diagUnknown": "unknown",
+  "diagUnknownValue": "?",
+  "@_section7": "Camera readout (live view)",
+  "readoutMode": "Mode",
+  "readoutShutter": "Shutter",
+  "readoutAperture": "Aperture",
+  "readoutIso": "ISO",
+  "readoutIsoAuto": "ISO auto",
+  "readoutEv": "EV",
+  "readoutWb": "WB",
+  "readoutStyle": "Style",
+  "readoutBattery": "Battery",
+  "readoutBatteryCharging": "Charging",
+  "@readoutBatteryCharging": {
+    "description": "The battery row's value while the camera is on external power. The camera reports charging as the reading 101 instead of a percentage, so this word replaces the number: the row used to draw '101%', which cannot exist. What is measured, and what the manufacturer's own code states, is in CameraState.isCharging."
+  },
+  "readoutBatteryChargingCompact": "Chg",
+  "@readoutBatteryChargingCompact": {
+    "description": "The same fact in the narrow (78 dp) readout column, where a value gets 66 dp of text room. 'Charging' is 8 characters, which this app's metrics draw at 96.0 dp — 0.688 of the 66 dp, below the 0.75 floor analysis/55 set for this column. The short form is the one the column's own budget (kCompactReadoutLength = 7) allows."
+  },
+  "readoutLeft": "Left",
+  "readoutApertureValue": "f/{value}",
+  "@readoutApertureValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutIsoAutoValue": "ISO {value} (auto)",
+  "@readoutIsoAutoValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutIsoValue": "ISO {value}",
+  "@readoutIsoValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutEvValue": "{value} EV",
+  "@readoutEvValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutBatteryAndLeft": "{battery}%  {left}",
+  "@readoutBatteryAndLeft": {
+    "placeholders": {
+      "battery": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutBatteryChargingAndLeft": "Charging  {left}",
+  "@readoutBatteryChargingAndLeft": {
+    "description": "The compact strip's battery half while the camera is on external power: the same word as readoutBatteryCharging, with the remaining-shot count. There is no number to show because there is no percentage.",
+    "placeholders": {
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSetByCamera": "Set by the camera in {mode} mode — switch to M to control it",
+  "@settingsSetByCamera": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "@_section8": "Exposure dials",
+  "dialAperture": "Aperture",
+  "dialShutter": "Shutter",
+  "dialIso": "ISO",
+  "dialEv": "EV",
+  "dialMode": "Mode",
+  "dialDecrease": "Lower {label}",
+  "@dialDecrease": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "dialIncrease": "Raise {label}",
+  "@dialIncrease": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "dialDisabledByMode": "not adjustable",
+  "@dialDisabledByMode": {
+    "description": "Shown on a dial the camera will not accept changes for right now — the value is displayed as a reference rather than as a control. The Chinese is the maintainer's own word (不可调)."
+  },
+  "albumRawJpgBadge": "RAW+JPG",
+  "@albumRawJpgBadge": {
+    "description": "Badge on a RAW+JPEG pair in the album grid. One row, not two: the pair is one shot."
+  },
+  "albumRawBadge": "RAW",
+  "albumRawPending": "RAW pending",
+  "@albumRawPending": {
+    "description": "Second badge on an album tile whose shot owns a RAW that is not on the phone yet AND is still being fetched — either because the RAW switch is on, or because the RAW is already in the sync list. The tile above it says RAW+JPG, which is the fact that the shot owns a RAW at all; this one answers 'and is it here yet'. Only drawn while the answer is 'no, but it is coming': with the switch off a RAW will never arrive, and a badge that claimed it was pending would sit on every pair tile forever."
+  },
+  "albumVideoBadge": "VIDEO",
+  "@albumVideoBadge": {
+    "description": "Badge on a video clip in the album grid. Chinese keeps the Latin word: it is what Chinese camera menus print, and a 10 dp badge has no room for 视频."
+  },
+  "@_section9": "First run and pairing",
+  "firstRunStepWhatItDoes": "What this app does",
+  "firstRunStepHowPhotosCome": "How photos should come across",
+  "firstRunStepPair": "Pair with the camera",
+  "firstRunStepOf": "Step {step} of {total}",
+  "@firstRunStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "firstRunTitle": "First run & pairing",
+  "firstRunSkip": "Skip",
+  "firstRunClose": "Close",
+  "firstRunBack": "Back",
+  "firstRunNext": "Next",
+  "firstRunStartPairing": "Start pairing",
+  "firstRunPairTryAgain": "Try again",
+  "@firstRunPairTryAgain": {
+    "description": "The pairing button after an attempt has failed: the same control, in the same place, relabelled. Every attempt needs a person standing at the camera, so the retry is manual, and this label is what tells the user the button is live again."
+  },
+  "firstRunPairFailedHelp": "That attempt is over — nothing is still waiting on the camera. Press Try again with the camera awake and in front of you, then press Accept on its screen within a few seconds.",
+  "@firstRunPairFailedHelp": {
+    "description": "Drawn under the app's own failure sentence in the pairing step's status card. It names the control to press, which the failure sentence cannot do on its own."
+  },
+  "firstRunDone": "Done",
+  "firstRunIntro": "It controls your YI M1 over Wi-Fi: a live viewfinder, the shutter, the settings the camera exposes, and a copy of the card in your phone's gallery. Nothing is sent to any server — the phone talks to the camera, and the photos land on the phone.",
+  "firstRunWifiOneDeviceTitle": "The camera's Wi-Fi takes one device at a time",
+  "firstRunWifiOneDeviceDetail": "If a PC or tablet is connected to the camera, this phone cannot be. Disconnect the other device first — otherwise the join fails in a way that reads like a wrong password.",
+  "firstRunAcceptOnCameraTitle": "Pairing needs a press on the camera body",
+  "firstRunAcceptOnCameraDetail": "When you start pairing, the camera asks you to confirm. You have a few seconds to press Accept on its screen. A PC that has already paired can take that turn, so pair from the device you actually want to use.",
+  "firstRunSyncIntro": "Asked once, and remembered. You can change it later on the Sync screen, or by reopening this guide from the ? button in the top bar.",
+  "firstRunSyncFoot": "Previews are small and appear in seconds; a full-size photo is several megabytes over a slow radio. This only decides what happens automatically — you can always pick individual photos in the album.",
+  "firstRunSyncAutoPreviewTitle": "Automatic — a small preview first, then the full size",
+  "firstRunSyncAutoPreviewBody": "A preview is small and appears in seconds, so the whole card is browsable quickly; the full-size file follows behind it.",
+  "firstRunSyncAutoOriginalTitle": "Automatic — full size only",
+  "firstRunSyncAutoOriginalBody": "Nothing lands on the phone that is not the real file, but each photo is several megabytes over a slow radio, so the first one takes a while.",
+  "firstRunSyncManualTitle": "Manual — only what I pick",
+  "firstRunSyncManualBody": "Nothing moves until you choose it. Browsing the card queues nothing, which is the safe choice on a metered or slow link.",
+  "firstRunKeepAwake": "Keep the camera awake and powered on. If nothing happens for ten seconds, the camera did not get the confirmation and the attempt has to be made again.",
+  "firstRunKeepAwakeAfterAsk": "Keep the camera awake and powered on. If nothing happens for ten seconds after you ask to pair, the camera did not get the confirmation and the attempt has to be made again.",
+  "@firstRunKeepAwakeAfterAsk": {
+    "description": "The portrait variant of firstRunKeepAwake. The extra clause is load-bearing there: that layout puts the button under the sentence, so \"after you ask to pair\" is what says when the ten seconds start."
+  },
+  "firstRunFourThings": "Four things happen, in this order:",
+  "firstRunPairFind": "Find the camera over Bluetooth",
+  "firstRunPairConfirm": "Confirm the pairing on the camera body",
+  "firstRunPairAccept": "Press Accept on the camera — it belongs to the camera, not to the app",
+  "firstRunPairReadCredentials": "Read the camera's Wi-Fi name and password",
+  "firstRunPairJoin": "Join that network and check the camera answers",
+  "firstRunNotConnected": "Not connected. Pressing Start pairing asks the camera to confirm — have the camera switched on and in front of you.",
+  "firstRunConnected": "Connected. The Camera tab now has the live view, the shutter and the settings.",
+  "@_section10": "Video page",
+  "videoNotConnected": "Not connected to the camera.",
+  "videoStartPreviewFirst": "Start the preview first — the camera only accepts remote commands while remote mode is active.",
+  "videoRefusedNotRemote": "{label} was refused because the camera is not in remote mode. Start the preview and try again.",
+  "@videoRefusedNotRemote": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFailed": "{label} failed: {detail}",
+  "@videoFailed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "videoRejected404": "{label} was rejected: the camera answered 404, which on this firmware means the command or its value is not accepted by this body.",
+  "@videoRejected404": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "videoStartRecording": "Start recording",
+  "videoStopRecording": "Stop recording",
+  "videoChangeFormat": "Change format",
+  "videoCautionTitle": "Remote video is partly unverified",
+  "videoCautionBody": "Recording start/stop and the format command have been sent to a real camera and accepted. Nothing has confirmed yet that the clip reaches the SD card, so check the card before relying on it.\n\nThe stabilisation, noise reduction and audio controls have NOT been verified on hardware at all: they were read out of the firmware's command table, and a value that table lists can still be refused by this body.\n\nThis camera has no watchdog, so a command it does not expect can leave it unresponsive until the battery is removed. If it stops answering, power-cycle it.",
+  "videoNotNow": "Not now",
+  "videoUnderstandContinue": "I understand — continue",
+  "videoPageTitle": "Video recording",
+  "videoWhatIsVerified": "What is verified?",
+  "videoRecordingFormat": "Recording format",
+  "videoFormatBlockedNote": "Blocked while recording: the camera encodes the format it started with.",
+  "videoUnavailableUntilPreview": "Unavailable until the preview is running.",
+  "videoStopRecordingFirst": "Stop the recording before changing the format.",
+  "videoVideoQuality": "Video quality",
+  "videoElectronicStabilisation": "Electronic stabilisation",
+  "videoNoiseReduction": "Noise reduction",
+  "videoAudio": "Audio",
+  "videoRecordAudio": "Record audio",
+  "videoNoStateYet": "No camera state yet. These values are read from the preview stream, so they appear with the first frame.",
+  "videoReportedByCamera": "Reported by the camera",
+  "videoRowFormat": "Format",
+  "videoRowAudio": "Audio",
+  "videoRowVolume": "Volume",
+  "videoRowNoiseReduction": "Noise reduction",
+  "videoRowStabilisation": "Stabilisation",
+  "videoRequestedNotReported": "Asked for {format}. The camera has not reported it yet — the stream is the only acknowledgement that counts on this firmware, so this is not a change until it appears above.",
+  "@videoRequestedNotReported": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "videoRecordingIndicator": "RECORDING",
+  "videoIdle": "Idle",
+  "videoTimerNote": "Recording state and the timer are tracked by the app: the camera reports the video settings in every frame but says nothing about whether it is recording.",
+  "videoUnknown": "unknown",
+  "videoUnconfirmed": "unconfirmed",
+  "videoRequestedWaiting": "{format} requested — waiting for the camera.",
+  "@videoRequestedWaiting": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFormatPoolNote": "The list is the firmware's own value pool, which is shared across bodies: a format can exist in firmware and still be refused by this one. A refusal comes back as a 404 and is reported here.",
+  "videoStateNotReported": "state not reported yet",
+  "videoSending": "sending {command}...",
+  "@videoSending": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "videoVolume": "Volume",
+  "videoNoVolumeYet": "The camera reports no volume yet.",
+  "videoCameraReports": "Camera reports {value}.",
+  "@videoCameraReports": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "videoChangeInFlight": " A change is in flight.",
+  "videoCautionFoot": "These commands have not all been verified on real hardware. The camera has no watchdog, so if it stops responding, power-cycle it.",
+  "videoOn": "ON",
+  "videoOff": "OFF",
+  "@_section11": "Messages raised by the Flutter-free layers",
+  "linkScanning": "looking for the camera...",
+  "linkNotFound": "camera not found. Is it powered on, and not already held by the official app?",
+  "linkConnecting": "connecting...",
+  "linkReadingIdentity": "reading camera identity...",
+  "linkUnreadableIdentity": "camera answered with an unreadable identity",
+  "linkFound": "found {firmware} ({region})",
+  "@linkFound": {
+    "placeholders": {
+      "firmware": {
+        "type": "String"
+      },
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "linkReusingPairing": "reusing the saved pairing (refId {refId})...",
+  "@linkReusingPairing": {
+    "placeholders": {
+      "refId": {
+        "type": "String"
+      }
+    }
+  },
+  "linkSavedPairingRejected": "saved pairing did not take ({detail}); pairing fresh",
+  "@linkSavedPairingRejected": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPressAllow": "PRESS ALLOW ON THE CAMERA now (refId {refId})",
+  "@linkPressAllow": {
+    "placeholders": {
+      "refId": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPairingNotConfirmed": "the camera did not confirm the pairing. It must be accepted on the camera screen within a few seconds.",
+  "linkOpeningSession": "opening the session...",
+  "linkEnablingWifi": "switching the camera Wi-Fi on...",
+  "linkReadingCredentials": "reading Wi-Fi credentials...",
+  "linkPairingForgotten": "the camera refused the saved pairing, so it has been forgotten; press Connect again to pair from scratch (the camera will ask for confirmation).",
+  "linkNoCredentials": "the camera did not hand over Wi-Fi credentials. The session may not have been accepted.",
+  "linkAskingAndroidToJoin": "asking Android to join \"{ssid}\"...",
+  "@linkAskingAndroidToJoin": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoined": "joined \"{ssid}\" — waiting for the camera to answer...",
+  "@linkJoined": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinedUnbound": "joined \"{ssid}\" — waiting for the camera...",
+  "@linkJoinedUnbound": {
+    "description": "The same moment as linkJoined, but the process could not be pinned to the camera's network, so the app cannot yet promise the camera will answer. The distinction is real: without the pin, requests leave over cellular.",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkSavedNetworkInstead": "Android saved \"{ssid}\" as a network instead of joining it. If a notification appears, allow it — otherwise open Wi-Fi and pick it. The passkey is already filled in ({credential}). Waiting...",
+  "@linkSavedNetworkInstead": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinDismissed": "the join prompt was dismissed. Tap \"Retry join\" to bring it back, or connect to \"{ssid}\" yourself with the passkey {credential}.",
+  "@linkJoinDismissed": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinTimedOut": "Android did not finish joining \"{ssid}\" in time.",
+  "@linkJoinTimedOut": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinUnsupported": "this phone will not let the app join \"{ssid}\" by itself, so the Wi-Fi screen was opened. Choose \"{ssid}\" there — the passkey is {credential} (the camera does not show it).",
+  "@linkJoinUnsupported": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinManual": "{detail} You can also connect to \"{ssid}\" by hand with the passkey {credential}. [{permissions}]",
+  "@linkJoinManual": {
+    "description": "{detail} is the platform's own explanation and {permissions} is the measured permission summary — an identifier list, not prose. Both are inserted verbatim in every language.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      },
+      "permissions": {
+        "type": "String"
+      }
+    }
+  },
+  "linkWaitingForCamera": "waiting for the camera to answer ({seconds}s left)...",
+  "@linkWaitingForCamera": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "linkCameraNotAnswering": "the camera is not answering on {host}. Check that the phone is on \"{ssid}\" — its passkey is {passkey} — then retry.",
+  "@linkCameraNotAnswering": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      },
+      "ssid": {
+        "type": "String"
+      },
+      "passkey": {
+        "type": "String"
+      }
+    }
+  },
+  "linkConnected": "connected",
+  "linkPreviewRunning": "preview running",
+  "linkPreviewStopped": "preview stopped",
+  "linkDisconnected": "disconnected",
+  "linkDisconnectedNoPairing": "Disconnected, but the camera's Wi-Fi is still on — the camera no longer holds this phone's pairing, so the app has no authenticated channel to switch it with. Press the camera's power switch, or reconnect and disconnect again, to stop it advertising.",
+  "@linkDisconnectedNoPairing": {
+    "description": "Shown after the Disconnect button when the camera's access point could not be switched off over Bluetooth. This one is the gate: the camera keeps exactly ONE pairing, and a newer client (the official app, another phone) silently replaces it, so there is no authenticated BLE channel left to send the switch-off through. The sentence must stay a *disclosure* — the radio really is still on, which costs the camera battery and occupies the single client slot its access point admits. It must not promise that the app can fix it."
+  },
+  "linkDisconnectedRadioRefused": "Disconnected, but the camera's Wi-Fi is still on — the camera did not acknowledge the switch-off command. Press the camera's power switch, or reconnect and disconnect again, to stop it advertising.",
+  "@linkDisconnectedRadioRefused": {
+    "description": "Same place as linkDisconnectedNoPairing. Here a pairing existed and the command was sent, but the camera did not take it. A BLE write is fire-and-forget on this hardware, so 'no acknowledgement' is the strongest thing the app can honestly say — do not translate it as a confirmed failure."
+  },
+  "linkDisconnectedNoBle": "Disconnected, but the camera's Wi-Fi is still on — the Bluetooth link to the camera was already gone, so the switch-off command had no way to reach it. Press the camera's power switch, or reconnect and disconnect again, to stop it advertising.",
+  "@linkDisconnectedNoBle": {
+    "description": "Same place as linkDisconnectedNoPairing. The normal case while the camera's network stack is wedged: HTTP is dead but Bluetooth still works, so reconnecting is what actually switches the radio off."
+  },
+  "linkIdle": "not connected",
+  "linkLostContact": "Lost contact with the camera. It may have been switched off, or the phone may have left the camera's Wi-Fi network.",
+  "@_section12": "Transfer stages (sync layer)",
+  "stageQueued": "Queued",
+  "stagePreview": "Preview",
+  "stageDownloading": "Downloading",
+  "stageStalled": "Stalled, retrying",
+  "stagePausedNoCamera": "Paused, camera away",
+  "stagePausedByUser": "Paused by you",
+  "stagePausedLowBattery": "Paused, camera battery low",
+  "stageDone": "Saved",
+  "syncNoteCameraAway": "The camera went away. Sync resumes when it is back.",
+  "syncNotePausedByUser": "Paused by you.",
+  "syncStreamPauseReason": "Preview paused while photos transfer — the live view and a full-resolution download share one Wi-Fi link, so they slow each other down. It comes back as soon as the transfer finishes.",
+  "@syncStreamPauseReason": {
+    "description": "Drawn over a still frame in the live view while a bulk transfer holds the stream. The cause (one shared Wi-Fi link) is the part that stops the user thinking the app has hung."
+  },
+  "@_section13": "Delete refusals (transport layer)",
+  "deleteRefusalProtected": "the camera lists this file as protected. What that flag means on this firmware is not verified, so the app treats it as a refusal to delete rather than guessing — remove the protection, or delete it on the camera",
+  "deleteRefusalPathTooLong": "the path is {length} characters, and DeleteFile copies each entry into a {limit}-character slot, so the camera would truncate it and could delete the wrong file",
+  "@deleteRefusalPathTooLong": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteRefusalListingFailed": "the card could not be listed after the delete, so this file's fate is unknown",
+  "@_section14": "Transport failures (album)",
+  "albumErrListingRejected": "GetFileList answered 404 for range {start}..{end}. On this firmware that means the parameters were rejected, not that the command is missing.",
+  "@albumErrListingRejected": {
+    "placeholders": {
+      "start": {
+        "type": "int"
+      },
+      "end": {
+        "type": "int"
+      }
+    }
+  },
+  "albumErrListingFailed": "GetFileList failed: {raw}",
+  "@albumErrListingFailed": {
+    "placeholders": {
+      "raw": {
+        "type": "String"
+      }
+    }
+  },
+  "albumErrPathTooLong": "path is {length} chars; the firmware copies it into a 50-byte buffer so this can never be fetched: {path}",
+  "@albumErrPathTooLong": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "albumErrDeleteRejected": "DeleteFile answered 404 for {count} path(s). On this firmware that means the request shape was rejected — not that the file is gone.",
+  "@albumErrDeleteRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumErrDeleteNoPaths": "DeleteFile needs at least one path",
+  "albumErrDeleteTooMany": "DeleteFile takes at most {limit} paths per call and was given {count}; the firmware clamps the list and silently drops the rest, so this would look like success while leaving files behind",
+  "@albumErrDeleteTooMany": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumErrDeleteAll": "refusing to send DeleteFile file_list \"ALL\": on this firmware that means delete every file on the card",
+  "albumErrDeletePathTooLong": "DeleteFile copies each path into a 56-byte slot, so \"{path}\" ({length} chars) would be truncated and could delete the wrong file; the limit is {limit}",
+  "@albumErrDeletePathTooLong": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "length": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "@_section15": "Settings catalog. The key after settingsRow/settingsGroup/settingsTab is the catalog id in lib/protocol/settings_menu.dart, which is Flutter-free and therefore cannot hold translated prose. A check asserts these two lists are equal in both directions.",
+  "noticeUnwiredRow": "Nothing is wired to \"{label}\" yet.",
+  "@noticeUnwiredRow": {
+    "description": "Shown in the live-view notice strip when a settings row has no handler — a wiring mistake made visible rather than silent.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "errStorageDenied": "Android will not let the app write to the photo library, so nothing can be saved. Grant the storage permission to this app, then start the sync again.",
+  "errPreviewRefused": "the camera refused to start the preview",
+  "noticeShotsNotOnPhone": "Those shots are not on this phone yet. Sync them first, or share from the camera by syncing and then sharing.",
+  "errShareAndroidOnly": "sharing is only implemented on Android.",
+  "errShareSheetRefused": "Android would not open a share sheet for those files.",
+  "noticeSharedPartially": "Shared {missing} of {total}; the rest are still syncing.",
+  "@noticeSharedPartially": {
+    "placeholders": {
+      "missing": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noticeShotNotOnPhone": "That shot is not on this phone yet.",
+  "errNoViewerApp": "No app on this phone would open that file.",
+  "errRemoveCopyFailed": "Could not remove the phone's copy.",
+  "errDeleteNotConnected": "not connected to the camera, so there is nothing to delete.",
+  "noticeNothingSentAllRefused": "Nothing was sent: every selected shot is one the app will not delete. See the reasons listed.",
+  "noticeNothingToDelete": "Nothing to delete.",
+  "errDeleteFailed": "the delete could not be carried out: {detail}",
+  "@errDeleteFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "errNotConnectedShort": "not connected",
+  "errCommandFailed": "{command} failed: {detail}",
+  "@errCommandFailed": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "errCommandRejected404": "{command} was rejected — the camera answered 404, which on this firmware means the parameters were wrong",
+  "@errCommandRejected404": {
+    "description": "The 404 clause is load-bearing: on this firmware a 404 means the parameters were rejected, not that the command is missing. Never translate it as 'command not found'.",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "errShutterReleaseFailed": "The shutter could not be released: {detail}. If the camera has stopped answering, it needs a power cycle.",
+  "@errShutterReleaseFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "errShutterHealthCheckFailed": "The camera did not answer the health check, so the shutter stays locked: {detail}. If it was frozen, it needs a power cycle.",
+  "@errShutterHealthCheckFailed": {
+    "description": "`{detail}` is the capture interlock's own description of what is still held — an identifier list, inserted verbatim.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "errInterlockReleasedNoRemote": "The interlock was released, but the camera did not re-enter remote mode. Power-cycle it if it was frozen.",
+  "errInterlockReleasedStillBlocked": "The interlock was released, but the shutter is still blocked.",
+  "noticeInterlockReleased": "Capture interlock released — the shutter is ready again.",
+  "errPhotoFail": "The camera refused the shot (\"photo fail\"). That means it is not in remote mode, or the previous shot is still being written to the card.",
+  "@errPhotoFail": {
+    "description": "The `photo fail` string in quotes is the firmware's own reply and is kept verbatim in both languages: it is what a user reports, and what a log search matches."
+  },
+  "errCaptureNotReached": "the capture did not reach the camera",
+  "noticeFocusSkippedForShot": "A shot is being taken, so the focus point was not sent.",
+  "errFocusFailed": "RCDoFocus failed: {detail}",
+  "@errFocusFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "errFocusRejected404": "RCDoFocus was rejected — the camera answered 404, which on this firmware means the parameters were wrong",
+  "errUnknownParamCommand": "unknown parameter command {command}",
+  "@errUnknownParamCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "errCommandNotInTable": "{command} is not in the firmware command table",
+  "@errCommandNotInTable": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeParamSetByCamera": "In {mode} mode the camera sets this itself, so the change was not applied. Switch to M to control it directly.",
+  "shutterBlockedNotConnected": "Not connected to the camera.",
+  "shutterBlockedNotRemote": "The camera is not in remote mode, so it will not accept a shot. Start the preview — or press \"Fix the shutter\" below to do it.",
+  "@shutterBlockedNotRemote": {
+    "description": "Names the button, not just the problem: this is the state a user lands in after a failed shot, and 'start the preview first' left them to work out that the fix button does exactly that."
+  },
+  "shutterBlockedBurst": "The camera is in {drive} drive. A single command starts a burst that this app has no way to stop — the camera keeps shooting until it locks up and needs its battery removed. Set the drive mode to Single, or use the camera itself.",
+  "@shutterBlockedBurst": {
+    "description": "Safety text. One command in a burst drive mode starts a burst that only RCCancelShooting stops, and this firmware has no watchdog: a user who does not understand this can strand the camera and have to pull the battery. The wording is the capture guard's own sentence, so both must be reworded together if either is.",
+    "placeholders": {
+      "drive": {
+        "type": "String"
+      }
+    }
+  },
+  "shutterBlockedQuarantined": "The camera refused the last capture and its capture state is now stuck — this is the fault the patched firmware fixes. Waiting will not clear it: power-cycle the camera, then reconnect.",
+  "@shutterBlockedQuarantined": {
+    "description": "The power cycle is named because nothing else works: the firmware clears the capture-state flags only on the ready branch, so a power cycle is the only recovery and the patched firmware the only prevention."
+  },
+  "@noticeParamSetByCamera": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTabCapture": "Capture",
+  "settingsTabSync": "Sync",
+  "settingsGroupExposure": "Exposure and focus",
+  "settingsGroupImage": "Image output",
+  "settingsGroupImageSummary": "Aspect, file format, quality",
+  "settingsGroupScene": "Scene and look",
+  "settingsGroupSceneSummary": "Picture style",
+  "settingsGroupVideo": "Video and audio",
+  "settingsGroupVideoSummary": "Format, stabilisation, noise reduction, volume",
+  "settingsGroupTransfer": "Transfer",
+  "settingsGroupTransferSummary": "Sync mode, preview during transfer",
+  "settingsGroupConnection": "Connection diagnostics",
+  "settingsGroupConnectionSummary": "Wi-Fi permissions, SSID, passkey",
+  "settingsGroupSystem": "System and diagnostics",
+  "settingsGroupSystemSummary": "Screen timeout, BLE log",
+  "settingsRowRCSwitchDialMode": "Exposure mode",
+  "settingsRowRCISOSet": "ISO",
+  "settingsRowRCFNSet": "Aperture",
+  "settingsRowRCShutterSpeedSet": "Shutter",
+  "settingsRowRCEVSet": "Exposure comp.",
+  "settingsRowRCWBSet": "White balance",
+  "settingsRowRCMeteringModeSet": "Metering",
+  "settingsRowRCFocusModeSet": "Focus mode",
+  "settingsRowRCDriveModeSet": "Drive",
+  "settingsRowRCImageAspect": "Aspect",
+  "settingsRowRCFileFormatSet": "File format",
+  "settingsRowRCImageQualitySet": "Image quality",
+  "settingsRowRCChooseColorMode": "Picture style",
+  "settingsRowNavVideo": "Open remote video",
+  "settingsRowNavAlbum": "Open the sync page",
+  "settingsRowDiagWifi": "Wi-Fi diagnostics",
+  "settingsRowDiagBle": "BLE diagnostics",
+  "settingsRowPauseStream": "Pause the preview during transfer",
+  "settingsRowPauseStreamNote": "The preview and a bulk transfer share one 802.11n link, so a copy holds the stream still until it finishes.",
+  "settingsRowKeepScreenOn": "Keep the screen on while previewing",
+  "settingsRowKeepScreenOnNote": "A camera controller is held at arm's length with both hands busy, so a screen that times out mid-composition cannot be recovered without losing the shot.",
+  "settingsRowLocale": "Language",
+  "@_section16": "Language picker (Settings → System)",
+  "localePickerTitle": "Language",
+  "localePickerNote": "Takes effect immediately and is remembered.",
+  "localeSystem": "Follow the phone",
+  "localeEnglish": "English",
+  "localeChinese": "简体中文",
+  "localeSelected": "Selected: {name}",
+  "@localeSelected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@_section17": "Parameter values as displayed. The wire value sent to the camera is never translated — these are display labels only, keyed by the firmware's own string so a label can never be sent by mistake.",
+  "paramAuto": "Auto",
+  "paramManual": "Manual",
+  "paramMulti": "Multi",
+  "paramSpot": "Spot",
+  "paramCenterWeighted": "Centre weighted",
+  "paramCAF": "C-AF",
+  "paramSAF": "S-AF",
+  "paramMF": "MF",
+  "paramSingle": "Single",
+  "paramContinuous": "Continuous",
+  "paramDelay2s": "2 s timer",
+  "paramDelay10s": "10 s timer",
+  "paramSunny": "Sunny",
+  "paramCloudy": "Cloudy",
+  "paramShadow": "Shadow",
+  "paramIncandescent": "Incandescent",
+  "paramStandard": "Standard",
+  "paramPortrait": "Portrait",
+  "paramVivid": "Vivid",
+  "paramNaturalBw": "NaturalBW",
+  "paramHighContrastBw": "HContrastBW",
+  "paramTime": "TIME",
+  "paramBulb": "BULB",
+  "paramVga": "VGA",
+  "paramJpgSmall": "JPG S",
+  "paramJpgMedium": "JPG M",
+  "paramJpgLarge": "JPG L",
+  "paramRawJpgSmall": "RAW+JPG S",
+  "paramRawJpgMedium": "RAW+JPG M",
+  "paramRawJpgLarge": "RAW+JPG L",
+  "@paramNaturalBw": {
+    "description": "The camera's own token, kept verbatim: the readout column draws the camera's vocabulary and compares against its screen, and the narrow column's short-form table is keyed by this exact string."
+  },
+  "@paramHighContrastBw": {
+    "description": "The camera's own token, kept verbatim — see @paramNaturalBw."
+  }
+}

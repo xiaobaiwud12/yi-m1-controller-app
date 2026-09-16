@@ -1,0 +1,61 @@
+name: Feature request
+description: Propose a capability, or a change to one that exists.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before you write: `README.md` §"Not verified, and not claimed" lists what
+        the project has decided **not** to build, and `CONTRIBUTING.md` §"Things
+        this project has deliberately rejected" lists what has already been
+        evaluated and turned down. If your proposal is on either list, please say
+        so and why it should be revisited — that is a much stronger request than
+        restating it.
+
+        Also worth knowing: the camera is a single-threaded HTTP server with one
+        Wi-Fi client slot and no authentication. Features that require talking to
+        it while the preview is streaming contend with the preview. That
+        constraint has already killed several plausible ideas.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you are in, not the implementation you have in mind. What can you not do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like to happen
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reachable-on-desk
+    attributes:
+      label: Can this be verified without a camera?
+      description: This determines how cheaply the change can be checked, which matters a lot in a project where the camera is the most expensive layer.
+      options:
+        - "Yes — pure logic, testable in a plain Dart VM"
+        - "Yes — widget tests or golden images"
+        - "Yes — the emulator's virtual camera can cover it"
+        - "No — it needs a real camera"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints you have considered
+      options:
+        - label: This does not require driving the camera while the preview stream is running, or it accepts that the two will contend.
+          required: false
+        - label: This does not require pausing and resuming the live-view stream, which has never been verified on a real camera and is off by default.
+          required: false
+        - label: This does not require flashing modified firmware. (This project does not touch the camera's firmware.)
+          required: false
+        - label: This does not require bundling assets extracted from the vendor's official application, which are not licensed for redistribution.
+          required: false

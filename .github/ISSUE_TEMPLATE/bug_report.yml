@@ -1,0 +1,90 @@
+name: Bug report
+description: Something in the app does not work.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Two things make a report actionable here more
+        than anything else:
+
+        1. **Which build you are running.** The app bar shows a build stamp
+           (a short commit hash, with `-dirty` appended when the tree it was
+           built from had uncommitted changes). Without it, "is this the build I
+           just made?" cannot be answered by looking at the app — which has
+           already cost this project a round of investigation.
+        2. **Whether the camera was involved, and its firmware version.**
+
+        Please read the checklist at the bottom before submitting.
+
+  - type: input
+    id: build-stamp
+    attributes:
+      label: Build stamp
+      description: The value shown in the app bar, e.g. `79e8fa6` or `79e8fa6-dirty`. If you built from a commit, that hash is fine too.
+      placeholder: "79e8fa6"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what actually happened. Screenshots or a screen recording are welcome.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: camera-involved
+    attributes:
+      label: Was a camera involved?
+      options:
+        - "No — this reproduces with the fake camera or on plain UI"
+        - "Yes — the camera was powered on and connected"
+        - "Yes — but the failure was before connecting (Bluetooth pairing / Wi-Fi join)"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: camera-firmware
+    attributes:
+      label: Camera firmware version
+      description: Read it on the camera under Firmware Info. On the tested unit it reports something like `1,3.1-cn ,M1CN,1.1`.
+      placeholder: "1,3.1-cn ,M1CN,1.1"
+    validations:
+      required: false
+
+  - type: input
+    id: phone
+    attributes:
+      label: Phone and Android version
+      description: Manufacturer, model, Android release. This app has been tested on exactly one phone.
+      placeholder: "e.g. Xiaomi 14, Android 15"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        `adb logcat` output around the failure is the single most useful
+        attachment. The app logs under tag prefixes that start with `yi_m1`.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have removed my camera's Wi-Fi password, the pairing token, and any other people's Bluetooth or Wi-Fi device addresses from anything I pasted above.
+          required: true
+        - label: I have not included the contents of anyone's photo library.
+          required: true
+        - label: "If a transfer was running: I stopped the stream from the app before disconnecting anything. Driving the camera while it is streaming is a documented way to wedge it, and it then needs its battery pulled."
+          required: false
+        - label: "I understand this is a single-maintainer project and a first response may take days."
+          required: true

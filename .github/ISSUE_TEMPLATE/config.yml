@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Read the README first
+    url: https://github.com/xiaobaiwud12/yi-m1-controller-app/blob/main/README.md
+    about: What the app does, what has been verified and what has not, the hardware and toolchain you need, and the safety rules the camera imposes.
+  - name: Report a security vulnerability
+    url: https://github.com/xiaobaiwud12/yi-m1-controller-app/security/advisories/new
+    about: Please use private reporting, not a public issue. See SECURITY.md.
+  - name: The camera's protocol has no authentication — that is the hardware, not a bug
+    url: https://github.com/xiaobaiwud12/yi-m1-controller-app/blob/main/app/docs/PROTOCOL.md
+    about: Plaintext BLE pairing, a CRC32 session check, an unauthenticated HTTP interface. Documented, known, and out of scope.

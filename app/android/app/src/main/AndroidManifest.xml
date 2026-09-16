@@ -1,0 +1,174 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- ==================================================================
+         Bluetooth Low Energy.
+
+         The camera must be found and paired over BLE before its Wi-Fi can be
+         switched on, so BLE is not optional.  Android's permission model for
+         it changed at API 31: the old model required location (because a BLE
+         scan can reveal position), the new one has dedicated permissions.
+         Both are declared so one APK covers every supported release.
+         ================================================================== -->
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+
+    <!-- API >= 31: dedicated Bluetooth permissions, so no location is implied. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- ==================================================================
+         Location — required for joining the camera's access point.
+
+         This deliberately has **no `maxSdkVersion`**, and getting that wrong
+         cost a round trip: `WifiNetworkSpecifier` validates the caller's
+         location permission *even on Android 12 and later*, where the old BLE
+         rationale no longer applies. With `maxSdkVersion="30"` the permission is
+         stripped from the manifest on newer releases, and the platform answers a
+         network request with a `SecurityException` thrown inside its own
+         callback — which the app never sees, so all it can report is
+         "failed: SecurityException" with no hint of the cause.
+
+         It must also be requested at **runtime**, which `PermissionGate` does
+         before the join is attempted.
+         ================================================================== -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- API <= 28 additionally wants the coarse permission declared. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ==================================================================
+         Wi-Fi.
+
+         `NEARBY_WIFI_DEVICES` exists from API 33 and is the sanctioned way to
+         request a Wi-Fi network without asking for location. It is declared with
+         `neverForLocation` because this app genuinely never derives a location
+         from Wi-Fi — it only ever talks to one camera on its own AP.
+         Location is still declared above, because below API 33 it is the only
+         mechanism the platform accepts.
+         ================================================================== -->
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation" />
+
+    <!-- ==================================================================
+         Network.
+
+         Two distinct uses, and the distinction matters for the UX: the app
+         talks to the camera over its own access point at 192.168.0.10, and
+         that AP has no internet passthrough.  While a transfer runs, the phone
+         is offline — which is exactly why the sync design is resumable.
+         ================================================================== -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- ==================================================================
+         THE permission that made "the app cannot join the camera" — and it
+         was missing outright.
+
+         `ConnectivityManager.requestNetwork()` is checked by
+         `ConnectivityService.enforceNetworkRequestPermissions()` →
+         `enforceChangePermission()`, which throws
+         `SecurityException("<pkg> was not granted either of these permissions:
+         android.permission.CHANGE_NETWORK_STATE,android.permission.WRITE_SETTINGS.")`
+
+         `CHANGE_NETWORK_STATE` is a **normal** permission: declaring it is
+         enough, there is nothing to grant at runtime. It was simply never
+         declared, so every join attempt threw before the platform even tried,
+         and the app spent three rounds blaming location and nearby-Wi-Fi
+         permissions that the specifier path never consults at all.
+
+         Note the shape of the mistake: `ACCESS_NETWORK_STATE` was declared and
+         looks almost identical in a permission list, so nothing about the
+         manifest looked wrong. The check that catches this is a dump of the
+         *shipped* APK's permissions (`aapt2 dump xmltree`), not a reading of
+         this file — which is also why `tools/audit_app_capabilities.py` now
+         asserts it.
+
+         Do not remove. The `WRITE_SETTINGS` alternative is an AppOp that MIUI
+         and HyperOS refuse by default, so on this user's phone there is no
+         fallback: without this line the app cannot join the camera at all.
+         ================================================================== -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- Needed to observe and report which Wi-Fi network we are on, so the app
+         can tell the user to join the camera's AP instead of silently failing
+         to reach 192.168.0.10. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- ==================================================================
+         Notifications — needed by the Wi-Fi fallback ladder, not for chatter.
+
+         When `WifiNetworkSpecifier` is refused outright, the app registers the
+         camera's network as a **suggestion** instead, and the platform asks the
+         user for approval through a *notification*. From API 33 that notification
+         is suppressed entirely unless this permission is granted, so without it
+         the fallback silently does nothing: the app reports "Android saved the
+         network", no prompt ever appears, and the join can never complete.
+
+         That is the same shape of failure as the missing `CHANGE_NETWORK_STATE`
+         above — a capability that looks present in code and is inert on the
+         device — so it is declared and requested rather than assumed.
+         ================================================================== -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Keep the screen on while framing a shot.  The official app asks for
+         WAKE_LOCK but never actually uses it (no FLAG_KEEP_SCREEN_ON anywhere
+         in its live-view activity) - a verified defect worth not repeating. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- ==================================================================
+         Storage, for album sync.
+
+         Android 10+ uses scoped storage: images are published through
+         MediaStore, which needs no permission on API 29+.  The legacy
+         permissions are declared only for older releases.
+         ================================================================== -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+
+    <application
+        android:label="M1 Controller"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="fullSensor"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <!-- flutterEmbedding meta-data is required by the Flutter tool; see
+             GeneratedPluginRegistrant.java. -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>

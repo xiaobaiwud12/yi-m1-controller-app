@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext HTTP is unavoidable for this camera: its entire control surface is
+  plain `GET http://192.168.0.10/?data={...}` with no authentication and no TLS.
+
+  Rather than switching cleartext on globally (which would also permit it for
+  every other host the app ever contacts), this permits it for the camera's
+  address only. The camera runs its own AP and always hands out 192.168.0.10, so
+  the exemption is as narrow as it can be while still working.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- The camera's fixed address on its own access point. -->
+        <domain includeSubdomains="false">192.168.0.10</domain>
+    </domain-config>
+
+    <!-- Everything else keeps the platform default: cleartext denied. -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

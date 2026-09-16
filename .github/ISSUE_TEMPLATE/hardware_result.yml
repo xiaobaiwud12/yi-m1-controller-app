@@ -1,0 +1,80 @@
+name: Hardware result
+description: You ran something against a real YI M1. This is the most valuable report this project can receive.
+labels: ["hardware"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project has been verified against **exactly one camera unit**, a
+        `3.1-cn` / `M1CN` body, and one phone. Anything you can tell us about a
+        different unit — or about the same unit doing something the project has
+        never claimed — is worth more than a bug report.
+
+        The things genuinely blocked on hardware are listed in `README.md` under
+        "Not verified, and not claimed": what the preview actually feels like,
+        whether a synced photo lands in the system gallery with the right date on
+        your phone, pause/resume of the stream, and burst shooting at card speed.
+
+  - type: input
+    id: camera-firmware
+    attributes:
+      label: Camera firmware version
+      description: Read it on the camera under Firmware Info. The tested unit reports `1,3.1-cn ,M1CN,1.1`.
+      placeholder: "1,3.1-cn ,M1CN,1.1"
+    validations:
+      required: true
+
+  - type: input
+    id: build-stamp
+    attributes:
+      label: Build stamp
+      description: The value in the app bar, or the commit you built from.
+    validations:
+      required: true
+
+  - type: input
+    id: region
+    attributes:
+      label: Region and market
+      description: Where the camera was bought, and whether it runs CN or INT firmware. The camera's own update path checks a region marker and refuses a mismatched image.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: What is the outcome?
+      options:
+        - "It works, and the project did not claim it would"
+        - "It works as the project says it does (confirmation is also useful)"
+        - "It does not work"
+        - "It works differently from the project's description"
+        - "Something destructive or risky happened"
+    validations:
+      required: true
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: What you did and what you observed
+      description: |
+        Please give the evidence, not the impression. For example, for a photo
+        that synced: the `adb shell content query` row showing `is_pending=0`
+        and `date_added`, rather than "it is in the gallery". For a frame rate:
+        the `drawn/recent fps` readout from the app, not "it looked smooth".
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Camera safety
+      options:
+        - label: I did not leave a PC and a phone connected to the camera's access point at the same time — it accepts one client only, and the second one's failure looks like a wrong password.
+          required: true
+        - label: I did not drive the camera while the preview was streaming, and if a stream was running I stopped it from the app before disconnecting.
+          required: true
+        - label: I did not shoot in the camera's Continuous drive mode. Nothing on the camera stops a burst you lose control of, and it then needs its battery pulled.
+          required: true
+        - label: I have removed my camera's Wi-Fi password, pairing token, and other people's device addresses from anything I pasted above.
+          required: true

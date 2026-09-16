@@ -1,0 +1,38 @@
+# Gradle's own bookkeeping, the wrapper, and one machine's SDK location.
+#
+# Unlike Flutter's template, this file does **not** ignore the Gradle wrapper. This
+# repository has to provide `./gradlew`, `gradlew.bat` and
+# `gradle/wrapper/gradle-wrapper.jar` — all three are committed here, and
+# `dart tool/verify_release.dart` fails if a .gitignore in this tree excludes one of
+# them, because `git add -A` would then leave it out of the repository and the
+# documented build entry point would not work in a fresh clone. (Flutter hides the
+# omission by injecting its own copies at build time.)
+/.gradle
+/captures/
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Keystores.
+#
+# **This repository must never contain one.** `keystore.properties`, `*.jks`,
+# `*.keystore`, `*.p12`, `*.pem` and `*.pk8` all stay ignored, and
+# `dart tool/verify_release.dart` fails on any of them, on a `storePassword=` line and
+# on a negation of these patterns.
+#
+# The maintainer's own key is *not* here: it is tracked on purpose in the private
+# development repository, where git history is the backup, and it is dropped by name
+# during the export. A key that can impersonate this app cannot be un-published, so
+# the only safe answer for a public repository is that it was never there.
+#
+# See RELEASING.md for the keytool invocation, the validity to choose and the
+# procedure. To make a local build without the key, use
+# `flutter build apk --release --android-project-arg=allowDebugSigning=true`, which is
+# debug-signed on purpose and refuses to pass the artifact check unless you say so.
+key.properties
+keystore.properties
+**/*.keystore
+**/*.jks
+**/*.p12
+**/*.pem
+**/*.pk8

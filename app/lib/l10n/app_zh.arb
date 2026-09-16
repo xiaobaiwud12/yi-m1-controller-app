@@ -1,0 +1,1040 @@
+{
+  "@@locale": "zh",
+  "appTitle": "M1 控制器",
+  "startupFailedTitle": "应用启动失败",
+  "startupFailedBody": "这是应用自身的问题，与相机无关。下面这段文字说明了出错的地方，值得反馈。",
+  "startupUnknownError": "未知错误",
+  "continueToApp": "仍然进入应用",
+  "disconnectTitle": "断开连接？",
+  "disconnectBody": "断开后会停止取景并关闭相机的 Wi-Fi —— 没人用它的时候，这正是相机希望的。配对信息会保留，下次连接不必再在相机上确认一次。",
+  "cancel": "取消",
+  "disconnect": "断开",
+  "dismiss": "知道了",
+  "guideTooltip": "首次使用与配对指引",
+  "disconnectTooltip": "断开与相机的连接",
+  "checkCameraTooltip": "检查相机是否还在",
+  "licencesTooltip": "开源许可、致谢与作者说明",
+  "licencesLegalese": "本应用是针对 YI M1（C59Y1）相机的非官方第三方应用，与 YI Technology 无隶属、授权或背书关系。应用本身以 Apache-2.0 许可发布；此处随附的开源组件各自适用其自己的许可，名单见下。",
+  "cameraResponding": "相机有应答。",
+  "cameraSilent": "相机没有应答。",
+  "navCapture": "拍摄",
+  "navSync": "同步",
+  "firmwareNotConnected": "未连接",
+  "albumListingRejected": "相机拒绝了列表参数，说明协议对不上：\n{detail}",
+  "@albumListingRejected": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "albumUnreachable": "连不上相机。\n{detail}",
+  "@albumUnreachable": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "albumOnThisPhone": "已在本机（{name}）",
+  "@albumOnThisPhone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "albumNotOnPhone": "尚未同步到本机",
+  "actionShare": "分享",
+  "actionShareSubtitleOnPhone": "发送到其他应用",
+  "actionShareSubtitleNotOnPhone": "需要先同步",
+  "actionOpen": "打开",
+  "actionOpenSubtitleOnPhone": "用手机自带的看图应用",
+  "actionSyncThis": "同步这张",
+  "actionRemoveFromPhone": "从本机删除",
+  "actionRemoveFromPhoneSubtitle": "相机上的文件保留",
+  "actionDeleteFromCamera": "从相机删除",
+  "actionDeleteFromCameraSubtitle": "无法撤销；相机没有回收站",
+  "albumShareSheetTitle": "{count, plural, other{分享 {count} 张照片}}",
+  "@albumShareSheetTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumRemoveConfirmTitle": "从本机删除？",
+  "albumRemoveConfirmBody": "相册里的这份副本会被删除，相机存储卡上的照片仍在 —— 这和“从相机删除”正好相反。\n\n{path}",
+  "@albumRemoveConfirmBody": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "删除副本",
+  "albumDeleteStarting": "准备中",
+  "albumSelectedCount": "已选 {count} 张",
+  "@albumSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumTitleCount": "相册  ·  共 {count} 张",
+  "@albumTitleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumSyncSelectedTooltip": "同步选中的照片",
+  "albumDeleteSelectedTooltip": "从相机删除选中的照片",
+  "albumDeleteBusyTooltip": "已有删除任务在进行",
+  "albumSelectTooltip": "选择照片",
+  "albumReloadTooltip": "从第一页重新读取全部",
+  "albumSyncCount": "同步 {count} 张",
+  "@albumSyncCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumShareCount": "分享 {count} 张",
+  "@albumShareCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumDeleteCount": "删除 {count} 张",
+  "@albumDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumNotConnectedTitle": "未连接",
+  "albumNotConnectedBody": "相册是通过相机自己的 Wi-Fi 提供的，请先连接相机。",
+  "albumReadFailedTitle": "读不到存储卡",
+  "albumReadFailedBody": "{error}\n\n相机的传输链路很慢，再试一次通常就好了。",
+  "@albumReadFailedBody": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "albumRetryListing": "重新读取列表",
+  "albumEmptyTitle": "没有找到照片",
+  "albumEmptyBody": "存储卡报告为空。如果相机里确实有照片，可能是链路繁忙导致列表被提前截断。",
+  "albumLookAgain": "再找一次",
+  "albumPreviewPending": "已保存预览图，原图尚未同步。",
+  "albumPathTooLong": "这个路径超出了固件拷贝用的 50 字节缓冲，无法获取。",
+  "albumNotConnectedShort": "尚未连接相机",
+  "albumLoadFailed": "从相机读取失败：{error}",
+  "@albumLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSavedCopyGone": "这条记录显示已保存，但本机上的副本已经不在了 —— 可能被从相册里删掉了。",
+  "syncNothingQueued": "队列为空",
+  "syncPause": "暂停",
+  "syncResume": "继续",
+  "syncStart": "{count, plural, other{开始同步（{count} 张）}}",
+  "@syncStart": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncPreviewPausedWhileTransfer": "传输期间取景已暂停。",
+  "syncLabel": "同步：",
+  "syncModeAutoPreviewThenOriginal": "自动 —— 先预览图，再原图",
+  "syncModeAutoOriginalOnly": "自动 —— 只传原图",
+  "syncModeManualOnly": "手动 —— 只传我选的",
+  "syncHideList": "收起列表",
+  "syncListCount": "列表（{count}）",
+  "@syncListCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncPauseStreamTitle": "同步时暂停取景",
+  "syncPauseStreamDetail": "两边都最快。关掉它可以继续看取景，代价是传输变慢。",
+  "syncRawTitle": "同时取回 RAW（每张约 32 MB）",
+  "syncRawDetail": "每张约 32 MB，而 JPEG 只有 5 MB，还要走相机自己的热点。",
+  "syncRawQueued": "{count, plural, other{已为列表中 {count} 张加上 RAW。不点开始就不会传输。}}",
+  "@syncRawQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncRetryFailed": "重试失败项",
+  "syncNothingLeftToFetch": "没有待传的照片了。",
+  "syncStillToFetch": "{count, plural, other{还有 {count} 张待传输}}",
+  "@syncStillToFetch": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncRemovedFromList": "{count, plural, other{已从同步列表移除 {count} 张，相机上的文件没有被删除。}}",
+  "@syncRemovedFromList": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncClearList": "清空列表",
+  "syncRemoveRowNote": "移除一行只是取消这次传输，照片留在相机上，也不会向相机发送任何命令。",
+  "syncCancelTransfer": "取消这次传输",
+  "syncRetrying": "重试中…",
+  "syncStageInFlight": "传输中 —— 本次请求结束后取消",
+  "syncStagePreviewSaved": "预览图已存，原图待传",
+  "deleteNothingHereTitle": "这里没有可删除的照片",
+  "deleteConfirmTitle": "{count, plural, other{从相机删除 {count} 张照片？}}",
+  "@deleteConfirmTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteConfirmBody": "{files, plural, other{这会从相机的 SD 卡上删除 {files} 个文件}}{pairs}，分 {requests, plural, other{{requests} 次}}请求完成。",
+  "@deleteConfirmBody": {
+    "placeholders": {
+      "files": {
+        "type": "int"
+      },
+      "pairs": {
+        "type": "String"
+      },
+      "requests": {
+        "type": "int"
+      }
+    }
+  },
+  "deletePairsSuffix": "{count, plural, other{（含 {count} 组 RAW+JPEG，两部分一起删除）}}",
+  "@deletePairsSuffix": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteIrreversibleWarning": "在这个应用里无法撤销：照片不会被预先备份，相机自己不保留副本，这套协议也没有恢复的办法。要留的先同步，再删除。",
+  "deleteWillNotBeTouched": "不会动这些：",
+  "deleteKeepThem": "保留",
+  "deleteConfirmAction": "从相机删除 {count} 张",
+  "@deleteConfirmAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteProgress": "删除中 —— 第 {index}/{total} 次请求（{label}）",
+  "@deleteProgress": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteNothingSent": "没有向相机发送任何命令。",
+  "deleteHide": "收起",
+  "deleteDetails": "详情",
+  "deleteUnconfirmed": "有 {count} 个文件无法确认删除与否 —— 相机接受了请求，但之后列不出存储卡。重新载入相册看看实际还剩什么。",
+  "@deleteUnconfirmed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteStillOnCard": "有 {count} 个文件仍在卡上，没有被删除。",
+  "@deleteStillOnCard": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "viewerSaveToPhone": "把这张存到本机",
+  "viewerQueued": "已加入同步队列，请在相册栏里开始同步。",
+  "viewerUndecodable": "这张图片无法解码。",
+  "viewerNotOnPhone": "尚未同步到本机。",
+  "viewerFetchPreview": "从相机取一张预览图",
+  "viewerCameraNotConnected": "相机未连接",
+  "viewerLocalCopy": "正在显示本机保存的副本。",
+  "viewerLoadingFromCamera": "正在从相机读取 —— {size}",
+  "@viewerLoadingFromCamera": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "qualityOriginal": "原图",
+  "qualityPreview": "仅预览图",
+  "histogramNoData": "还没有曝光数据",
+  "histogramUnavailable": "直方图不可用",
+  "histogramTooltip": "曝光直方图",
+  "histogramStats": "平均 {mean}{blown}{crushed}",
+  "@histogramStats": {
+    "placeholders": {
+      "mean": {
+        "type": "String"
+      },
+      "blown": {
+        "type": "String"
+      },
+      "crushed": {
+        "type": "String"
+      }
+    }
+  },
+  "histogramBlown": "  高光溢出 {percent}%",
+  "@histogramBlown": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "histogramCrushed": "  暗部溢出 {percent}%",
+  "@histogramCrushed": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "liveConnectionLost": "与相机的连接已断开",
+  "liveCheckAgain": "再检查一次",
+  "livePreviewPausedForTransfer": "传输期间取景已暂停",
+  "liveFps": "{fps} fps",
+  "@liveFps": {
+    "placeholders": {
+      "fps": {
+        "type": "String"
+      }
+    }
+  },
+  "liveHideThis": "隐藏这条",
+  "livePausedBannerBody": "正在拷贝照片。取景和传输共用同一条 Wi-Fi 链路，所以拷贝结束前画面会停住。",
+  "liveKeepPreviewRunning": "保持取景",
+  "liveStopPreview": "停止取景",
+  "liveNoFrames": "无帧",
+  "liveDrawnOfReceivedFps": "{drawn}/{received} fps",
+  "@liveDrawnOfReceivedFps": {
+    "placeholders": {
+      "drawn": {
+        "type": "String"
+      },
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "liveLossPercent": "丢帧 {percent}%",
+  "@liveLossPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "liveCompositionGrid": "构图网格",
+  "liveFocusAtCentre": "对焦到画面中心",
+  "liveStartPreview": "开始取景",
+  "liveStopPreviewTooltip": "停止取景",
+  "liveFullScreen": "全屏",
+  "liveExitFullScreen": "退出全屏",
+  "liveShutterReady": "快门已恢复。",
+  "liveStillBlocked": "仍被阻止：{reason}",
+  "@liveStillBlocked": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "liveReleaseAnyway": "仍然解除",
+  "liveFixShutter": "修复快门",
+  "liveStartPreviewForSettings": "先开始取景，才能读到相机设置。",
+  "liveCameraSettings": "相机设置",
+  "liveHideSettings": "收起设置",
+  "liveSettings": "设置",
+  "liveVideoTab": "视频",
+  "liveAlbumTab": "相册",
+  "liveEvReference": "EV 参考",
+  "liveRetry": "重试",
+  "liveConnectToCamera": "连接相机",
+  "joinOutcomeGranted": "已加入。正在寻找相机...",
+  "joinOutcomeSaved": "Android 已保存该网络。请允许那条通知，或者在 Wi-Fi 里选择它。",
+  "joinOutcomeDismissed": "加入提示已被关闭。",
+  "joinOutcomeTimeout": "Android 加入超时。",
+  "liveRetryJoinLabel": "设置",
+  "liveConnectRetry": "重试",
+  "liveBleDiagnostics": "蓝牙诊断",
+  "liveWifiDiagnostics": "Wi-Fi 诊断",
+  "liveOpenWifi": "打开 Wi-Fi",
+  "liveRetryJoin": "重新加入",
+  "liveAppPermissions": "应用权限",
+  "liveReRead": "重新读取",
+  "liveNothingLoggedYet": "（暂无记录）",
+  "liveBleDiagnosticsBody": "这些属性是相机自己广播的。这里写入失败通常是写入类型或权限不匹配，而不是协议错误。",
+  "liveWifiDiagnosticsBody": "相机自己不会显示密码，所以在这里读。这里没有猜测：每一行都是刚才在这台手机上实测的。",
+  "liveCameraAccessPoint": "相机热点",
+  "liveAccessPointUnknown": "尚不可知 —— 相机打开 Wi-Fi 后，凭据会通过蓝牙传过来。",
+  "liveSsid": "网络名",
+  "livePasskey": "密码",
+  "liveNotReadYet": "（尚未读到）",
+  "liveOpenedWifiPanel": "已打开 Wi-Fi 面板，请在那里选择相机网络。",
+  "liveOpenedWifiSettings": "已打开 Wi-Fi 设置，请在那里选择相机网络。",
+  "liveMeasuredState": "实测状态",
+  "liveAndroidOnly": "仅 Android —— 当前平台没有可报告的内容。",
+  "liveLocationServicesOffNote": "定位权限已授予，但定位服务本身是关闭的。Android 会把它报成权限缺失，真正的开关在快捷设置里的定位磁贴 —— 再授予一次权限没有用。",
+  "diagAndroid": "Android",
+  "diagTargetSdk": "目标 SDK",
+  "diagDevice": "设备",
+  "diagLocationPermission": "定位权限",
+  "diagNearbyWifiPermission": "附近 Wi-Fi 权限",
+  "diagChangeWifiPermission": "更改 Wi-Fi 权限",
+  "diagChangeNetworkPermission": "更改网络权限",
+  "diagLocationServices": "定位服务",
+  "diagWifiRadio": "Wi-Fi 开关",
+  "diagNotifications": "通知",
+  "diagAddNetworkSheet": "“添加网络”弹窗",
+  "diagGranted": "已授予",
+  "diagNotGranted": "未授予",
+  "diagUnknown": "未知",
+  "diagUnknownValue": "？",
+  "readoutMode": "模式",
+  "readoutShutter": "快门",
+  "readoutAperture": "光圈",
+  "readoutIso": "感光度",
+  "readoutIsoAuto": "感光度 自动",
+  "readoutEv": "曝光补偿",
+  "readoutWb": "白平衡",
+  "readoutStyle": "风格",
+  "readoutBattery": "电量",
+  "readoutBatteryCharging": "充电中",
+  "readoutBatteryChargingCompact": "充电",
+  "readoutLeft": "剩余",
+  "readoutApertureValue": "f/{value}",
+  "@readoutApertureValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutIsoAutoValue": "感光度 {value}（自动）",
+  "@readoutIsoAutoValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutIsoValue": "感光度 {value}",
+  "@readoutIsoValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutEvValue": "{value} EV",
+  "@readoutEvValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutBatteryAndLeft": "{battery}%  剩 {left}",
+  "@readoutBatteryAndLeft": {
+    "placeholders": {
+      "battery": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "readoutBatteryChargingAndLeft": "充电中  剩 {left}",
+  "@readoutBatteryChargingAndLeft": {
+    "placeholders": {
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSetByCamera": "在 {mode} 档下由相机自己决定 —— 切到 M 档才能调",
+  "@settingsSetByCamera": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "dialAperture": "光圈",
+  "dialShutter": "快门",
+  "dialIso": "感光度",
+  "dialEv": "曝光补偿",
+  "dialMode": "模式",
+  "dialDecrease": "调低{label}",
+  "@dialDecrease": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "dialIncrease": "调高{label}",
+  "@dialIncrease": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "dialDisabledByMode": "不可调",
+  "albumRawJpgBadge": "RAW+JPG",
+  "albumRawPending": "RAW 待传",
+  "albumRawBadge": "RAW",
+  "albumVideoBadge": "VIDEO",
+  "firstRunStepWhatItDoes": "这个应用能做什么",
+  "firstRunStepHowPhotosCome": "照片怎么传过来",
+  "firstRunStepPair": "与相机配对",
+  "firstRunStepOf": "第 {step} 步 / 共 {total} 步",
+  "@firstRunStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "firstRunTitle": "首次使用与配对",
+  "firstRunSkip": "跳过",
+  "firstRunClose": "关闭",
+  "firstRunBack": "上一步",
+  "firstRunNext": "下一步",
+  "firstRunStartPairing": "开始配对",
+  "firstRunPairTryAgain": "重试配对",
+  "firstRunPairFailedHelp": "这次尝试已经结束，相机那边没有东西在等。把相机开机、放在手边，再按“重试配对”，然后在相机屏幕上按“接受”，几秒内完成。",
+  "firstRunDone": "完成",
+  "firstRunIntro": "它通过 Wi-Fi 控制你的小蚁 M1：取景器、快门、相机开放的各项设置，以及把存储卡里的照片拷贝到手机相册。不会向任何服务器发送数据 —— 手机只和相机通信，照片只落到手机上。",
+  "firstRunWifiOneDeviceTitle": "相机的 Wi-Fi 一次只接一台设备",
+  "firstRunWifiOneDeviceDetail": "如果电脑或平板已经连上相机，这台手机就连不上。请先断开另一台设备 —— 否则加入失败的样子很像密码错误。",
+  "firstRunAcceptOnCameraTitle": "配对需要在相机机身上按一下",
+  "firstRunAcceptOnCameraDetail": "开始配对后，相机会要求确认。你只有几秒钟时间在相机屏幕上按“接受”。已经配对过的电脑会占用这个名额，所以请用你真正要用的那台设备来配对。",
+  "firstRunSyncIntro": "只问一次，之后记住。以后可以在“同步”页改，或者点顶栏的 ? 重新打开这份指引。",
+  "firstRunSyncFoot": "预览图很小，几秒就能看到；原图有好几 MB，而链路很慢。这里只决定自动做什么 —— 在相册里你随时可以单张挑选。",
+  "firstRunSyncAutoPreviewTitle": "自动 —— 先传小预览图，再传原图",
+  "firstRunSyncAutoPreviewBody": "预览图很小、几秒就出来，所以整张卡很快就能翻完；原图随后跟上。",
+  "firstRunSyncAutoOriginalTitle": "自动 —— 只传原图",
+  "firstRunSyncAutoOriginalBody": "落到手机上的每个文件都是真图，但每张都有好几 MB，链路又慢，第一张要等一会儿。",
+  "firstRunSyncManualTitle": "手动 —— 只传我选的",
+  "firstRunSyncManualBody": "你不选就不动。只是翻看存储卡不会排入任何传输，在计费网络或慢链路上这样最稳妥。",
+  "firstRunKeepAwake": "让相机保持开机、不要休眠。如果十秒内没有任何动静，说明相机没收到确认，这次尝试得重来。",
+  "firstRunKeepAwakeAfterAsk": "让相机保持开机、不要休眠。按下“开始配对”之后如果十秒内没有任何动静，说明相机没收到确认，这次尝试得重来。",
+  "firstRunFourThings": "按顺序会发生四件事：",
+  "firstRunPairFind": "通过蓝牙找到相机",
+  "firstRunPairConfirm": "在相机机身上确认配对",
+  "firstRunPairAccept": "在相机上按“接受” —— 这一步属于相机，不属于这个应用",
+  "firstRunPairReadCredentials": "读取相机的 Wi-Fi 名称和密码",
+  "firstRunPairJoin": "加入该网络，并确认相机有应答",
+  "firstRunNotConnected": "未连接。按下“开始配对”会让相机要求确认 —— 请把相机开机并放在手边。",
+  "firstRunConnected": "已连接。“拍摄”页现在有取景、快门和各项设置。",
+  "videoNotConnected": "尚未连接相机。",
+  "videoStartPreviewFirst": "请先开始取景 —— 只有在遥控模式下，相机才接受远程命令。",
+  "videoRefusedNotRemote": "{label}被拒绝，因为相机不在遥控模式。请开始取景后重试。",
+  "@videoRefusedNotRemote": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFailed": "{label}失败：{detail}",
+  "@videoFailed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "videoRejected404": "{label}被拒绝：相机返回 404，在这版固件里意味着该命令或该取值不被这台机身接受。",
+  "@videoRejected404": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "videoStartRecording": "开始录制",
+  "videoStopRecording": "停止录制",
+  "videoChangeFormat": "更改格式",
+  "videoCautionTitle": "遥控视频功能只验证了一部分",
+  "videoCautionBody": "开始/停止录制和格式命令都已经发给真机并被接受。但还没有任何证据表明视频片段真的写进了 SD 卡，用之前请先检查卡。\n\n防抖、降噪和音频这三项完全没有在真机上验证过：它们是从固件的命令表里读出来的，而表里列出的取值仍然可能被这台机身拒绝。\n\n这台相机没有看门狗，遇到它不预期的命令可能一直无响应，直到取出电池。如果它不再应答，请断电重启。",
+  "videoNotNow": "暂不",
+  "videoUnderstandContinue": "我已了解，继续",
+  "videoPageTitle": "视频录制",
+  "videoWhatIsVerified": "验证了什么？",
+  "videoRecordingFormat": "录制格式",
+  "videoFormatBlockedNote": "录制中不可更改：相机按开始时的格式编码。",
+  "videoUnavailableUntilPreview": "取景开始后才可用。",
+  "videoStopRecordingFirst": "请先停止录制再改格式。",
+  "videoVideoQuality": "视频画质",
+  "videoElectronicStabilisation": "电子防抖",
+  "videoNoiseReduction": "降噪",
+  "videoAudio": "音频",
+  "videoRecordAudio": "录制声音",
+  "videoNoStateYet": "还没有相机状态。这些值来自取景流，第一帧到达后才会出现。",
+  "videoReportedByCamera": "相机报告的值",
+  "videoRowFormat": "格式",
+  "videoRowAudio": "音频",
+  "videoRowVolume": "音量",
+  "videoRowNoiseReduction": "降噪",
+  "videoRowStabilisation": "防抖",
+  "videoRequestedNotReported": "已请求 {format}。相机还没有报告该值 —— 在这版固件上，只有取景流算数，所以在上面出现之前都不能算改成功。",
+  "@videoRequestedNotReported": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "videoRecordingIndicator": "录制中",
+  "videoIdle": "待机",
+  "videoTimerNote": "录制状态和计时由应用自己维护：相机在每一帧里都会报告视频设置，却从不说明它是否正在录制。",
+  "videoUnknown": "未知",
+  "videoUnconfirmed": "未确认",
+  "videoRequestedWaiting": "已请求 {format} —— 正在等待相机。",
+  "@videoRequestedWaiting": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFormatPoolNote": "这个列表来自固件自己的取值池，各机型共用：某个格式在固件里存在，这台机身仍然可能拒绝。被拒绝时返回 404，并在这里报告。",
+  "videoStateNotReported": "相机尚未报告状态",
+  "videoSending": "正在发送 {command}...",
+  "@videoSending": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "videoVolume": "音量",
+  "videoNoVolumeYet": "相机还没有报告音量。",
+  "videoCameraReports": "相机报告 {value}。",
+  "@videoCameraReports": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "videoChangeInFlight": " 正在发送更改。",
+  "videoCautionFoot": "这些命令没有全部在真机上验证过。相机没有看门狗，如果它不再响应，请断电重启。",
+  "videoOn": "开",
+  "videoOff": "关",
+  "linkScanning": "正在寻找相机…",
+  "linkNotFound": "没有找到相机。相机开机了吗？是不是还被官方 app 占着？",
+  "linkConnecting": "正在连接…",
+  "linkReadingIdentity": "正在读取相机标识…",
+  "linkUnreadableIdentity": "相机返回了无法解析的标识",
+  "linkFound": "找到 {firmware}（{region}）",
+  "@linkFound": {
+    "placeholders": {
+      "firmware": {
+        "type": "String"
+      },
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "linkReusingPairing": "正在复用已保存的配对（refId {refId}）…",
+  "@linkReusingPairing": {
+    "placeholders": {
+      "refId": {
+        "type": "String"
+      }
+    }
+  },
+  "linkSavedPairingRejected": "已保存的配对没生效（{detail}），改为重新配对",
+  "@linkSavedPairingRejected": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPressAllow": "现在在相机上按“允许”（refId {refId}）",
+  "@linkPressAllow": {
+    "placeholders": {
+      "refId": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPairingNotConfirmed": "相机没有确认配对。必须在几秒内于相机屏幕上接受。",
+  "linkOpeningSession": "正在建立会话…",
+  "linkEnablingWifi": "正在打开相机的 Wi-Fi…",
+  "linkReadingCredentials": "正在读取 Wi-Fi 凭据…",
+  "linkPairingForgotten": "相机拒绝了已保存的配对，已将其遗忘；请再按一次“连接”从头配对（相机会要求确认）。",
+  "linkNoCredentials": "相机没有交出 Wi-Fi 凭据。会话可能没有被接受。",
+  "linkAskingAndroidToJoin": "正在请求 Android 加入“{ssid}”…",
+  "@linkAskingAndroidToJoin": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoined": "已加入“{ssid}” —— 正在等待相机应答…",
+  "@linkJoined": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinedUnbound": "已加入“{ssid}” —— 正在等待相机…",
+  "@linkJoinedUnbound": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkSavedNetworkInstead": "Android 把“{ssid}”存成了网络，而没有直接加入。如果弹出通知，请允许它 —— 否则打开 Wi-Fi 手动选择该网络。密码已经填好（{credential}）。",
+  "@linkSavedNetworkInstead": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinDismissed": "加入提示被关掉了。点“重新加入”把它调回来，或者自己用密码 {credential} 连上“{ssid}”。",
+  "@linkJoinDismissed": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinTimedOut": "Android 没有在限定时间内完成加入“{ssid}”。",
+  "@linkJoinTimedOut": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinUnsupported": "这台手机不允许应用自行加入“{ssid}”，所以打开了 Wi-Fi 界面。请在那里选择“{ssid}” —— 密码是 {credential}（相机自己不会显示它）。",
+  "@linkJoinUnsupported": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      }
+    }
+  },
+  "linkJoinManual": "{detail} 你也可以用密码 {credential} 手动连接“{ssid}”。[{permissions}]",
+  "@linkJoinManual": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "ssid": {
+        "type": "String"
+      },
+      "credential": {
+        "type": "String"
+      },
+      "permissions": {
+        "type": "String"
+      }
+    }
+  },
+  "linkWaitingForCamera": "正在等待相机应答（还剩 {seconds} 秒）…",
+  "@linkWaitingForCamera": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "linkCameraNotAnswering": "相机在 {host} 上没有应答。请确认手机连的是“{ssid}” —— 它的密码是 {passkey} —— 然后重试。",
+  "@linkCameraNotAnswering": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      },
+      "ssid": {
+        "type": "String"
+      },
+      "passkey": {
+        "type": "String"
+      }
+    }
+  },
+  "linkConnected": "已连接",
+  "linkPreviewRunning": "取景中",
+  "linkPreviewStopped": "取景已停止",
+  "linkDisconnected": "已断开",
+  "linkDisconnectedNoPairing": "已断开，但相机的 Wi-Fi 还开着 —— 相机已经不保存这台手机的配对了，所以 app 没有可用的认证通道去关它。要让它停止广播，请按相机的电源开关，或重新连接后再断开一次。",
+  "linkDisconnectedRadioRefused": "已断开，但相机的 Wi-Fi 还开着 —— 相机没有确认关机命令。要让它停止广播，请按相机的电源开关，或重新连接后再断开一次。",
+  "linkDisconnectedNoBle": "已断开，但相机的 Wi-Fi 还开着 —— 与相机的蓝牙连接已经断了，关机命令发不过去。要让它停止广播，请按相机的电源开关，或重新连接后再断开一次。",
+  "linkIdle": "未连接",
+  "linkLostContact": "与相机失去联系。它可能被关机了，也可能手机已经离开了相机的 Wi-Fi 网络。",
+  "stageQueued": "排队中",
+  "stagePreview": "预览图",
+  "stageDownloading": "下载中",
+  "stageStalled": "卡住了，正在重试",
+  "stagePausedNoCamera": "已暂停，相机不在了",
+  "stagePausedByUser": "被你暂停",
+  "stagePausedLowBattery": "已暂停，相机电量低",
+  "stageDone": "已保存",
+  "syncNoteCameraAway": "相机不在了。相机回来后同步会自动继续。",
+  "syncNotePausedByUser": "已被你暂停。",
+  "syncStreamPauseReason": "传输期间取景已暂停 —— 取景和原图下载共用同一条 Wi-Fi 链路，会互相拖慢。传输一结束就会恢复。",
+  "deleteRefusalProtected": "相机把这个文件标记为受保护。这个标志在这版固件上究竟意味着什么尚未验证，所以应用把它当作“拒绝删除”处理，而不是去猜 —— 请在相机上解除保护，或者直接在相机上删除它",
+  "deleteRefusalPathTooLong": "路径长 {length} 个字符，而 DeleteFile 会把每一项拷进 {limit} 个字符的槽位，相机因此会截断它，并可能删错文件",
+  "@deleteRefusalPathTooLong": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteRefusalListingFailed": "删除之后列不出存储卡，这个文件的去向未知",
+  "albumErrListingRejected": "GetFileList 对范围 {start}..{end} 返回了 404。在这版固件里这意味着参数被拒绝，而不是命令不存在。",
+  "@albumErrListingRejected": {
+    "placeholders": {
+      "start": {
+        "type": "int"
+      },
+      "end": {
+        "type": "int"
+      }
+    }
+  },
+  "albumErrListingFailed": "GetFileList 失败：{raw}",
+  "@albumErrListingFailed": {
+    "placeholders": {
+      "raw": {
+        "type": "String"
+      }
+    }
+  },
+  "albumErrPathTooLong": "路径长 {length} 个字符；固件会把它拷进 50 字节的缓冲，所以这个文件永远取不回来：{path}",
+  "@albumErrPathTooLong": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "albumErrDeleteRejected": "DeleteFile 对 {count} 个路径返回了 404。在这版固件里这意味着请求的结构被拒绝 —— 而不是文件已经没了。",
+  "@albumErrDeleteRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumErrDeleteNoPaths": "DeleteFile 至少需要一个路径",
+  "albumErrDeleteTooMany": "DeleteFile 每次最多接受 {limit} 个路径，这次给了 {count} 个；固件会截断列表并悄悄丢掉多余部分，看起来像成功，实际把文件留在了卡上",
+  "@albumErrDeleteTooMany": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumErrDeleteAll": "拒绝发送 DeleteFile file_list \"ALL\"：在这版固件里那意味着删除卡上的每一个文件",
+  "albumErrDeletePathTooLong": "DeleteFile 会把每个路径拷进 56 字节的槽位，所以“{path}”（{length} 个字符）会被截断，可能删错文件；上限是 {limit}",
+  "@albumErrDeletePathTooLong": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "length": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "noticeUnwiredRow": "还没有为“{label}”接上任何操作。",
+  "errStorageDenied": "Android 不允许应用写入相册，所以什么都存不下来。请给本应用授予存储权限，然后重新开始同步。",
+  "errPreviewRefused": "相机拒绝开始取景",
+  "noticeShotsNotOnPhone": "这些照片还没有同步到本机。请先同步，或者同步之后再从相机分享。",
+  "errShareAndroidOnly": "分享功能只在 Android 上实现。",
+  "errShareSheetRefused": "Android 没能为这些文件打开分享面板。",
+  "noticeSharedPartially": "已分享 {total} 张中的 {missing} 张，其余的还在同步。",
+  "noticeShotNotOnPhone": "这张还没有同步到本机。",
+  "errNoViewerApp": "这台手机上没有任何应用能打开这个文件。",
+  "errRemoveCopyFailed": "没能删除本机上的副本。",
+  "errDeleteNotConnected": "尚未连接相机，没有可删除的内容。",
+  "noticeNothingSentAllRefused": "没有发送任何请求：选中的每一张都是应用拒绝删除的。原因见下方列表。",
+  "noticeNothingToDelete": "没有可删除的照片。",
+  "errDeleteFailed": "删除没能执行：{detail}",
+  "errNotConnectedShort": "未连接",
+  "errCommandFailed": "{command} 失败：{detail}",
+  "errCommandRejected404": "{command} 被拒绝 —— 相机返回 404，在这版固件里意味着参数不对",
+  "errShutterReleaseFailed": "快门无法解除：{detail}。如果相机已经不再应答，需要断电重启。",
+  "errShutterHealthCheckFailed": "相机没有应答健康检查，快门保持锁定：{detail}。如果它卡住了，需要断电重启。",
+  "errInterlockReleasedNoRemote": "互锁已解除，但相机没有重新进入遥控模式。如果它卡住了，请断电重启。",
+  "errInterlockReleasedStillBlocked": "互锁已解除，但快门仍被阻止。",
+  "noticeInterlockReleased": "拍摄互锁已解除 —— 快门已恢复。",
+  "errPhotoFail": "相机拒绝了这次拍摄（“photo fail”）。这意味着它不在遥控模式，或者上一张还在写入存储卡。",
+  "errCaptureNotReached": "拍摄命令没有到达相机",
+  "noticeFocusSkippedForShot": "正在拍摄，所以没有发送对焦点。",
+  "errFocusFailed": "RCDoFocus 失败：{detail}",
+  "errFocusRejected404": "RCDoFocus 被拒绝 —— 相机返回 404，在这版固件里意味着参数不对",
+  "errUnknownParamCommand": "未知的参数命令 {command}",
+  "errCommandNotInTable": "{command} 不在固件的命令表里",
+  "noticeParamSetByCamera": "在 {mode} 档下这是相机自己决定的，所以改动没有生效。切到 M 档才能直接控制。",
+  "shutterBlockedNotConnected": "尚未连接相机。",
+  "shutterBlockedNotRemote": "相机不在遥控模式，所以不会接受拍摄。请先开始取景 —— 或者按下面的“修复快门”来启动取景。",
+  "shutterBlockedBurst": "相机处于{drive}驱动模式。一条命令就会开始连拍，而这个应用没有任何办法让它停下 —— 相机会一直拍到自己卡死、必须取出电池。请把驱动模式设为单张，或者直接用相机拍。",
+  "shutterBlockedQuarantined": "相机拒绝了上一次拍摄，它的拍摄状态现在卡住了 —— 这正是打过补丁的固件所修复的故障。等待不会让它恢复：请给相机断电重启，然后重新连接。",
+  "settingsTabCapture": "拍摄",
+  "settingsTabSync": "同步",
+  "settingsGroupExposure": "曝光与对焦",
+  "settingsGroupImage": "图像输出",
+  "settingsGroupImageSummary": "画幅、格式、画质",
+  "settingsGroupScene": "场景与风格",
+  "settingsGroupSceneSummary": "色彩风格",
+  "settingsGroupVideo": "视频与音频",
+  "settingsGroupVideoSummary": "格式、防抖、降噪、音量",
+  "settingsGroupTransfer": "传输",
+  "settingsGroupTransferSummary": "同步模式、传输期间的取景",
+  "settingsGroupConnection": "连接诊断",
+  "settingsGroupConnectionSummary": "Wi-Fi 权限、网络名、密码",
+  "settingsGroupSystem": "系统与诊断",
+  "settingsGroupSystemSummary": "息屏时间、蓝牙日志",
+  "settingsRowRCSwitchDialMode": "曝光模式",
+  "settingsRowRCISOSet": "感光度",
+  "settingsRowRCFNSet": "光圈",
+  "settingsRowRCShutterSpeedSet": "快门",
+  "settingsRowRCEVSet": "曝光补偿",
+  "settingsRowRCWBSet": "白平衡",
+  "settingsRowRCMeteringModeSet": "测光",
+  "settingsRowRCFocusModeSet": "对焦模式",
+  "settingsRowRCDriveModeSet": "驱动模式",
+  "settingsRowRCImageAspect": "画幅",
+  "settingsRowRCFileFormatSet": "文件格式",
+  "settingsRowRCImageQualitySet": "画质",
+  "settingsRowRCChooseColorMode": "色彩风格",
+  "settingsRowNavVideo": "打开遥控视频",
+  "settingsRowNavAlbum": "打开同步页",
+  "settingsRowDiagWifi": "Wi-Fi 诊断",
+  "settingsRowDiagBle": "蓝牙诊断",
+  "settingsRowPauseStream": "传输时暂停取景",
+  "settingsRowPauseStreamNote": "取景和批量传输共用同一条 802.11n 链路，所以拷贝期间画面会停住，直到传完。",
+  "settingsRowKeepScreenOn": "取景时保持屏幕常亮",
+  "settingsRowKeepScreenOnNote": "相机控制器是双手端着、离眼睛一臂远的用法，构图到一半息屏，就只能丢掉这一张重来。",
+  "settingsRowLocale": "语言",
+  "localePickerTitle": "语言",
+  "localePickerNote": "立即生效，并且会记住。",
+  "localeSystem": "跟随手机",
+  "localeEnglish": "English",
+  "localeChinese": "简体中文",
+  "localeSelected": "当前：{name}",
+  "@localeSelected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paramAuto": "自动",
+  "paramManual": "手动",
+  "paramMulti": "多重测光",
+  "paramSpot": "点测光",
+  "paramCenterWeighted": "中央重点测光",
+  "paramCAF": "连续自动对焦",
+  "paramSAF": "单次自动对焦",
+  "paramMF": "手动对焦",
+  "paramSingle": "单张",
+  "paramContinuous": "连拍",
+  "paramDelay2s": "2 秒延时",
+  "paramDelay10s": "10 秒延时",
+  "paramSunny": "晴天",
+  "paramCloudy": "多云",
+  "paramShadow": "阴影",
+  "paramIncandescent": "白炽灯",
+  "paramStandard": "标准",
+  "paramPortrait": "人像",
+  "paramVivid": "鲜艳",
+  "paramNaturalBw": "黑白",
+  "paramHighContrastBw": "高对比黑白",
+  "paramTime": "TIME",
+  "paramBulb": "B 门",
+  "paramVga": "VGA",
+  "paramJpgSmall": "JPG 小",
+  "paramJpgMedium": "JPG 中",
+  "paramJpgLarge": "JPG 大",
+  "paramRawJpgSmall": "RAW+JPG 小",
+  "paramRawJpgMedium": "RAW+JPG 中",
+  "paramRawJpgLarge": "RAW+JPG 大"
+}

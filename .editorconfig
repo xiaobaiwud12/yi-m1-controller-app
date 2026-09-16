@@ -1,0 +1,96 @@
+# EditorConfig — https://editorconfig.org
+#
+# This file states the conventions the repository actually follows. It was added
+# late: the tree predates it, `core.autocrlf` is off, there is no `.gitattributes`,
+# and a number of files are consequently CRLF while their neighbours are LF.
+# The settings below are the convention going forward, not a description of every
+# file in the tree — see "Existing CRLF files" below before you re-save one.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# --------------------------------------------------------------- Dart / Flutter
+# `dart format` uses 2 spaces and 80 columns; the analyzer config is
+# app/analysis_options.yaml, which includes package:flutter_lints.
+[*.dart]
+indent_size = 2
+max_line_length = 80
+
+# The generated protocol tables. They were produced by a generator that wrote
+# its output in Python's default text mode, so on Windows they came out CRLF. Do
+# not let your editor rewrite them to LF: a later regeneration would put the CRLF
+# back, and the diff would be whitespace rather than content.
+[{app/lib/protocol/http_commands.dart,app/lib/protocol/http_params.dart}]
+end_of_line = unset
+
+# ------------------------------------------------------------------- Kotlin/JVM
+# Android platform code, Gradle Kotlin DSL and the JVM unit tests.
+[*.{kt,kts}]
+indent_size = 4
+
+[*.gradle]
+indent_size = 4
+
+# ------------------------------------------------------------------- data files
+[*.{json,jsonc}]
+indent_size = 2
+
+[*.{yaml,yml}]
+indent_size = 2
+
+# Android resources and manifests are conventionally 4 spaces.
+[*.xml]
+indent_size = 4
+
+# ------------------------------------------------------------------- Markdown
+# Markdown in this repository uses hard-wrapped prose with no trailing-space line
+# breaks, so trimming is safe. If you need a line break inside a paragraph, use an
+# explicit <br> rather than two trailing spaces.
+[*.md]
+trim_trailing_whitespace = true
+
+# --------------------------------------------------------------------- binary
+# Nothing here can be edited as text. These entries stop an over-eager editor from
+# "fixing" the final newline of a golden image or a captured datagram and
+# producing a diff that cannot be reviewed.
+[*.{png,jpg,jpeg,gif,ico,bin}]
+charset = unset
+end_of_line = unset
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# ------------------------------------------------------------------ licences
+[LICENSE]
+# Verbatim third-party licence text. Do not reflow, re-wrap or "tidy" it: the
+# Apache License permits verbatim copies only, and changing the document is not
+# allowed. The same applies to any licence text reproduced inside NOTICE.
+max_line_length = unset
+trim_trailing_whitespace = false
+
+# ==================================================================== notes
+#
+# Existing CRLF files
+# -------------------
+# These are CRLF in the working tree and in git, and predate this file. Re-saving
+# one with an editor honouring `end_of_line = lf` will produce a whole-file diff;
+# that is acceptable when you are genuinely editing the file, but do not reformat
+# them as a drive-by change. The list is not exhaustive:
+#
+#   app/lib/state/app_state.dart
+#   app/lib/sync/sync_engine.dart
+#   app/lib/transport/capture_guard.dart
+#   app/test/capture_quarantine_reset_test.dart
+#   app/test/shutter_burst_gate_test.dart
+#   app/tool/verify_sync.dart
+#   app/README.md                app/analysis_options.yaml
+#   app/android/app/build.gradle.kts
+#   app/android/build.gradle.kts
+#   app/android/settings.gradle.kts
+#   app/android/app/src/**/*.xml

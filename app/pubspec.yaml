@@ -1,0 +1,69 @@
+name: yi_m1_controller
+description: >-
+  Open-source controller for the YI M1 (C59Y1) mirrorless camera. Replaces the
+  abandoned official app and unlocks capabilities the firmware implements but the
+  official app never exposed.
+publish_to: "none"
+# The single source of truth for the shipped identity: Android's `versionName` and
+# `versionCode` are both derived from this line (`app/android/app/build.gradle.kts`
+# reads `flutter.versionName` / `flutter.versionCode`), so a tag, this file and an
+# installed build can be checked against each other.
+#
+# `0.2.0+2` is the first published version. The development repository's only tag is
+# `v0.2.0-hardware-round1`, a milestone marker rather than a release tag, and it
+# points at a build that called itself `0.1.0` (versionCode 1) because this line was
+# still `0.1.0+1` at the time. The build number therefore starts at 2: it must be
+# strictly greater than the code already installed on the test phone, or "which
+# build is on this device" becomes unanswerable again.
+version: 0.2.0+2
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Localization. `flutter_localizations` supplies the Material/Cupertino/Widgets
+  # delegates (so framework-supplied strings — the date picker, "Cancel" in a
+  # platform dialog, the semantics of a `Slider` — follow the chosen locale too),
+  # and `intl` is what `gen-l10n` compiles the ARB files against.
+  #
+  # `intl: any` rather than a caret range: `flutter_localizations` pins an exact
+  # `intl` version, and a range here would either fight that pin or silently
+  # downgrade the SDK's own choice the next time Flutter bumps it.
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # BLE transport. flutter_blue_plus is the actively maintained Nordic-style API
+  # and gives us the raw write-without-response the camera's pairing
+  # characteristic needs (see docs/PROTOCOL.md).
+  flutter_blue_plus: ^1.35.0
+
+  # Locating an app-private writable directory for the persisted pairing record.
+  # The camera stores only ONE pairing and pairing needs a physical confirmation
+  # on the camera body, so losing this file would cost the user a trip to the
+  # camera on every app launch.
+  marionette_flutter: ^0.6.0
+  path_provider: ^2.1.4
+
+  # Runtime permission requests. Joining the camera's access point needs location
+  # on releases below API 33 and NEARBY_WIFI_DEVICES from 33, and both must be
+  # *granted* rather than merely declared — a declared-but-denied permission makes
+  # the platform throw a SecurityException inside its own callback, which is
+  # invisible to the app and produced a bare "failed: SecurityException".
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+flutter:
+  uses-material-design: true
+
+  # Runs `gen-l10n` as part of every `flutter run` / `flutter build`, driven by
+  # `l10n.yaml`. Without this the generated `AppLocalizations` is only refreshed
+  # when someone remembers to run the command, and the failure mode is a build
+  # that compiles against yesterday's strings.
+  generate: true

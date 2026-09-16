@@ -1,0 +1,36 @@
+# Localization generation config — read by `flutter gen-l10n`, which `flutter run`
+# and `flutter build` invoke automatically because `pubspec.yaml` sets
+# `flutter: generate: true`.
+#
+# ## English is the template
+#
+# `app_en.arb` is the source of truth: every key is defined there first, and a
+# locale file that is missing one falls back to it. That is also why the parity
+# check (`test/l10n_arb_test.dart`) compares the *key sets* rather than trusting
+# the generator's report — a missing Chinese key is exactly what the fallback
+# would hide.
+#
+# ## Why the untranslated report is written to disk
+#
+# Without `untranslated-messages-file` the tool prints the list to a console that
+# nobody reads, and a key that exists in English and is *blank* in Chinese ships as
+# an empty label. With it, `test/l10n_arb_test.dart` can open the file and fail.
+# It is generated output, not a source file — see `.gitignore`.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+
+# Generated into `lib/l10n/gen/` so the hand-written ARB files and the generated
+# Dart never get confused for one another, and so `lib/l10n/**` is a directory a
+# reader can open without wondering which half is editable.
+output-dir: lib/l10n/gen
+
+# Non-nullable, so every call site is `AppLocalizations.of(context).key` rather
+# than `?.key` — a null-checkable lookup invites `?? 'fallback'` at the call site,
+# which is how a hardcoded English string comes back after being removed.
+nullable-getter: false
+
+# The report of keys present in the template but missing a translation. Written
+# here rather than printed because a check reads it.
+untranslated-messages-file: l10n_untranslated.json

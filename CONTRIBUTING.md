@@ -99,11 +99,15 @@ on, and do not claim a hardware result you did not get.
 - Building a release with `FAKE_CAMERA`, `DIRECT_CAMERA` or `MARIONETTE`
   defined, or bypassing the artefact assertions that are supposed to catch it.
   The build is supposed to refuse; if it does not, that is the bug.
-- Introducing `package:flutter` into `app/lib/sync/`, `app/lib/transport/` or
-  `app/lib/protocol/`. Those layers must stay Flutter-free so the 674 assertions
-  can run in a plain Dart VM in seconds. Implementations that need Flutter go in
-  `app/lib/platform/`. `app/lib/protocol/viewfinder_layout.dart` is deliberately
-  free of even `dart:ui`; keep it that way.
+- Breaking the plain-VM invariant: `tool/verify_transport.dart` and
+  `tool/verify_sync.dart` must keep compiling and running in a plain Dart VM, without
+  Flutter, so the 674 assertions finish in seconds. **That is the rule the tree actually
+  enforces**, and it is deliberately narrower than "these layers are Flutter-free":
+  `app/lib/protocol/` and `app/lib/sync/` are clean, but four files in `app/lib/transport/`
+  do import Flutter (`file_pairing_store.dart`, `flutter_ble_transport.dart`,
+  `screen_control.dart`, `wifi_joiner.dart`) — which is exactly why the two verifiers avoid
+  them. Implementations that need Flutter belong in `app/lib/platform/`, and
+  `app/lib/protocol/viewfinder_layout.dart` is deliberately free of even `dart:ui`.
 - Adding an interactive control without a `ValueKey<String>`. A control without a
   key cannot be located reliably — text changes and coordinates drift — which
   makes it unverifiable.

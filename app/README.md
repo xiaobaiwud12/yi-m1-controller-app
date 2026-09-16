@@ -35,7 +35,7 @@ signature explicitly with `--android-project-arg=allowDebugSigning=true`. The ro
 | Path | What it is |
 |---|---|
 | `lib/protocol/` | Wire formats, the 45-command table, parameter pools, coordinate mapping, layout maths. **No Flutter.** |
-| `lib/transport/` | BLE, HTTP, live view, album, Wi-Fi join, capture interlock. **No Flutter.** |
+| `lib/transport/` | BLE, HTTP, live view, album, Wi-Fi join, capture interlock. **Four files import Flutter; the pure-VM verifiers avoid them.** |
 | `lib/sync/` | Transfer queue, sync ledger, pause contract. **No Flutter.** |
 | `lib/platform/` | The implementations that do need Flutter: MediaStore, file sinks. |
 | `lib/state/` | `AppState`, the single source of truth. |

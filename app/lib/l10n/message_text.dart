@@ -4,7 +4,7 @@
 ///
 /// `AGENTS.md` §4.1 forbids `package:flutter` in `lib/protocol/`, `lib/transport/`
 /// and `lib/sync/`, and §4.2 forbids even `dart:ui` in `viewfinder_layout.dart`. Those
-/// layers must stay drivable in the plain Dart VM — that is why 674 assertions run in
+/// layers must stay drivable in the plain Dart VM — that is why 686 assertions run in
 /// seconds — so `AppLocalizations` (a widget-tree lookup) can never be called there.
 ///
 /// But their messages are user-visible, and several of them are the *only* place a
@@ -254,7 +254,6 @@ String syncStageText(AppLocalizations l, SyncStage stage) =>
       SyncStageCodes.stalled => l.stageStalled,
       SyncStageCodes.pausedNoCamera => l.stagePausedNoCamera,
       SyncStageCodes.pausedByUser => l.stagePausedByUser,
-      SyncStageCodes.pausedLowBattery => l.stagePausedLowBattery,
       SyncStageCodes.done => l.stageDone,
       _ => stage.label,
     };

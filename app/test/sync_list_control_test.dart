@@ -55,14 +55,45 @@ void main() {
         captureTime: DateTime.fromMillisecondsSinceEpoch(date * 1000),
       );
 
-  /// The album page, with real file I/O allowed to finish.
+  /// The album page, with real file I/O allowed to finish — **polled, not budgeted**.
   ///
   /// `runAsync` is not optional here: the page awaits the durable ledger before its
   /// first listing, that ledger is read from **real files**, and in a widget test's
   /// fake-async zone the read never completes — the page then sits on its spinner and
   /// every assertion below would fail looking like a missing control
   /// (`analysis/41` §7 item 9).
-  Future<void> pumpAlbum(WidgetTester tester, AppState app) async {
+  ///
+  /// ## Why this waits for a state instead of eight rounds of 40 ms
+  ///
+  /// It used to run a fixed `for (i = 0; i < 8; i++)` loop, and **that budget was what
+  /// the checks below rested on**. Measured, with the loop cut to four rounds or fewer
+  /// the page has not asked the camera for a listing at all — `GetFileList` never
+  /// reaches the injected client — and `app.sync.pendingCount` is 2 instead of 5: the
+  /// two shots this test queued itself, with none of the three the listing adds.
+  /// Reading the ledger and the queue is real file I/O gated inside `runAsync`, so on a
+  /// loaded machine eight rounds of 40 ms is a coin flip. That is this file's recorded
+  /// flake: *"expecting a five-item queue and finding two"* (`AGENTS.md` §8); the
+  /// fixture was not wrong about the queue, it was wrong about how long the launch path
+  /// takes.
+  ///
+  /// So it now waits for the **state the assertions need** and exits the moment it
+  /// arrives — `AGENTS.md` §5's rule (poll, exit early, never sleep a fixed time).
+  /// [commands] is the recorder the caller already hands `connectedTestAppState`; it is
+  /// a wait predicate from an independent source (the protocol spy), never an
+  /// assertion, so the counts below stay statements about the queue rather than about
+  /// the fixture.
+  ///
+  /// Measured on the round the request appears, the queue has already been updated
+  /// (2 → 5 in the same iteration), but the loop keeps polling until both halves hold
+  /// rather than trusting that ordering under load. Running out of rounds is a failure
+  /// with its own name, not a longer wait: a listing that never lands would otherwise
+  /// be reported as a wrong count, which reads like a queue bug.
+  Future<void> pumpAlbum(
+    WidgetTester tester,
+    AppState app, {
+    required List<String> commands,
+  }) async {
+    final queuedByTheTest = app.sync.pendingCount;
     await tester.binding.setSurfaceSize(const Size(1080, 2136));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(
@@ -71,11 +102,22 @@ void main() {
       theme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
       home: AlbumPage(app: app),
     ));
-    for (var i = 0; i < 8; i++) {
+    var settled = false;
+    for (var i = 0; i < 100; i++) {
+      settled = commands.contains('GetFileList') &&
+          app.sync.pendingCount > queuedByTheTest;
+      if (settled) break;
       await tester.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 40)));
-      await tester.pump(const Duration(milliseconds: 40));
+          () => Future<void>.delayed(const Duration(milliseconds: 10)));
+      await tester.pump(const Duration(milliseconds: 10));
     }
+    expect(settled, isTrue,
+        reason: 'the card was never listed, so nothing below is measured against the '
+            'state it describes: the page asks only after `AppState._load()` has read '
+            'the ledger and the queue from disk, and that is real file I/O, which '
+            'progresses only inside `runAsync`. '
+            'listed=${commands.contains('GetFileList')} '
+            'pending=${app.sync.pendingCount} (was $queuedByTheTest before the pump)');
   }
 
   testWidgets('the media fixtures really are the formats their consumers expect',
@@ -99,7 +141,7 @@ void main() {
     // the two named below. Stating that here is the point: a check that assumed two
     // would be reading a number it had not accounted for.
     app.sync.enqueueSelected([shot('YI000501'), shot('YI000502', date: 1700000100)]);
-    await pumpAlbum(tester, app);
+    await pumpAlbum(tester, app, commands: commands);
 
     // Preconditions, asserted rather than assumed: an empty queue would make every
     // check below pass by having nothing to remove.
@@ -169,7 +211,7 @@ void main() {
       shot('YI000512', date: 1700000100),
       shot('YI000513', date: 1700000200),
     ]);
-    await pumpAlbum(tester, app);
+    await pumpAlbum(tester, app, commands: commands);
 
     await tester.tap(find.byKey(const ValueKey<String>('btn-sync-list')));
     await tester.pump();
@@ -192,9 +234,10 @@ void main() {
   });
 
   testWidgets('the list starts closed and survives progress ticks', (tester) async {
-    final app = connectedTestAppState();
+    final commands = <String>[];
+    final app = connectedTestAppState(onCommand: commands.add);
     addTearDown(app.dispose);
-    await pumpAlbum(tester, app);
+    await pumpAlbum(tester, app, commands: commands);
     // The injected listing queues three photos in the default automatic mode.
     expect(app.sync.pendingCount, 3, reason: 'precondition: the listing is queued');
 
@@ -228,7 +271,7 @@ void main() {
     final commands = <String>[];
     final app = connectedTestAppState(onCommand: commands.add);
     addTearDown(app.dispose);
-    await pumpAlbum(tester, app);
+    await pumpAlbum(tester, app, commands: commands);
 
     expect(app.sync.pendingCount, 3,
         reason: 'precondition: the listed photos are queued for a preview pass');

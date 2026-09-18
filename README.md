@@ -12,16 +12,21 @@ syncs photos off the SD card into the phone's system gallery.
 
 This repository contains the application. Nothing else.
 
-> **Status: first public release, `0.2.0+2`.** No APK has been published yet; the
-> first one will be attached to a GitHub Release and signed with the maintainer's own
-> key (see `RELEASING.md`). The app has been verified on exactly one camera unit by
+> **Status: `0.2.1+3`.** `0.2.0+2` was the first public release: its APK is attached to
+> a GitHub Release and signed with the maintainer's own key (see `RELEASING.md`). The
+> version in `app/pubspec.yaml` is the artefact's identity, and `CHANGELOG.md` records
+> what changed in each one. The app has been verified on exactly one camera unit by
 > one person, on one phone. `CHANGELOG.md` and the sections below separate what has
 > evidence from what does not.
 >
 > The app ships **English and Simplified Chinese**. It follows the phone's language by
 > default; the picker is at **Settings → Sync → System and diagnostics → Language**
-> (`setting-locale`), it takes effect immediately, and it is remembered. One line the
-> user reads is English in both locales — see "Not verified, and not claimed" below.
+> (`setting-locale`), it takes effect immediately, and it is remembered. Two strings are
+> outside that picker by construction: the name under the launcher icon follows the
+> **system** language, because the launcher reads it from the APK's resources through
+> `PackageManager` before any Dart code runs (see "The launcher icon and the name under
+> it" below). One line the user reads is English in both locales — see "Not verified,
+> and not claimed" below.
 > It states its own licences in-app: the info button in the app bar (`btn-licences`)
 > opens the licence page, which lists every bundled component and says plainly that
 > this is not the manufacturer's app.
@@ -193,8 +198,8 @@ recorded, **[H]** means it is judgement or reasoning rather than an observation.
 
 ### Verified on a desk
 
-- **[V]** 674 pure-logic assertions across the protocol, transport and sync (450 in
-  the transport suite, 224 in the sync one) plus 29 conformance checks, runnable with
+- **[V]** 686 pure-logic assertions across the protocol, transport and sync (456 in
+  the transport suite, 230 in the sync one) plus 29 conformance checks, runnable with
   plain `dart` and no Flutter engine:
 
   ```powershell
@@ -233,6 +238,35 @@ recorded, **[H]** means it is judgement or reasoning rather than an observation.
   **packaged** manifest, that no test instrumentation reached the dex or
   `libapp.so`, that the build stamp is inside the shipped `libapp.so`, and that the
   artifact is not signed with the public Android debug key.
+
+### The launcher icon and the name under it
+
+- **[V]** The app has its own icon: a lens ring with a white glass at its centre and
+  two broadcast waves opening to the upper right — a camera you command over a radio
+  link. It is **original work by this project under this project's licence**, and
+  contains no vendor artwork, wordmark or trade dress; `NOTICE` §6 records what it is
+  and, just as deliberately, what it is not. It is a real adaptive icon rather than one
+  bitmap: `mipmap-anydpi-v26/` carries the foreground and background layers,
+  `mipmap-anydpi-v33/` adds a `<monochrome>` layer so Android 13+ can recolour the icon
+  to the user's wallpaper palette, and `mipmap-{m,h,xh,xxh,xxx}dpi/` carry the ten
+  legacy PNGs for API 24–25. Every artefact is derived from one set of constants.
+- **[V]** The name under that icon is a string resource with an English and a Chinese
+  value (`app/android/app/src/main/res/values/strings.xml` and `values-zh/`), not a
+  literal, so a Chinese phone shows the Chinese name.
+- **Which language it follows is a platform property, not a setting in this app.** The
+  launcher resolves `android:label` against the **system** locale through
+  `PackageManager`, before Dart runs, so the in-app language picker cannot influence
+  it: a phone set to English shows the English name even when this app is set to
+  Chinese, and the reverse. That is stated here rather than glossed because it is the
+  one visible string the in-app localisation can never reach — `app/lib/l10n/app_*.arb`
+  only supplies text the Dart code renders.
+- **[V]** The icon has a check that can fail: `dart tool/verify_icon.dart`, 94
+  assertions. It decodes the ten PNGs with a real decoder (zlib and all five scanline
+  filters) rather than reading their headers, asserts they are neither blank nor
+  single-coloured nor duplicates of one another, requires the round ones to be genuinely
+  round, and re-derives the safe-zone arithmetic by parsing the written vector rather
+  than reusing the generator's numbers. It reads `res/` and the manifest, so it runs
+  here; it is not part of `dart tool/verify.dart`.
 
 ### Hardware facts that constrain what the app can do
 
@@ -393,7 +427,7 @@ dart tool/verify.dart
 ```
 
 That is the whole verification story for this repository: the analyzer, the three
-pure-Dart logic suites (674 assertions between them, plus 29 conformance checks, and they must keep compiling
+pure-Dart logic suites (686 assertions between them, plus 29 conformance checks, and they must keep compiling
 *without* Flutter — that is an architectural invariant, not a preference), the widget
 tests, the leak scan over this repository, and the self-tests of the two checks that
 belong to the release rather than to the app. Add `--with-android` to run the Kotlin
@@ -487,7 +521,7 @@ caught it, and that check stays. See `CONTRIBUTING.md`.
 | `app/lib/state/` | `AppState`, the single source of truth. |
 | `app/lib/ui/` | Pages and widgets. Interactive controls carry `ValueKey<String>` names (`btn-*`, `toggle-*`, `banner-*`) so they can be located remotely. |
 | `app/lib/l10n/` | Translation sources (`app_en.arb`, `app_zh.arb`) and the generated `AppLocalizations`. |
-| `app/tool/verify*.dart` | 674 pure-VM assertions, plus `verify.dart` (the entry point), `verify_release.dart` (the leak scan) and `verify_apk.dart` (the artifact check). All runnable with plain `dart`, no Flutter engine. |
+| `app/tool/verify*.dart` | 686 pure-VM assertions, plus `verify.dart` (the entry point), `verify_release.dart` (the leak scan), `verify_apk.dart` (the artifact check) and `verify_icon.dart` (the launcher icon). All runnable with plain `dart`, no Flutter engine. |
 | `app/test/` | Widget tests, overflow and text-scale tests, fakes. |
 | `app/android/` | Kotlin: `MediaStorePublish`, `WifiJoinDiagnosis`, `MediaKind`, plus JVM unit tests. |
 | `app/testdata/liveview/` | 40 real UDP datagrams captured from the camera. `tool/verify_transport.dart` reads them and the framing checks cannot run without them. |
@@ -497,7 +531,7 @@ The three Flutter-free layers are a hard constraint, not a style preference:
 `dart tool/verify_transport.dart` and `dart tool/verify_sync.dart` must keep
 compiling — and running — in a plain Dart VM with no Flutter engine, and neither
 imports the four files in `app/lib/transport/` that do import Flutter. That is what
-makes 674 assertions finish in seconds. `app/lib/protocol/` and `app/lib/sync/`
+makes 686 assertions finish in seconds. `app/lib/protocol/` and `app/lib/sync/`
 carry no `package:flutter` import at all.
 
 ---
@@ -509,8 +543,14 @@ authentication. Three rules exist because breaking them cost real hardware time.
 They are enforced in code, not merely documented:
 
 1. **Queueing a download does not start a transfer.** The sync bar starts it.
-2. **An already-synced photo is never fetched from the camera again.** The viewer
-   reads the phone's own copy; an explicit request is required to fetch.
+2. **A photo that is already on the phone is never fetched from the camera again.**
+   The viewer reads the phone's own copy, so a synced photo opens with the camera off.
+   An **unsynced** photo may load itself **one** `MidThumb` preview when it is opened —
+   that rule was narrowed deliberately, and the three conditions are: only one camera
+   request is ever in flight (one gate, shared with the grid and the sync engine, and
+   the open photo takes priority), a request that is still queued when the page is
+   swiped away is never sent at all, and a failure is shown rather than left spinning.
+   Fetching the full-size original is still an explicit button press.
 3. **Pause/resume of the live-view stream is off by default** because it was
    never verified on real hardware.
 
@@ -532,5 +572,6 @@ password.
 This project is an independent third-party controller. It is not affiliated
 with, endorsed by or supported by the manufacturer of the YI M1. "YI", "Xiaoyi"
 and "YI M1" are their owners' trademarks and are used here only to say what the
-software is for. No vendor artwork, logo or asset is bundled — the launcher icon
-is the stock Flutter template icon.
+software is for. No vendor artwork, logo or asset is bundled — the launcher icon is
+this project's own work (`NOTICE` §6), drawn from geometry defined for it and saved
+in this repository.

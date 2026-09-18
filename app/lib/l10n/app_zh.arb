@@ -289,6 +289,9 @@
   "viewerFetchPreview": "从相机取一张预览图",
   "viewerCameraNotConnected": "相机未连接",
   "viewerLocalCopy": "正在显示本机保存的副本。",
+  "viewerLoadingPreview": "正在从相机读取预览图……",
+  "viewerFetchFullSize": "从相机取原图",
+  "viewerPosition": "第 {index} / {total} 张",
   "viewerLoadingFromCamera": "正在从相机读取 —— {size}",
   "@viewerLoadingFromCamera": {
     "placeholders": {
@@ -391,7 +394,6 @@
   "liveVideoTab": "视频",
   "liveAlbumTab": "相册",
   "liveEvReference": "EV 参考",
-  "liveRetry": "重试",
   "liveConnectToCamera": "连接相机",
   "joinOutcomeGranted": "已加入。正在寻找相机...",
   "joinOutcomeSaved": "Android 已保存该网络。请允许那条通知，或者在 Wi-Fi 里选择它。",
@@ -432,7 +434,6 @@
   "diagGranted": "已授予",
   "diagNotGranted": "未授予",
   "diagUnknown": "未知",
-  "diagUnknownValue": "？",
   "readoutMode": "模式",
   "readoutShutter": "快门",
   "readoutAperture": "光圈",
@@ -840,7 +841,6 @@
   "stageStalled": "卡住了，正在重试",
   "stagePausedNoCamera": "已暂停，相机不在了",
   "stagePausedByUser": "被你暂停",
-  "stagePausedLowBattery": "已暂停，相机电量低",
   "stageDone": "已保存",
   "syncNoteCameraAway": "相机不在了。相机回来后同步会自动继续。",
   "syncNotePausedByUser": "已被你暂停。",
@@ -999,14 +999,6 @@
   "localeSystem": "跟随手机",
   "localeEnglish": "English",
   "localeChinese": "简体中文",
-  "localeSelected": "当前：{name}",
-  "@localeSelected": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "paramAuto": "自动",
   "paramManual": "手动",
   "paramMulti": "多重测光",

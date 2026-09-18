@@ -252,7 +252,7 @@ AssetId assetIdOf(AlbumFile f) => AssetId(
 /// decision is taken. It exists because that decision was documented and never
 /// implemented: `transport/album.dart` says RAW transfer ships off, while every queue
 /// path enqueued `AssetGroup.assets` — `[primary, raw!]` — so one tap on a `rawJpeg`
-/// shot queued the ~32 MB `.DNG` beside the ~5 MB JPEG the user was thinking about
+/// shot queued the ~32 MB `.DNG` beside the measured 4.9 MB JPEG the user was thinking about
 /// (`analysis/79`, finding #2). A single function means the next call site cannot
 /// forget.
 ///

@@ -15,7 +15,7 @@ publish_to: "none"
 # still `0.1.0+1` at the time. The build number therefore starts at 2: it must be
 # strictly greater than the code already installed on the test phone, or "which
 # build is on this device" becomes unanswerable again.
-version: 0.2.0+2
+version: 0.2.1+3
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The DEFAULT locale's strings. English, because `lib/l10n/app_en.arb` is the
+    template every other locale falls back to.
+
+    ## Why this file exists at all, when the app is already localized
+
+    Flutter's own localisation (`lib/l10n/app_*.arb`) only reaches text the Dart
+    code renders. The **launcher label** is not one of those: it is read by the
+    launcher process, from this APK's resources, through
+    `PackageManager.getApplicationLabel()`, which resolves `android:label`
+    against the **system** locale, before any Dart runs and regardless of the
+    language chosen inside the app.
+
+    So a build with `android:label="M1 Controller"` puts English under the icon
+    on a Chinese phone, permanently, and no amount of ARB work changes it. That
+    was `analysis/79` finding #16: the ARB already shipped `M1 控制器` while the
+    one string a user sees while the app is closed stayed English.
+
+    ## Only the label lives here
+
+    Everything else in the UI is Flutter's business and is generated from the
+    ARB files. Duplicating any other string here would create two sources of
+    truth for it, and the copy in this file is the one that would silently go
+    stale; nothing in `verify` compares these files with the ARB.
+
+    The value below is therefore not invented: it is exactly `appTitle` from
+    `lib/l10n/app_en.arb`, and `values-zh/strings.xml` is exactly `appTitle` from
+    `lib/l10n/app_zh.arb`. `test/l10n_arb_test.dart` owns ARB parity; the
+    Android side is checked by `tools/audit_app_capabilities.py`, which reads the
+    merged manifest and fails if `android:label` stops being a string resource.
+
+    ## XML forbids a double hyphen inside a comment
+
+    These comments use `;` and `:` where a dash would be natural. That is not a
+    style choice: XML's comment production excludes that two-character sequence.
+    Gradle's resource merger enforces it, and so does `aapt2 compile` once the
+    file is a `values/` resource rather than a bare document. The first version
+    of this file used it twice, once as punctuation and once inside the name of
+    an aapt2 command-line flag, and failed the release build at
+    `:app:packageReleaseResources` with a SAXParseException. This paragraph
+    therefore spells the sequence out in words rather than showing it.
+-->
+<resources>
+    <string name="app_name">M1 Controller</string>
+</resources>

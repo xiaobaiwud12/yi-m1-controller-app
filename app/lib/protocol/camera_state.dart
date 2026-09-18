@@ -245,8 +245,62 @@ class CameraState {
     return out;
   }
 
+  /// The state field holding the current value of [command], or null.
+  ///
+  /// The value the UI should draw beside a control: for `RCISOSet` this is
+  /// `raw['ISOSetting']`, which is the same `isoSetting` accessor a widget would use.
+  String? valueForParamCommand(String command) {
+    final key = paramStateKeys[command];
+    return key == null ? null : raw[key];
+  }
+
   @override
   String toString() => 'CameraState(${raw.length} fields, '
       'mode=$exposureMode iso=$isoSetting $shutterSpeed f/$fNumber '
       'battery=$batteryLevel%)';
 }
+
+/// Where a parameter command's **result** appears in the live-view state JSON.
+///
+/// ## Why this table has to exist
+///
+/// There are two wire vocabularies for the same thirteen parameters and they are **not
+/// the same strings**: the outbound `*Set` request carries a key this app chooses
+/// (`AppState.paramCommands`), and the inbound state block carries the firmware's own
+/// field name. For twelve of the thirteen they coincide, which is exactly what makes the
+/// thirteenth dangerous:
+///
+/// | command | key sent | field read back |
+/// |---|---|---|
+/// | `RCISOSet` | `ISO` | **`ISOSetting`** |
+/// | the other twelve | e.g. `WB`, `EV`, `Fnumber` | the same string |
+///
+/// `analysis/79` #8: nothing pinned the two, so the pair lived in two files
+/// (`AppState.paramCommands` and a `switch` in `live_view_page.dart`) with no check
+/// relating them. A typo on either side is silent in the worst way — the request is still
+/// sent and the camera still answers `200`, and only the *displayed* value goes blank,
+/// which reads as "the camera refused" rather than "this app looks in the wrong field".
+///
+/// So the read side is one declared table, keyed by the same command strings, and
+/// `verify_transport.dart` asserts three things about it against the **recorded** block
+/// from the hardware (not against this file): the two tables have the same keys, every
+/// field name here occurs in the real block, and two commands never claim one field.
+///
+/// Twelve of these are the firmware's own names, taken from the JSON in the library
+/// comment above and confirmed against `testdata/params_*.bin`. `ISOSetting` is the one
+/// worth reading twice.
+const Map<String, String> paramStateKeys = <String, String>{
+  'RCSwitchDialMode': 'ExposureMode',
+  'RCMeteringModeSet': 'MeteringMode',
+  'RCFocusModeSet': 'FocusMode',
+  'RCImageQualitySet': 'ImageQuality',
+  'RCImageAspect': 'ImageAspect',
+  'RCFileFormatSet': 'FileFormat',
+  'RCDriveModeSet': 'DriveMode',
+  'RCFNSet': 'Fnumber',
+  'RCShutterSpeedSet': 'ShutterSpeed',
+  'RCEVSet': 'EV',
+  'RCISOSet': 'ISOSetting',
+  'RCWBSet': 'WB',
+  'RCChooseColorMode': 'ColorMode',
+};

@@ -12,6 +12,7 @@ import '../../sync/sync_engine.dart';
 import '../../sync/sync_ledger.dart';
 import '../../transport/album.dart';
 import '../../transport/album_delete.dart';
+import '../../transport/camera_request_gate.dart';
 import '../../transport/http_transport.dart';
 import '../haptics.dart';
 
@@ -1309,7 +1310,15 @@ class _AlbumPageState extends State<AlbumPage> {
           _toggleSelect(g);
         } else {
           Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => AssetViewerPage(app: app, group: g),
+            // The whole listing, not just this shot: the viewer is a `PageView`, so
+            // opening a photo has to hand it the photos either side or a flick has
+            // nowhere to go. `_groups` is already newest-first (`groupAssets`), which is
+            // the order the swipe should follow.
+            builder: (_) => AssetViewerPage(
+              app: app,
+              groups: List<AssetGroup>.unmodifiable(_groups),
+              initialIndex: _groups.indexOf(g),
+            ),
           ));
         }
       },
@@ -2473,127 +2482,123 @@ class _Message extends StatelessWidget {
 /// loads behind it.
 class AssetViewerPage extends StatefulWidget {
   final AppState app;
-  final AssetGroup group;
-  const AssetViewerPage({super.key, required this.app, required this.group});
+
+  /// Every shot the viewer may show, newest first — the same order as the grid.
+  ///
+  /// A list rather than one shot, because the viewer is a `PageView`: a flick goes to
+  /// the next photo, which is what any gallery does and what the counter in the app bar
+  /// is for.
+  final List<AssetGroup> groups;
+
+  /// Which of [groups] to open on.
+  final int initialIndex;
+
+  const AssetViewerPage({
+    super.key,
+    required this.app,
+    required this.groups,
+    this.initialIndex = 0,
+  });
 
   @override
   State<AssetViewerPage> createState() => _AssetViewerPageState();
 }
 
-class _AssetViewerPageState extends State<AssetViewerPage> {
-  Uint8List? _image;
-  AssetQuality _shown = AssetQuality.none;
-  bool _upgrading = false;
-  String? _error;
-  int _bytes = 0;
+/// The shot currently on screen, for anything above the viewer that has to name it.
+///
+/// Marionette presses buttons by `ValueKey` and a route pop is a tap on a *position*;
+/// a check that has to click an overlay control needs to know where the page is first.
+/// The index travels as a widget rather than as a global so it costs nothing and is
+/// scoped to the frame that drew it — the same reasoning as the grid's per-tile keys
+/// (`AGENTS.md` §5, and `analysis/70`'s note about tiles having no key at all).
+class ViewerPageIndex extends InheritedWidget {
+  final int index;
 
-  /// The `content://` URI this page is displaying, when it came from the phone.
+  const ViewerPageIndex({required this.index, required super.child, super.key});
+
+  static int? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ViewerPageIndex>()?.index;
+
+  @override
+  bool updateShouldNotify(ViewerPageIndex old) => old.index != index;
+}
+
+class _AssetViewerPageState extends State<AssetViewerPage> {
+  late final PageController _pages;
+  late int _index;
+
+  /// Bumped every time the page in view changes.
   ///
-  /// Kept so the view can say the photo is the local copy rather than implying it
-  /// was just fetched from the camera.
-  String? _localUri;
+  /// ## What this is for, and what it is not
+  ///
+  /// A photo's preview request is allowed to be **dropped** when the user has moved on
+  /// — see [CameraRequestTicket.wanted] for exactly what dropping can and cannot mean
+  /// against a single-threaded server. The generation counter is how a pending load
+  /// finds out: it captured a number, and a number that has moved on means nobody is
+  /// waiting for those bytes any more.
+  int _generation = 0;
+
+  /// Whether the shot on screen is zoomed in.
+  ///
+  /// Read here rather than on each photo because it is the **PageView's** physics that
+  /// depend on it: while a photo is magnified a horizontal drag has to pan it, and it
+  /// cannot do both that and turn the page.
+  bool _zoomed = false;
 
   AppState get app => widget.app;
-  AssetGroup get group => widget.group;
+
+  AssetGroup get group => widget.groups[_currentIndex];
+
+  /// The index to draw, clamped — a caller that named a shot it no longer holds gets
+  /// the first one rather than an exception inside `build`.
+  int get _currentIndex =>
+      widget.groups.isEmpty ? 0 : _index.clamp(0, widget.groups.length - 1);
 
   @override
   void initState() {
     super.initState();
-    unawaited(_loadFromPhoneFirst());
+    _index = widget.initialIndex;
+    _pages = PageController(initialPage: _index);
   }
 
-  /// Show the phone's own copy when there is one, and only then consider the
-  /// camera.
-  ///
-  /// ## Why this order is the whole fix
-  ///
-  /// This page used to fetch `MidThumb` and then `Original` over HTTP
-  /// unconditionally. For a photo already synced that is not just wasted work:
-  /// it drives `GetFile` into a single-threaded camera server that is busy
-  /// streaming live view, which is the reported "opening a photo freezes the
-  /// camera and it reboots". A synced photo is on the phone, so it must be read
-  /// from the phone — with the camera able to be switched off entirely.
-  ///
-  /// The camera is still reachable, but only through [fetchFromCamera], which
-  /// the user has to ask for.
-  Future<void> _loadFromPhoneFirst() async {
-    final localUri = app.ledger.localIdOf(group.id);
-    if (localUri != null && localUri.isNotEmpty) {
-      final bytes = await MediaStoreBridge.read(localUri);
-      if (!mounted) return;
-      if (bytes != null && bytes.isNotEmpty) {
-        setState(() {
-          _image = bytes;
-          _shown = app.ledger.qualityOf(group.id);
-          _bytes = bytes.length;
-          _localUri = localUri;
-        });
-        return;
-      }
-      // The ledger says it is here and the bytes are not: the user deleted it
-      // from the gallery. Say so rather than silently re-downloading.
-      if (mounted) {
-        final l = l10nOf(context);
-        setState(() => _error = l.albumSavedCopyGone);
-      }
-      return;
-    }
-
-    // Nothing local. Do not reach for the camera on open; wait to be asked.
-    if (mounted) {
-      setState(() => _error = null);
-    }
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
   }
 
-  /// Fetch a rendition from the camera, on an explicit request.
-  Future<void> fetchFromCamera({bool original = false}) async {
-    final album = app.album;
-    if (album == null) {
-      setState(() => _error = l10nOf(context).albumNotConnectedShort);
-      return;
-    }
+  void _onPageChanged(int index) {
     setState(() {
-      _error = null;
-      _upgrading = true;
-      _bytes = 0;
+      _index = index;
+      _generation++;
+      // A page that was magnified keeps its own zoom — the controller is the photo's,
+      // not this page's — but the *next* photo must start swipeable.
+      _zoomed = false;
     });
-
-    final resolution = original ? FileResolution.original : FileResolution.midThumb;
-    try {
-      final bytes = await album.download(
-        group.primary,
-        resolution: resolution,
-        onProgress: (n) {
-          if (mounted) setState(() => _bytes = n);
-        },
-      );
-      if (!mounted) return;
-      setState(() {
-        _image = bytes;
-        _shown = original ? AssetQuality.original : AssetQuality.preview;
-        _upgrading = false;
-        _bytes = bytes.length;
-      });
-    } on Object catch (e) {
-      if (!mounted) return;
-      final l = l10nOf(context);
-      setState(() {
-        _upgrading = false;
-        _error = l.albumLoadFailed('$e');
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l = l10nOf(context);
+    final g = group;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: Text(group.primary.fileName, style: const TextStyle(fontSize: 15)),
+        title: Text(g.primary.fileName, style: const TextStyle(fontSize: 15)),
         actions: [
+          if (widget.groups.length > 1)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Center(
+                child: Text(
+                  l.viewerPosition(_currentIndex + 1, widget.groups.length),
+                  key: const ValueKey<String>('viewer-position'),
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ),
+            ),
           IconButton(
             // Keyed like every other control a check has to press (`AGENTS.md` §5):
             // Marionette and `flutter_test` otherwise have to locate it by its
@@ -2607,7 +2612,7 @@ class _AssetViewerPageState extends State<AssetViewerPage> {
               // along only when the user's switch says so (`AppState.queuePlan`), and
               // the two used to disagree — the documentation said the RAW was opt-in
               // while this button queued it every time.
-              app.sync.enqueueSelected(plannedQueue([group], app.queuePlan));
+              app.sync.enqueueSelected(plannedQueue([g], app.queuePlan));
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text(l.viewerQueued),
                 duration: const Duration(seconds: 2),
@@ -2617,102 +2622,494 @@ class _AssetViewerPageState extends State<AssetViewerPage> {
           ),
         ],
       ),
-      body: Column(
+      // ## The containment fix: the viewer IS the body, and the chrome floats over it
+      //
+      // This used to be `Column > Expanded > Center > InteractiveViewer`. `Center` sizes
+      // itself to its **child**, and `InteractiveViewer` sizes its viewport to what it is
+      // given — so the clip rect, the pan boundary and every drawn pixel were bounded by
+      // the photo's own intrinsic size. That is the report, exactly: *"the zoomed viewer
+      // cannot fill the screen — it is constrained to the area the un-zoomed photo
+      // occupied."* Nothing was wrong with `maxScale`; the box was wrong.
+      //
+      // A `Stack` with `Positioned.fill` gives the viewer the whole body, and the badges
+      // sit **on top of** it rather than above it, so a zoomed photo has the full screen
+      // to pan in.
+      body: Stack(
         children: [
-          Expanded(
-            child: Center(
-              child: _image == null
-                  ? (_error != null
-                      ? Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text(_error!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: Colors.white70, height: 1.4)),
-                        )
-                      // No spinner: nothing is being fetched on open any more, so
-                      // an indefinite spinner would claim work that is not
-                      // happening. The panel below offers the camera explicitly.
-                      : const SizedBox.shrink())
-                  : InteractiveViewer(
-                      maxScale: 6,
-                      child: Image.memory(_image!,
-                          gaplessPlayback: true,
-                          // The same guard as the grid: honours the "a bad frame is
-                          // not a dead app" rule for the full-size view too.
-                          errorBuilder: (context, error, stack) => Center(
-                            child: Text(
-                              l.viewerUndecodable,
-                              style: const TextStyle(
-                                  color: Colors.white70, fontSize: 12.5),
-                            ),
-                          )),
-                    ),
+          Positioned.fill(
+            child: ViewerPageIndex(
+              index: _currentIndex,
+              child: PageView.builder(
+                key: const ValueKey<String>('viewer-pages'),
+                controller: _pages,
+                // While a photo is magnified, a horizontal drag is a pan. The
+                // alternative is what the report describes from the other side: every
+                // attempt to look at the edge of a photo turns the page instead.
+                physics: _zoomed
+                    ? const NeverScrollableScrollPhysics()
+                    : const PageScrollPhysics(),
+                onPageChanged: _onPageChanged,
+                itemCount: widget.groups.length,
+                itemBuilder: (context, i) {
+                  final shot = widget.groups[i];
+                  return IndexedStack(
+                    // ## Why every page is wrapped in an `IndexedStack`, with a key
+                    //
+                    // This is not decoration — it is the fix for a real state-loss bug
+                    // found while writing the checks. `PageView` keeps its neighbours
+                    // built, and without a stable key per **page index** the element for
+                    // the page being scrolled to does not line up with the element that
+                    // was there before. Flutter then builds a fresh element, which
+                    // destroys and recreates that page's `State` — and a recreated state
+                    // has `_autoTried == false`, so a photo the user had already been
+                    // shown asks the camera for its preview **a second time**.
+                    //
+                    // A `PageView`-shaped widget cannot be relied on to give the same
+                    // answer, so the key pins it: a page index is the same page for the
+                    // life of this route.
+                    key: ValueKey<String>('viewer-page-$i'),
+                    index: 0,
+                    children: [
+                      _ViewerPhoto(
+                        key: ValueKey<String>('viewer-photo-${shot.id.key}'),
+                        app: app,
+                        group: shot,
+                        isCurrent: i == _currentIndex,
+                        generation: _generation,
+                        onZoomChanged: (z) {
+                          if (z == _zoomed || !mounted) return;
+                          setState(() => _zoomed = z);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
-          if (_image == null && !_upgrading && _error == null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                children: [
-                  Text(
-                    l.viewerNotOnPhone,
-                    style:
-                        const TextStyle(color: Colors.white70, fontSize: 12.5),
+        ],
+      ),
+    );
+  }
+}
+
+/// One photo in the viewer.
+///
+/// ## Why it is a widget of its own rather than state on the page
+///
+/// The viewer is a `PageView`, so "the photo on screen" is a *page*, and everything
+/// about showing one — the local read, the camera request, the zoom, the pan, the
+/// quality badge — belongs to that page rather than to the route. Keeping it on the
+/// page would mean one set of fields being reset on every swipe, which is how a
+/// previous shot's bytes end up labelled as the next one's.
+///
+/// ## The load, and the three rules it obeys
+///
+/// `analysis/39` and `AGENTS.md` §4.6 are the constraints, and this round added a
+/// fourth requirement of its own (the maintainer asked for the preview to load when a
+/// photo opens). In order:
+///
+/// 1. **The phone first, always.** A `content://` URI in the ledger means the shot is
+///    already here, so it is read from the phone and the camera is not touched at all.
+///    Not even for a thumbnail: a photo the user already owns must be viewable with the
+///    camera switched off. This is the rule that was paid for with a wedged camera, and
+///    the automatic preview does not weaken it — a sync happens precisely so the viewer
+///    stops talking to the camera.
+/// 2. **A ledger entry whose bytes are gone is reported, not re-fetched.** The user
+///    deleted it from the gallery; silently re-downloading would hide that.
+/// 3. **One request, at one rendition, only for the photo on screen.** `MidThumb` is
+///    the measured middle size (`analysis/61` §1: 196,495 B against the original's
+///    5,565,238 B), so the picture is on screen in well under a second on this link.
+///    `Original` is never automatic — it is 4.9 MB for a JPEG and 31.9 MB for a RAW,
+///    and the app bar's download button is how the user asks for the real file.
+///    **No fallback chain on the automatic path**: `analysis/70` §15 shows why a chain
+///    is right for the grid and wrong here — the grid's chain starts at the *cheapest*
+///    rendition, so a `204` there is cheap to step past, while a chain from `MidThumb`
+///    would send a second request to a single-threaded camera for a rendition this page
+///    does not need. A failure here is shown, with the explicit button beside it.
+/// 4. **Dropped when the user moves on.** A request still queued when the page changes
+///    is never sent (see [CameraRequestTicket.wanted]); one already on the wire is
+///    allowed to finish and its bytes are discarded.
+///
+/// ## And what it costs
+///
+/// One `GetFile` at `MidThumb` per photo opened: **196,495 B measured** on the real
+/// body, against the live view's ~17.5 KB/frame at ~30 fps — about **0.5 MB/s** of
+/// sustained UDP (`analysis/ce-app-competitive-spec.md` §5.3). So one preview is on the
+/// order of **0.4 s** of the radio at the streaming rate, which is why it is worth
+/// serialising and not worth doing speculatively.
+class _ViewerPhoto extends StatefulWidget {
+  const _ViewerPhoto({
+    super.key,
+    required this.app,
+    required this.group,
+    required this.isCurrent,
+    required this.generation,
+    required this.onZoomChanged,
+  });
+
+  final AppState app;
+  final AssetGroup group;
+
+  /// Whether this page is the one being shown.
+  ///
+  /// The `PageView` builds its neighbours too, so this is what keeps "only the photo on
+  /// screen" true: a neighbour that is merely being kept alive does not ask the camera
+  /// for anything.
+  final bool isCurrent;
+
+  /// The page-change counter this photo's pending requests were started under.
+  final int generation;
+
+  /// Told when this photo's zoom crosses back and forth over 1x, because the page's
+  /// swipe physics depend on it.
+  final ValueChanged<bool> onZoomChanged;
+
+  @override
+  State<_ViewerPhoto> createState() => _ViewerPhotoState();
+}
+
+class _ViewerPhotoState extends State<_ViewerPhoto> {
+  Uint8List? _image;
+  AssetQuality _shown = AssetQuality.none;
+  bool _loading = false;
+  bool _upgrading = false;
+  String? _error;
+  int _bytes = 0;
+
+  /// The `content://` URI being displayed, when the bytes came from the phone.
+  String? _localUri;
+
+  /// Whether the automatic preview has already been tried for this photo.
+  ///
+  /// One shot per photo, like the grid's `_thumbAsked`: this camera has no watchdog and
+  /// the page must not re-ask on every rebuild. Cleared when the load **fails**, so a
+  /// transient failure leaves a way forward rather than a dead end.
+  bool _autoTried = false;
+
+  /// The zoom, owned here so that a page can be magnified and then swiped away from
+  /// without the next photo inheriting the matrix.
+  final TransformationController _zoom = TransformationController();
+
+  /// What a double tap zooms to.
+  ///
+  /// Sized from the measurement rather than picked: on a portrait phone the fitted
+  /// picture is limited by the screen's **width**, so covering the viewport needs
+  /// `viewportHeight / fittedHeight` ≈ 2.5x for a 4:3 photo. 3 is that with margin, and
+  /// stays inside `maxScale` so the clamp is not what makes the assertion true.
+  static const double _doubleTapScale = 3.0;
+
+  /// The largest scale the viewer offers.
+  static const double _maxScale = 6.0;
+
+  /// Where the last tap landed, in the viewer's own coordinates — the focal point a
+  /// double tap zooms about.
+  Offset? _lastTap;
+
+  AppState get app => widget.app;
+  AssetGroup get group => widget.group;
+
+  /// Whether asking the camera for this photo is still the right thing to do.
+  bool get _wanted =>
+      widget.isCurrent && app.link.isReady && app.album != null;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_ensureLoaded());
+  }
+
+  @override
+  void didUpdateWidget(_ViewerPhoto old) {
+    super.didUpdateWidget(old);
+    // Two ways this photo becomes loadable after it was built: the page arrived (the
+    // `PageView` may have built it as a neighbour first), or the link came up while the
+    // viewer was open. Both are the same question, so both go through the same gate.
+    if (!old.isCurrent && widget.isCurrent) {
+      _autoTried = false;
+      unawaited(_ensureLoaded());
+    } else if (old.generation != widget.generation && widget.isCurrent) {
+      unawaited(_ensureLoaded());
+    }
+  }
+
+  @override
+  void dispose() {
+    _zoom.dispose();
+    super.dispose();
+  }
+
+  /// Load this photo: the phone's copy if there is one, otherwise one preview from the
+  /// camera.
+  Future<void> _ensureLoaded() async {
+    if (!mounted || _autoTried || _image != null) return;
+    _autoTried = true;
+
+    // ---- 1. the phone, and it is not a fallback
+    final localUri = app.ledger.localIdOf(group.id);
+    if (localUri != null && localUri.isNotEmpty) {
+      final bytes = await MediaStoreBridge.read(localUri);
+      if (!mounted) return;
+      if (bytes != null && bytes.isNotEmpty) {
+        setState(() {
+          _image = bytes;
+          _shown = app.ledger.qualityOf(group.id);
+          _bytes = bytes.length;
+          _localUri = localUri;
+        });
+        return;
+      }
+      // The ledger says it is here and the bytes are not: the user deleted it from the
+      // gallery. Say so rather than silently re-downloading — and **do not** let the
+      // automatic preview cover for it, because then the deletion is invisible and the
+      // camera is asked for a photo the user thought they had.
+      if (mounted) {
+        final l = l10nOf(context);
+        setState(() {
+          _error = l.albumSavedCopyGone;
+          _autoTried = false;
+        });
+      }
+      return;
+    }
+
+    // ---- 2. nothing local, so one preview from the camera — if it is the right moment
+    await _fetch(preview: true, automatic: true);
+  }
+
+  /// Fetch from the camera, automatically or on an explicit request.
+  Future<void> _fetch({required bool preview, required bool automatic}) async {
+    final album = app.album;
+    if (automatic) {
+      // Not connected, not the page in view, or the page moved on while this was being
+      // scheduled: the camera is not asked. Silently — this is the normal outcome of a
+      // flick through a card, not a failure to report.
+      final generation = widget.generation;
+      if (!_wanted) {
+        _clearProvisional();
+        return;
+      }
+      final started = generation;
+      setState(() {
+        _error = null;
+        _loading = true;
+      });
+      try {
+        final bytes = await album!.download(
+          group.primary,
+          resolution: FileResolution.midThumb,
+          // Interactive: the user is looking at this photo, and the grid's chain can be
+          // holding the camera for a 31.9 MB `.DNG`. See `CameraRequestGate`.
+          priority: CameraRequestPriority.interactive,
+        );
+        if (!mounted) return;
+        // ^ the page is gone
+        if (started != widget.generation) {
+          // Dropped: the user moved on. The bytes are discarded rather than drawn, and
+          // nothing is reported — an error message about a photo nobody is looking at
+          // is a lie about what happened.
+          return;
+        }
+        setState(() {
+          _image = bytes;
+          _shown = AssetQuality.preview;
+          _loading = false;
+          _bytes = bytes.length;
+        });
+      } on CameraRequestDropped {
+        // Never sent: the gate skipped it because the page had already moved on.
+        if (mounted) setState(() => _loading = false);
+      } on Object catch (e) {
+        if (!mounted) return;
+        _reportFailure(e, allowAutoRetry: false);
+      }
+      return;
+    }
+
+    // ---- the explicit path: the user pressed the button
+    if (album == null) {
+      setState(() => _error = l10nOf(context).albumNotConnectedShort);
+      return;
+    }
+    setState(() {
+      _error = null;
+      _upgrading = true;
+      _bytes = 0;
+    });
+    try {
+      final bytes = await album.download(
+        group.primary,
+        resolution: preview ? FileResolution.midThumb : FileResolution.original,
+        priority: CameraRequestPriority.interactive,
+        onProgress: (n) {
+          if (mounted) setState(() => _bytes = n);
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        _image = bytes;
+        _shown = preview ? AssetQuality.preview : AssetQuality.original;
+        _upgrading = false;
+        _bytes = bytes.length;
+      });
+    } on CameraRequestDropped {
+      if (mounted) setState(() => _upgrading = false);
+    } on Object catch (e) {
+      if (!mounted) return;
+      _reportFailure(e, allowAutoRetry: preview);
+    }
+  }
+
+  /// Put a failure on screen, and decide whether it may be retried on its own.
+  ///
+  /// A failure that is never retried and never shown is the spinner-forever defect
+  /// `analysis/70` records; a failure that is retried on every rebuild is a request
+  /// storm against a single-threaded camera. So the automatic path is allowed to fail
+  /// **once**: [allowAutoRetry] is false for the automatic preview, which means the
+  /// next attempt is the user pressing the button — and the message names what happened
+  /// so they know there is something to press it for.
+  void _reportFailure(Object e, {required bool allowAutoRetry}) {
+    final l = l10nOf(context);
+    setState(() {
+      _loading = false;
+      _upgrading = false;
+      _autoTried = allowAutoRetry;
+      _error = l.albumLoadFailed('$e');
+    });
+    debugPrint('[viewer] ${group.primary.path}: $e');
+  }
+
+  /// Clear the "still loading" state of a request that was never sent.
+  void _clearProvisional() {
+    if (!mounted) return;
+    if (_loading) setState(() => _loading = false);
+  }
+
+  void _onTapDown(TapDownDetails d) => _lastTap = d.localPosition;
+
+  /// Double tap: fit-to-screen, or zoom to [_doubleTapScale] about the tap.
+  void _toggleZoom() {
+    final v = context.size;
+    if (v == null) return;
+    final zoomedIn = _zoom.value.getMaxScaleOnAxis() > 1.01;
+    if (zoomedIn) {
+      _zoom.value = Matrix4.identity();
+    } else {
+      final at = _lastTap ?? Offset(v.width / 2, v.height / 2);
+      _zoom.value = Matrix4.identity()
+        ..translateByDouble(
+            -at.dx * (_doubleTapScale - 1),
+            -at.dy * (_doubleTapScale - 1),
+            0,
+            1)
+        ..scaleByDouble(_doubleTapScale, _doubleTapScale, 1, 1);
+    }
+    widget.onZoomChanged(!zoomedIn);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = l10nOf(context);
+    final bytes = _image;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (bytes != null)
+          // ## The viewer is the box, and the picture fits inside it
+          //
+          // Nothing here sizes anything to the photo. `Positioned.fill` above gives the
+          // `PageView` the whole body, the page is that size, and this fills the page —
+          // so the clip rect and the pan boundary are the **screen**, which is the fix
+          // for "the zoom is trapped in the un-zoomed photo's box". `BoxFit.contain`
+          // then letterboxes the picture inside it, which is what makes one box work for
+          // a panorama and for a portrait crop.
+          GestureDetector(
+            key: const ValueKey<String>('viewer-zoom-surface'),
+            onTapDown: _onTapDown,
+            onDoubleTap: _toggleZoom,
+            child: InteractiveViewer(
+              transformationController: _zoom,
+              // Both finite and on purpose. `maxScale` is the ceiling the double tap and
+              // the pinch are clamped to; there is no `boundaryMargin`, so the picture
+              // cannot be flung into empty space and always covers the viewport.
+              maxScale: _maxScale,
+              minScale: 1.0,
+              child: Image.memory(
+                bytes,
+                fit: BoxFit.contain,
+                gaplessPlayback: true,
+                // The same guard as the grid: honours the "a bad frame is not a dead
+                // app" rule for the full-size view too.
+                errorBuilder: (context, error, stack) => Center(
+                  child: Text(
+                    l.viewerUndecodable,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12.5),
                   ),
-                  const SizedBox(height: 6),
-                  // Reading from the camera is a deliberate action, not something
-                  // that happens because a thumbnail was tapped. The camera serves
-                  // one request at a time while streaming live view, and an
-                  // automatic `GetFile` here is what wedged it before.
-                  FilledButton.icon(
-                    key: const ValueKey<String>('btn-viewer-fetch-camera'),
-                    onPressed: app.link.isReady
-                        ? () => unawaited(fetchFromCamera())
-                        : null,
-                    icon: const Icon(Icons.cloud_download, size: 18),
-                    label: Text(app.link.isReady
-                        ? l.viewerFetchPreview
-                        : l.viewerCameraNotConnected),
-                  ),
-                ],
+                ),
               ),
             ),
-          if (_localUri != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Text(
-                l.viewerLocalCopy,
-                style: const TextStyle(color: Colors.greenAccent, fontSize: 11.5),
-              ),
+          )
+        else if (_error != null)
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, height: 1.4)),
             ),
-          if (_upgrading)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(l.viewerLoadingFromCamera(_mb(_bytes)),
-                      style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                ],
+          )
+        else if (_loading)
+          // Named work, not an indefinite spinner: the request is real, countable and
+          // finishes. When it fails the spinner goes away — see [_reportFailure].
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
-            ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
-            color: const Color(0xFF121212),
+              const SizedBox(height: 10),
+              Text(l.viewerLoadingPreview,
+                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            ],
+          ),
+        _statusPanel(l),
+      ],
+    );
+  }
+
+  /// The band under the photo: what it is, how good the copy is, and what to do next.
+  ///
+  /// **On top of the photo, not below it.** It used to be a `Column` sibling, which cost
+  /// the viewer whatever height the text happened to need — and the text is localized,
+  /// so English and Chinese reserved different amounts. That is a box whose size depends
+  /// on the language, and on a page whose job is to show a picture edge to edge it is the
+  /// wrong box to be measuring. Over a scrim, in the ordinary photo-viewer shape, the
+  /// language can no longer move the picture.
+  Widget _statusPanel(AppLocalizations l) {
+    final showFetchButton = _image == null && !_loading && !_upgrading;
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          // Translucent rather than solid: a magnified photo has to be able to show
+          // through, or the bottom of every zoomed picture would sit behind a panel with
+          // no pan that could reveal it.
+          color: Color(0xB3121212),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  group.primary.path,
-                  style: const TextStyle(color: Colors.white38, fontSize: 11),
-                ),
+                Text(group.primary.path,
+                    style: const TextStyle(color: Colors.white38, fontSize: 11)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -2735,22 +3132,77 @@ class _AssetViewerPageState extends State<AssetViewerPage> {
                     ),
                   ],
                 ),
-                // Only when a picture is on screen. With no image the centre
-                // already carries this exact sentence, and saying it twice in one
-                // view is the duplication this app has been reported for before.
-                if (_error != null && _image != null) ...[
-                  const SizedBox(height: 6),
+                // The band says one of these, never two: the centre carries the same
+                // sentence when there is no picture, and saying it twice in one view is
+                // the duplication this app has been reported for before.
+                if (_localUri != null) ...[
+                  const SizedBox(height: 4),
+                  Text(l.viewerLocalCopy,
+                      style:
+                          const TextStyle(color: Colors.greenAccent, fontSize: 11.5)),
+                ] else if (_image == null && _error == null) ...[
+                  // The other half of the sentence the centre is showing while a preview
+                  // is on its way: *where* it is coming from. `viewerNotOnPhone` says the
+                  // honest thing about the phone and nothing about the camera, so it is
+                  // right in both states — before the fetch and during it.
+                  const SizedBox(height: 4),
+                  Text(l.viewerNotOnPhone,
+                      style: const TextStyle(color: Colors.white54, fontSize: 11.5)),
+                ] else if (_error != null && _image != null) ...[
+                  const SizedBox(height: 4),
                   Text(_error!,
                       style: const TextStyle(
                           color: Colors.orangeAccent, fontSize: 11, height: 1.3)),
                 ],
+                if (showFetchButton) ...[
+                  const SizedBox(height: 8),
+                  // ## Why the automatic preview still leaves a button here
+                  //
+                  // Three states reach it, and all three need a way forward: nothing
+                  // loaded yet (the camera was unreachable, or the preview is still to
+                  // come), the automatic preview **failed**, and the app is not
+                  // connected. It reads "Load a preview" for a preview and "Load the
+                  // full size" once a preview is on screen — one control, whose label is
+                  // the rendition it will actually fetch.
+                  FilledButton.icon(
+                    key: const ValueKey<String>('btn-viewer-fetch-camera'),
+                    onPressed: app.link.isReady
+                        ? () => unawaited(
+                            _fetch(preview: _image == null, automatic: false))
+                        : null,
+                    icon: const Icon(Icons.cloud_download, size: 18),
+                    label: Text(app.link.isReady
+                        ? (_image == null
+                            ? l.viewerFetchPreview
+                            : l.viewerFetchFullSize)
+                        : l.viewerCameraNotConnected),
+                  ),
+                ],
+                if (_upgrading) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(l.viewerLoadingFromCamera(_mb(_bytes)),
+                          style: const TextStyle(
+                              color: Colors.white54, fontSize: 12)),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
+  /// Bytes as megabytes, for the one line that reports a transfer in progress.
   static String _mb(int n) => '${(n / 1048576).toStringAsFixed(1)} MB';
 }

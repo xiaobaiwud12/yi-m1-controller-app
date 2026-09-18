@@ -138,10 +138,7 @@ final List<ContentRule> kContentRules = <ContentRule>[
       'signing key material cannot be un-published',
       exempt: const <String>{
         'README.md', // it has to tell a contributor that a release build needs a key
-        // The Chinese README is a translation of the same section, so it names the
-        // same four fields for the same reason. Exempting one and not the other
-        // would make the translated page the only one that fails the scan.
-        'README.zh-CN.md',
+        'README.zh-CN.md', // the same paragraph, translated: it names the four fields
         'RELEASING.md', // the runbook: it has to name the fields
         'app/android/.gitignore', // the policy that keeps keys out
         'app/android/app/build.gradle.kts', // the code that reads the key
@@ -186,6 +183,12 @@ const List<String> kRequiredFiles = <String>[
   'LICENSE',
   'NOTICE',
   'README.md',
+  // The Chinese README is a published document, not a convenience: the camera is a
+  // Chinese product and the maintainer's first language is Chinese, so a tree that
+  // dropped it would still pass every other check here. It was missing from this list
+  // (and from the exporter's root allow list) until 0.2.1, which is why the export
+  // refused the tree the first time it was added to `tools/release/metadata/`.
+  'README.zh-CN.md',
   'CHANGELOG.md',
   'CONTRIBUTING.md',
   'SECURITY.md',

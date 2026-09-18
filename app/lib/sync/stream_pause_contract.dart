@@ -1,22 +1,32 @@
 /// The stream-pause seam the sync engine talks to during a bulk transfer.
 ///
 /// `analysis/ce-app-competitive-spec.md` §5.3 is the specification for this file: a
-/// full-resolution `GetFile(Original)` runs at ~13.5 Mbit/s (9.4 MB in 5.6 s) and the
-/// live-view stream shares **one** 802.11n link with it, so running them together makes
-/// both slower — which is why the engine pauses the stream around a bulk run.
+/// full-resolution `GetFile(Original)` moves several megabytes (4.9–5.6 MB for a JPEG,
+/// 31.9 MB for a `.DNG` — `measured_sizes.dart`) and the live-view stream shares **one**
+/// 802.11n link with it, so running them together makes both slower — which is why the
+/// engine pauses the stream around a bulk run.
 ///
-/// ## The stream's rate was wrong here, and the number is quoted in three files
+/// ## Two rates were wrong here, and they were wrong in opposite directions
 ///
 /// This said "~4.2 Mbit/s (800x600 at ~30 fps, ~17.5 KB per datagram)". That came from a
 /// 40-frame sample of a plain scene, where consecutive frames differ by 374 bytes.
 /// **Measured** (`tools/camera_bridge.py`, 2026-09-15, a real scene): **~52-57 KB per
 /// datagram at ~30/s, about 12-14 Mbit/s** — 48,697 datagrams / 2.56 GB.
 ///
-/// So the picture is not "a cheap 4.2 against an expensive 13.5": the two are
-/// **comparable**, and on a busy scene the stream is the larger share. The contention is
-/// real either way and the pause seam is still the right shape — but "4.2 Mbit/s" must
-/// not be quoted as this stream's bandwidth again (see `analysis/50` §3, `analysis/16`
-/// stage 2).
+/// It also said the transfer "runs at ~13.5 Mbit/s (9.4 MB in 5.6 s)". **That has now
+/// been withdrawn too**, and for the same reason as the first: one unrepresentative
+/// observation presented as a property of the link. The size was wrong — the recorded
+/// `Original` is 4,897,837 B and 5,565,238 B, not 9.4 MB — and 5.6 s is a single
+/// wall-clock reading with no record of whether the preview was running, which is the one
+/// variable this file exists to manage. `analysis/16` stage 2 retracted the *stream's*
+/// rate on exactly this ground; the transfer's rate was derived the same way and is
+/// withdrawn on the same ground, not on a new measurement.
+///
+/// So the picture is **not** "a cheap 4.2 against an expensive 13.5". What is [V] is the
+/// file sizes and that the live view runs at 12–14 Mbit/s. Whether the stream costs more
+/// or less than a download has **not** been measured, and this comment no longer implies
+/// it has. "4.2 Mbit/s" and "13.5 Mbit/s" must not be quoted as either side's bandwidth
+/// again (see `analysis/50` §3, `analysis/16` stage 2).
 ///
 /// Frame geometry was **not** re-measured in that round, so 800x600 remains [H] rather
 /// than [V].

@@ -752,6 +752,24 @@ abstract class AppLocalizations {
   /// **'Showing the copy saved on this phone.'**
   String get viewerLocalCopy;
 
+  /// No description provided for @viewerLoadingPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading a preview from the camera…'**
+  String get viewerLoadingPreview;
+
+  /// No description provided for @viewerFetchFullSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Load the full size from the camera'**
+  String get viewerFetchFullSize;
+
+  /// Where the photo being viewed sits in the album, in the viewer's app bar.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} of {total}'**
+  String viewerPosition(int index, int total);
+
   /// No description provided for @viewerLoadingFromCamera.
   ///
   /// In en, this message translates to:
@@ -973,12 +991,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'· reference'**
   String get liveEvReference;
-
-  /// No description provided for @liveRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get liveRetry;
 
   /// No description provided for @liveConnectToCamera.
   ///
@@ -1219,12 +1231,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'unknown'**
   String get diagUnknown;
-
-  /// No description provided for @diagUnknownValue.
-  ///
-  /// In en, this message translates to:
-  /// **'?'**
-  String get diagUnknownValue;
 
   /// No description provided for @readoutMode.
   ///
@@ -2151,12 +2157,6 @@ abstract class AppLocalizations {
   /// **'Paused by you'**
   String get stagePausedByUser;
 
-  /// No description provided for @stagePausedLowBattery.
-  ///
-  /// In en, this message translates to:
-  /// **'Paused, camera battery low'**
-  String get stagePausedLowBattery;
-
   /// No description provided for @stageDone.
   ///
   /// In en, this message translates to:
@@ -2702,12 +2702,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'简体中文'**
   String get localeChinese;
-
-  /// No description provided for @localeSelected.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected: {name}'**
-  String localeSelected(String name);
 
   /// No description provided for @paramAuto.
   ///

@@ -98,7 +98,7 @@ class UiPrefs {
   /// **31,931,408 bytes** against the JPEG's **4,897,837**, and the card that was
   /// measured holds **18** such shots — ~574 MB, over the camera's own access point,
   /// which has **no internet passthrough**, so the phone is offline for the whole
-  /// transfer and the ~9 MB the user has in mind is ~32 MB per tap.
+  /// transfer and the 4,897,837 bytes the user has in mind is 31,931,408 per tap.
   ///
   /// `transport/album.dart` (`SyncPlan.skipRaw`) decided this and wrote the reasoning
   /// down. What it did not have was an implementation: `SyncPlan` was constructed

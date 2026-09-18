@@ -94,7 +94,7 @@ void main() {
     expect(linkStatusText(chineseStrings, uncoded), 'not connected');
   });
 
-  test('a link code resolves even when it arrives through AppState', () {
+  test('a link code resolves even when it arrives through AppState', () async {
     // The second half of the leak. `AppState.connect` copies a `LinkStatus`'s sentence
     // into `lastError`, and the strip that draws `lastError` never calls
     // `linkStatusText` — so before `linkCodeText` existed the code was either stripped
@@ -102,6 +102,22 @@ void main() {
     // code. Both fields go through one table now.
     final app = testAppState();
     addTearDown(app.dispose);
+
+    // ## Why this test awaits the launch path it just started
+    //
+    // `AppState`'s constructor starts `_load()` and nobody awaits it. In a widget test
+    // the pumps drain it inside the body; here the body is synchronous and returns in
+    // microseconds, so the load landed **after** `addTearDown(app.dispose)` — and its
+    // last statement, `notifyListeners()`, asserts on a disposed notifier:
+    // `A AppState was used after being disposed`, raised from `AppState._load`. Green
+    // 3/3 alone, red intermittently in a full suite, because the extra load moves the
+    // timing. This is not a sleep and not a longer wait: `loadDurableState()` returns
+    // the very future the constructor started, so awaiting it means the work is
+    // finished before the object is thrown away, whatever the machine is doing.
+    //
+    // The assertions below are untouched — they are still statements about
+    // `appErrorText`, and they still fail when the code table stops resolving them.
+    await app.loadDurableState();
 
     app
       ..lastError = 'not connected'

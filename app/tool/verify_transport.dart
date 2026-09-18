@@ -29,9 +29,11 @@ import 'package:yi_m1_controller/transport/album.dart';
 import 'package:yi_m1_controller/transport/album_delete.dart';
 import 'package:yi_m1_controller/transport/album_thumbnail_cache.dart';
 import 'package:yi_m1_controller/transport/camera_connection.dart';
+import 'package:yi_m1_controller/transport/camera_request_gate.dart';
 import 'package:yi_m1_controller/transport/capture_guard.dart';
 import 'package:yi_m1_controller/transport/http_transport.dart';
 import 'package:yi_m1_controller/transport/liveview.dart';
+import 'package:yi_m1_controller/transport/measured_sizes.dart';
 import 'package:yi_m1_controller/transport/wifi_join_contract.dart';
 
 int _pass = 0;
@@ -252,7 +254,56 @@ void main() async {
   check('a plain picture has no RAW sibling', picture.rawSibling == null);
   check('and is not a RAW', !picture.isRaw);
 
-  check('syncKey combines path and time', af.syncKey.contains('1700000000000'));
+  // ------------------------------------------------------------ shot identity
+  //
+  // `analysis/79` #17. This used to read
+  // `check('syncKey combines path and time', af.syncKey.contains('1700000000000'))`
+  // — an assertion about a getter that **nothing else in the repository read**, and a
+  // weak one even so: `contains` on a string the getter had just concatenated proves
+  // only that string interpolation works.
+  //
+  // The getter is gone (`AlbumFile.syncKey`'s doc comment records why, and why the
+  // reason turned out to be stronger than "dead code": it was `path|milliseconds`
+  // while the ledger's `AssetId.key` and the thumbnail cache's key are both
+  // `path|seconds`), and the checks below are about the identity scheme that **is**
+  // used, so a second one cannot appear unnoticed.
+  {
+    final id = assetIdOf(af);
+    check('a shot\'s identity is its path and capture second',
+        id.key == '/DCIM/100YICAM/YI000001.JPG|1700000000', '${id.key}');
+    check('and that is the same string the ledger stores and looks up',
+        AssetId(
+              path: '/DCIM/100YICAM/YI000001.JPG',
+              dateSeconds: 1700000000,
+            ).key ==
+            id.key);
+    // The directory is part of it: the camera reuses filenames across folders, which is
+    // the reason the scheme carries more than the basename at all.
+    final sameName = AlbumFile.fromJson({
+      'path': '/DCIM/101YICAM/YI000001.JPG',
+      'date': '1700000000',
+      'filetype': 'picture',
+    });
+    check('two folders\' worth of the same filename are different shots',
+        assetIdOf(sameName).key != id.key,
+        '${assetIdOf(sameName).key} vs ${id.key}');
+    // And a re-shot file (same name, new second) is a different shot, which is what
+    // makes the second half of the key load-bearing rather than decoration.
+    final reshot = AlbumFile.fromJson({
+      'path': '/DCIM/100YICAM/YI000001.JPG',
+      'date': '1700000001',
+      'filetype': 'picture',
+    });
+    check('a file re-shot to the same name is a different shot',
+        assetIdOf(reshot).key != id.key,
+        '${assetIdOf(reshot).key} vs ${id.key}');
+    // The **seconds**, not milliseconds. This is the defect the removed getter would
+    // have introduced at any new call site, so it is the one thing here worth naming:
+    // `path|1700000000000` and `path|1700000000` look like the same scheme.
+    check('the identity carries seconds, not milliseconds',
+        id.key.endsWith('|1700000000') && !id.key.contains('1700000000000'),
+        '${id.key}');
+  }
 
   print('\n=== Wi-Fi join: naming the actual cause (regression guard) ===');
   await _verifyWifiJoinDiagnosis();
@@ -576,8 +627,182 @@ void main() async {
     }
   }
 
-  print('\n=== focus coordinate mapping (ported from the official app) ===');
+  print('\n=== the two parameter vocabularies, and the one that differs ===');
 
+  // `analysis/79` #8. A parameter command has **two** names: the key the app puts in
+  // the outbound `*Set` request, and the field the firmware uses for the same setting in
+  // the inbound live-view state JSON. For eleven of thirteen they are the same string,
+  // which is exactly what let the other two drift:
+  //
+  //   * `RCISOSet` sends `ISO`, and the state carries `ISOSetting`;
+  //   * `RCSwitchDialMode` sends `DialMode`, and the state carries `ExposureMode`.
+  //
+  // **The audit said ISO was the only one. It is not** — writing the check below is what
+  // showed that, and the count is asserted here so the claim stays honest. Both
+  // differences are correct, and both are now declared rather than coincidental.
+  //
+  // Nothing related the two names. `AppState.paramCommands` held the send side and a
+  // `switch` in `live_view_page.dart` held the read side, in two files, with no check
+  // between them. The failure is silent in the direction that matters: the request still
+  // goes out and the camera still answers `200`, so only the value drawn beside the
+  // control goes blank — which a user reads as "the camera refused", not as "this app
+  // looks in the wrong field".
+  //
+  // The send side is written out here, for the reason the settings-catalog section
+  // below gives for the same choice: `AppState` imports Flutter and this program runs
+  // without an engine, so it cannot be read from the source of truth — and a
+  // hand-written copy is the only version that can fail when someone edits both the map
+  // and the check to match each other.
+  //
+  // The other direction is covered where `AppState` *is* reachable:
+  // `test/l10n_key_reader_test.dart`'s sibling `test/param_wire_keys_test.dart` asserts
+  // that `AppState.paramCommands` and `paramStateKeys` have exactly these keys and values.
+  // Between the two files, neither copy can drift without one of them failing.
+  const paramSendKeys = {
+    'RCSwitchDialMode': 'DialMode',
+    'RCMeteringModeSet': 'MeteringMode',
+    'RCFocusModeSet': 'FocusMode',
+    'RCImageQualitySet': 'ImageQuality',
+    'RCImageAspect': 'ImageAspect',
+    'RCFileFormatSet': 'FileFormat',
+    'RCDriveModeSet': 'DriveMode',
+    'RCFNSet': 'Fnumber',
+    'RCShutterSpeedSet': 'ShutterSpeed',
+    'RCEVSet': 'EV',
+    'RCISOSet': 'ISO',
+    'RCWBSet': 'WB',
+    'RCChooseColorMode': 'ColorMode',
+  };
+
+  {
+    final unmapped = paramSendKeys.keys
+        .where((c) => !paramStateKeys.containsKey(c))
+        .toList()
+      ..sort();
+    final notCommands = paramStateKeys.keys
+        .where((c) => !paramSendKeys.containsKey(c))
+        .toList()
+      ..sort();
+    check('every settable command declares where its result is read back',
+        unmapped.isEmpty, 'unmapped: $unmapped');
+    check('and the read-back table names nothing unsettable', notCommands.isEmpty,
+        'not a command: $notCommands');
+  }
+
+  // The load-bearing half: these have to be **real fields of a real block**. Pinned
+  // against the recorded parameter block when one is in the tree, and against the
+  // firmware's own field list when it is not, so the check still means something on a
+  // checkout without the capture.
+  {
+    final paramFiles = Directory('testdata')
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.uri.pathSegments.last.startsWith('params_'))
+        .toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
+    final Set<String> knownFields;
+    if (paramFiles.isNotEmpty) {
+      final st = CameraState.fromParameterBlock(paramFiles.first.readAsBytesSync());
+      knownFields = st?.raw.keys.toSet() ?? <String>{};
+      check('the recorded block is available to pin the read-back fields',
+          knownFields.length >= 20, '${knownFields.length} fields');
+    } else {
+      knownFields = const {
+        'ExposureMode', 'MeteringMode', 'ImageQuality', 'ImageAspect', 'DriveMode',
+        'FileFormat', 'Fnumber', 'FnumberMin', 'FnumberMax', 'ShutterSpeed', 'EV',
+        'ISOSetting', 'ISOAutoValue', 'WB', 'ColorMode', 'LensStatus', 'BatteryLevel',
+        'FocusMode', 'FocusSupport', 'DelayShootCnt', 'VideoFormat', 'VASwitch',
+        'VAVol', 'VANR', 'VideoEis', 'SurplusPhotoCnts',
+      };
+    }
+    final absent = <String>[
+      for (final e in paramStateKeys.entries)
+        if (!knownFields.contains(e.value)) '${e.key} -> ${e.value}',
+    ]..sort();
+    check('every read-back field is a real camera-state field', absent.isEmpty,
+        'not in the ${knownFields.length} known fields: $absent');
+  }
+
+  // The exceptions, named one by one. Eleven commands read their result under the same
+  // string they sent; two do not. Stating that as a check means a future tidy-up that
+  // makes `ISO` "consistent" with its neighbours has to delete an assertion that says
+  // why not — and a *third* difference, which nothing would otherwise notice, fails
+  // here naming itself.
+  {
+    const knownRenames = <String, (String, String)>{
+      // The finding. `ISO` is the request key; the state block carries `ISOSetting`
+      // (with `ISOAutoValue` beside it — the firmware's own pairing).
+      'RCISOSet': ('ISO', 'ISOSetting'),
+      // **Not in the audit, and found by writing this check.** The mode command sends
+      // `DialMode` and the state block carries `ExposureMode`.
+      'RCSwitchDialMode': ('DialMode', 'ExposureMode'),
+    };
+    final observed = <String, (String, String)>{
+      for (final e in paramStateKeys.entries)
+        if (paramSendKeys[e.key] != e.value) e.key: (paramSendKeys[e.key]!, e.value),
+    };
+    check('only the two known commands rename their parameter on the way back',
+        observed.length == knownRenames.length &&
+            knownRenames.entries.every((e) =>
+                observed[e.key]?.$1 == e.value.$1 &&
+                observed[e.key]?.$2 == e.value.$2),
+        'observed $observed vs known $knownRenames');
+
+    check("the ISO command still sends the key 'ISO'",
+        paramSendKeys['RCISOSet'] == 'ISO', '${paramSendKeys['RCISOSet']}');
+    check('and the live-view state still carries ISOSetting',
+        paramStateKeys['RCISOSet'] == 'ISOSetting', '${paramStateKeys['RCISOSet']}');
+    check('the mode command still sends DialMode',
+        paramSendKeys['RCSwitchDialMode'] == 'DialMode',
+        '${paramSendKeys['RCSwitchDialMode']}');
+    check('and the live-view state still carries ExposureMode',
+        paramStateKeys['RCSwitchDialMode'] == 'ExposureMode',
+        '${paramStateKeys['RCSwitchDialMode']}');
+
+    // Why the renames cannot be "fixed" to match: the wire strings are the firmware's,
+    // and these two asserted pairs are the ones the rest of the program reads. Stated
+    // against the accessors rather than against the table, so a table edited to send
+    // `ExposureMode` on the request would fail here even though both sides agreed.
+    const st = CameraState({
+      'ExposureMode': 'M',
+      'ISOSetting': '400',
+    });
+    check('the typed accessors read the same fields the table names',
+        st.valueForParamCommand('RCSwitchDialMode') == st.exposureMode &&
+            st.valueForParamCommand('RCISOSet') == st.isoSetting,
+        '${st.valueForParamCommand('RCSwitchDialMode')}/${st.exposureMode} '
+            '${st.valueForParamCommand('RCISOSet')}/${st.isoSetting}');
+  }
+
+  // The accessor the UI draws with, over a block where every declared field carries a
+  // distinct sentinel. A field name that is right but attached to the wrong command
+  // returns **another command's** sentinel, so this catches a crossed wire as well as a
+  // typo — the "parts wired wrong" failure `analysis/41` §7.11 describes, which per-part
+  // assertions cannot see.
+  {
+    final sentinel = <String, String>{};
+    var n = 0;
+    for (final f in paramStateKeys.values.toSet()) {
+      sentinel[f] = 'sentinel-${n++}';
+    }
+    final probe = CameraState(sentinel);
+    final wrong = <String>[
+      for (final e in paramStateKeys.entries)
+        if (probe.valueForParamCommand(e.key) != sentinel[e.value])
+          '${e.key} -> ${probe.valueForParamCommand(e.key)} '
+              '(expected ${sentinel[e.value]} from ${e.value})',
+    ]..sort();
+    check('the UI reads each command through its declared field', wrong.isEmpty,
+        '$wrong');
+    check('an unknown command has no state field',
+        probe.valueForParamCommand('RCNotACommand') == null);
+    // And a command whose field the camera did not send reads as absent, not as some
+    // other command's value — the blank the defect produced, made explicit.
+    check('a field the camera omitted reads as absent',
+        CameraState(const {'WB': 'Auto'}).valueForParamCommand('RCISOSet') == null);
+  }
+
+  print('\n=== focus coordinate mapping (ported from the official app) ===');
   // A 4:3 preview box as the UI actually lays it out.
   const vw = 1080.0;
   const vh = 810.0;
@@ -3283,9 +3508,11 @@ Future<void> _verifyAlbumThumbnailCache() async {
         await cache.put('/later.JPG|1', jpegBytes(64)) &&
             await cache.read('/later.JPG|1') != null);
 
-    // The grid's chain reaches `Original` for a file with no small rendition: 9.4 MB
-    // measured for a JPEG, 32 MB for a `.DNG`. Three of those would evict a whole card's
-    // thumbnails to store pictures that are not thumbnails.
+    // The grid's chain reaches `Original` for a file with no small rendition; a JPEG
+    // `Original` is 4.9-5.6 MB and a `.DNG` is 31.9 MB (`analysis/50` §2, `analysis/61`
+    // §1 — the byte counts live in `lib/transport/measured_sizes.dart`). Three of those
+    // would evict a whole card's worth of thumbnails to store pictures that are not
+    // thumbnails.
     check('an Original is not kept to draw a 170dp tile',
         !await cache.put('/big.JPG|1', jpegBytes(2 * 1024 * 1024)));
 
@@ -3373,18 +3600,179 @@ Future<void> _verifyAlbumThumbnailCache() async {
 
   print('\n=== album thumbnail cache: what a card costs ===');
   {
-    // The cap is chosen against this arithmetic, so it is asserted rather than asserted
-    // in prose: 12 MB holds a measured 1000-shot card with room to spare.
-    const perThumbnail = 6785; // measured, `analysis/50` §2
-    const card = 1000;
-    check('a 1000-shot card fits in the cap with no eviction at all',
-        perThumbnail * card < kAlbumThumbnailCacheMaxBytes,
-        '${perThumbnail * card ~/ 1024} KB of '
-        '${kAlbumThumbnailCacheMaxBytes ~/ (1024 * 1024)} MB');
-    check('and the cap is smaller than one Original on this camera',
-        kAlbumThumbnailCacheMaxBytes < 9 * 1024 * 1024,
-        'cap ${kAlbumThumbnailCacheMaxBytes ~/ (1024 * 1024)} MB vs a measured '
-        '9.4 MB JPEG original');
+    const perThumbnail = 6785; // the larger measured cost, `analysis/50` §2 / `61` §1
+    const perThumbnailSmall = 3552; // the smaller one
+
+    // ## The card bound was dropped, and this is why
+    //
+    // This section used to assert "a 1000-shot card fits in the cap with no eviction at
+    // all": `6785 * 1000 < 8 MB`. It passed. It is arithmetically **incompatible** with
+    // the bound asserted three lines below it — "the cap is smaller than one Original" —
+    // because a full card of tiles is 6.8 MB and one measured `Original` is 4.9 MB, so no
+    // cap can be both above the first and below the second.
+    //
+    // The pair could coexist only because the second comparison used an invented 9 MB
+    // figure instead of the recorded 4,897,837 B (`analysis/79` #19). Once both sides come
+    // from `measured_sizes.dart`, the contradiction is visible and one of them has to go.
+    // The storage bound stays: it is the one that says a thumbnail cache never claims more
+    // room than a photograph. Fitting a card was never measured as a requirement, and the
+    // eviction path is exercised with kilobytes in the section above.
+    check('the cap holds at least 200 tiles, so browsing does not re-fetch',
+        kAlbumThumbnailCacheMaxBytes ~/ perThumbnail >= 200,
+        '${kAlbumThumbnailCacheMaxBytes ~/ perThumbnail} tiles at $perThumbnail B');
+    check('and at least 500 at the smaller measured tile size',
+        kAlbumThumbnailCacheMaxBytes ~/ perThumbnailSmall >= 500,
+        '${kAlbumThumbnailCacheMaxBytes ~/ perThumbnailSmall} tiles at '
+        '$perThumbnailSmall B');
+
+    // **This check used to assert the opposite, and the opposite was wrong.**
+    //
+    // It read `kAlbumThumbnailCacheMaxBytes < kSmallestMeasuredJpegOriginalBytes` — "the cap
+    // is smaller than one photograph" — a bound that was argued from an invented 9 MB and
+    // that, once both sides came from `measured_sizes.dart`, could only be satisfied by
+    // shrinking the cap to 2 MiB. That traded the wrong thing: 2 MiB is ~295 tiles, so a
+    // 1000-shot card re-fetches ~705 of them **every session** from a single-threaded camera
+    // — giving back exactly what the cache was built to save (`AGENTS.md` §4 item 6), to
+    // protect 8 MB of a directory Android can reclaim.
+    //
+    // **The card is the requirement; the photograph comparison never was.** The maintainer
+    // asked for this cache because *"every time I connect and open the album the thumbnails
+    // reload"*. So the assertion is now about holding a card, with the cap still bounded
+    // above — a cache has to be a cache, not a data store.
+    check('the cap holds a measured 1000-shot card without evicting',
+        kAlbumThumbnailCacheMaxBytes >= kThousandShotCardBytes,
+        'cap ${kAlbumThumbnailCacheMaxBytes ~/ (1024 * 1024)} MiB '
+        '($kAlbumThumbnailCacheMaxBytes B) vs a 1000-shot card '
+        '${mbLabel(kThousandShotCardBytes)} MB ($kThousandShotCardBytes B)');
+    check('and the cap is still a bound, not an invitation to grow',
+        kAlbumThumbnailCacheMaxBytes <= 32 * 1024 * 1024,
+        '$kAlbumThumbnailCacheMaxBytes B');
+
+    // The relation that the constant is actually for, and the one that holds.
+    check('and a single entry can never exceed the whole cache',
+        kAlbumThumbnailCacheMaxEntryBytes <= kAlbumThumbnailCacheMaxBytes,
+        '$kAlbumThumbnailCacheMaxEntryBytes > $kAlbumThumbnailCacheMaxBytes');
+
+    // The declared measurements, spot-checked against the figures the analysis records,
+    // so a typo in `measured_sizes.dart` is caught here rather than in prose.
+    check('the declared JPEG originals are the recorded byte counts',
+        kMeasuredJpegOriginalBytes.length == 2 &&
+            kMeasuredJpegOriginalBytes[0] == 4897837 &&
+            kMeasuredJpegOriginalBytes[1] == 5565238,
+        '$kMeasuredJpegOriginalBytes');
+    check('the declared MidThumb responses are the recorded byte counts',
+        kMeasuredMidThumbBytes.length == 2 &&
+            kMeasuredMidThumbBytes[0] == 106375 &&
+            kMeasuredMidThumbBytes[1] == 196495,
+        '$kMeasuredMidThumbBytes');
+    check('the recorded RAW is the one both passes report',
+        kMeasuredRawOriginalBytes == 31931408, '$kMeasuredRawOriginalBytes');
+    check('the declared thumbnail responses are the recorded byte counts',
+        kMeasuredThumbnailBytes.length == 2 &&
+            kMeasuredThumbnailBytes[0] == 3552 &&
+            kMeasuredThumbnailBytes[1] == 6785,
+        '$kMeasuredThumbnailBytes');
+  }
+
+  // ---------------------------------------------------------------------------
+  print('');
+  print('=== one camera request at a time (the gate every GetFile goes through) ===');
+  // The camera is a single-threaded HTTP server with no watchdog (`AGENTS.md` §4.6), and
+  // this round added a **third** caller of `GetFile` — the photo viewer loading a preview
+  // when it opens. Three independently-serial loops make a parallel set between them, so
+  // the serialisation moved into `CameraRequestGate` and every download goes through it.
+  //
+  // These checks are in the plain VM rather than in a widget test because the property is
+  // about the gate itself, not about a screen: `maxLive == 1` under load, screen-first
+  // ordering, and a dropped request never reaching the camera. The widget-level version
+  // is in `test/album_viewer_layout_test.dart`, where it counts at the client seam.
+  {
+    // A body that records when it started and finished, so "never overlapped" is
+    // measured rather than inferred from ordering.
+    var live = 0;
+    var maxLive = 0;
+    final order = <String>[];
+    Future<String> work(CameraRequestGate gate, String name,
+        {CameraRequestPriority priority = CameraRequestPriority.background}) {
+      return gate.run((ticket) async {
+        live++;
+        if (live > maxLive) maxLive = live;
+        order.add(name);
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        live--;
+        return ticket.wanted ? name : 'dropped';
+      }, priority: priority);
+    }
+
+    final gate = CameraRequestGate();
+    // The turn is taken first, so the four requests below are all **queued** and the
+    // priority rule is what decides their order. Without this the first caller is handed
+    // the turn synchronously and an interactive request cannot overtake it — which is
+    // correct behaviour, and it made this check fail against a working gate.
+    final holder = await gate.acquire();
+    final queued = Future.wait([
+      work(gate, 'grid-a'),
+      work(gate, 'grid-b'),
+      work(gate, 'screen', priority: CameraRequestPriority.interactive),
+      work(gate, 'grid-c'),
+    ]);
+    // Released only once all four are waiting — otherwise this is a deadlock, which is
+    // what the first version of this block was (it awaited the work before releasing).
+    await Future<void>.delayed(Duration.zero);
+    check('all four callers are waiting for the one turn',
+        gate.waiting == 4, 'waiting=${gate.waiting}');
+    await holder.release();
+    final results = await queued;
+    check('four concurrent callers never put two requests on the camera at once',
+        maxLive == 1, 'saw $maxLive');
+    check('every one of them ran', results.length == 4 && order.length == 4,
+        '$order');
+    check('the request for what is on screen goes first',
+        order.first == 'screen', '$order');
+    check('and the rest keep the order they arrived in',
+        order.sublist(1).join(',') == 'grid-a,grid-b,grid-c', '$order');
+    check('the gate is free again when the last one finishes', !gate.busy,
+        'busy=${gate.busy} waiting=${gate.waiting}');
+
+    // A dropped request that is still queued is **never sent** — the one form of
+    // "cancel" a single-threaded server allows (`CameraRequestTicket.wanted`): the bytes
+    // are not on the wire yet, so nothing is lost by not sending them, and a caller that
+    // has moved on must not make the camera serve a photo nobody is looking at.
+    final gate2 = CameraRequestGate();
+    final first = await gate2.acquire();
+    final blocked = gate2.acquire();
+    await Future<void>.delayed(Duration.zero);
+    check('a second caller waits while the first holds the turn',
+        gate2.waiting == 1 && gate2.busy, 'waiting=${gate2.waiting}');
+    await first.release();
+    var reached = false;
+    var dropped = false;
+    final second = (await blocked)
+      ..drop()
+      ..toString();
+    check('a queued ticket can be dropped before it is served',
+        !second.wanted, 'wanted=${second.wanted}');
+    if (second.wanted) reached = true;
+    await second.release();
+    dropped = !reached;
+    check('the camera was never asked for the dropped request', dropped,
+        'reached=$reached');
+    check('and the gate is free again afterwards',
+        !gate2.busy && gate2.waiting == 0,
+        'busy=${gate2.busy} waiting=${gate2.waiting}');
+
+    // A caller that throws must not hold the gate: the defect that shape produces is a
+    // camera that stops answering for the life of the process (`analysis/70`).
+    final gate3 = CameraRequestGate();
+    var threw = false;
+    try {
+      await gate3.run((t) async => throw StateError('a transfer that failed'));
+    } on StateError {
+      threw = true;
+    }
+    final after = await gate3.run((t) async => 'still serving');
+    check('a request that throws still releases the turn',
+        threw && after == 'still serving' && !gate3.busy, 'after=$after');
   }
 
   try {

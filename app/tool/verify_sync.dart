@@ -891,6 +891,58 @@ Future<void> main() async {
   check('resuming drains it', engine6.items.first.stage == SyncStage.done,
       '${engine6.items.first.stage}');
 
+  // ------------------------------------------- every stage has an assigner
+  //
+  // `analysis/79` #9. `SyncStage.pausedLowBattery` was declared, labelled
+  // ("Paused, camera battery low"), given a translation key in **both** locales and
+  // counted by `isPaused` — and **nothing in `lib/` ever assigned it**. No
+  // low-battery threshold existed anywhere. It read as a shipped safety feature and
+  // was a comment on an enum.
+  //
+  // The audit filed it as a product decision (implement it or delete it) and that is
+  // the right framing for the *feature*; this check is about the **value**, and it is
+  // the half that is not a judgement call. A stage that nothing assigns can never be
+  // reached, so its label, its translation and its `isPaused` membership are all
+  // unreachable code that reads like behaviour — which is exactly what the localisation
+  // checks and the enum's own exhaustive switches are structurally unable to see.
+  //
+  // The scan is a source read, deliberately. The alternative — driving the engine until
+  // every stage appears — is not possible for a stage nothing can set, and each stage
+  // that *is* set needs a different scenario (a lost link, a user pause, a stall). A
+  // source scan over `lib/sync/` plus `lib/state/` answers the question the finding
+  // asks: is there an assignment anywhere?
+  {
+    final sources = <String>[
+      for (final dir in ['lib/sync', 'lib/state', 'lib/transport'])
+        for (final f in Directory(dir)
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart')))
+          f.readAsStringSync(),
+    ].join('\n');
+
+    final unassigned = <String>[];
+    for (final stage in SyncStage.values) {
+      // `= SyncStage.x` covers `i.stage = ...`, `stage = ...`, a named argument
+      // default and a const initialiser; `: SyncStage.x` covers the map entries the
+      // durable queue writes. Both are shapes this codebase actually uses.
+      final assigned = RegExp('(=|:)\\s*SyncStage\\.${stage.name}\\b').hasMatch(sources);
+      if (!assigned) unassigned.add(stage.name);
+    }
+    check('every SyncStage value is assigned somewhere, or it cannot be reached',
+        unassigned.isEmpty,
+        'declared, labelled and translated, but nothing sets: $unassigned');
+
+    // The scan has to be able to see the assignments that exist, or "nothing is
+    // unassigned" would be indistinguishable from "the regex matched nothing".
+    for (final name in ['pausedNoCamera', 'pausedByUser', 'queued', 'done']) {
+      check('the scan finds the assignment of ${name}',
+          RegExp('(=|:)\\s*SyncStage\\.$name\\b').hasMatch(sources));
+    }
+    check('the scan read a real corpus', sources.length > 100000,
+        '${sources.length} characters of lib/sync + lib/state + lib/transport');
+  }
+
   // ------------------------------------------------- summary accounting
 
   print('\n=== sync summary ===');
@@ -1889,7 +1941,12 @@ Future<void> main() async {
       check('the camera\'s own GMT rendering is gone from it',
           !after.any((s) => s.text == realStamps.first.text),
           '${after.map((s) => s.text)}');
-      check('a 9.4 MB original is still 9.4 MB',
+      // The file this runs on is the real camera original committed under
+      // `testdata/` (4.9 MB, recorded as 4,897,837 B in `analysis/50` §2 and declared
+      // in `lib/transport/measured_sizes.dart`). This check used to say "9.4 MB",
+      // which is not a size any measurement in this tree contains — the same invented
+      // figure as `analysis/79` #19.
+      check('the original is still the same length after the EXIF rewrite',
           stamped.bytes.length == real.length,
           '${stamped.bytes.length} vs ${real.length}');
 

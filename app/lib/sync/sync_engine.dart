@@ -24,7 +24,6 @@ abstract final class SyncStageCodes {
   static const stalled = 'stageStalled';
   static const pausedNoCamera = 'stagePausedNoCamera';
   static const pausedByUser = 'stagePausedByUser';
-  static const pausedLowBattery = 'stagePausedLowBattery';
   static const done = 'stageDone';
 
   static const Set<String> all = {
@@ -34,7 +33,6 @@ abstract final class SyncStageCodes {
     stalled,
     pausedNoCamera,
     pausedByUser,
-    pausedLowBattery,
     done,
   };
 }
@@ -64,6 +62,36 @@ abstract final class SyncNoteCodes {
 /// trustworthy sync from an untrustworthy one (§5.6): "paused (Wi-Fi lost)",
 /// "stalled (retrying)" and "failed" are three different things, and collapsing
 /// them into a spinner is the classic silent-stall failure mode.
+///
+/// ## The value that used to be here, and why it is not
+///
+/// `pausedLowBattery` was declared, labelled (`Paused, camera battery low`), given a
+/// translation key in both locales and counted by [isPaused] — and **nothing ever set
+/// it**. No low-battery threshold existed anywhere in `lib/` (`analysis/79` #9). It read
+/// as a shipped safety feature and was a comment: the state a user would reach instead
+/// is `pausedNoCamera`, whose sentence is true and misleading in the way that matters —
+/// the camera is fine, the app stopped asking.
+///
+/// Removed rather than implemented, and the reasoning matters because the intent was
+/// real. The official app pauses below 25 % (`app/re/jadx-out`, and that part is
+/// verified), but a correct implementation here is not a threshold:
+///
+/// * **Which battery.** `BatteryLevel` is the *camera's* reading, and this app's drain is
+///   the phone's. Those are different resources with different failures, and the enum's
+///   own label said "camera battery low" — so a phone-driven stop under that sentence
+///   would be a new misleading string rather than a fix for one.
+/// * **`101` means charging, not empty.** `CameraState.isCharging` is equality with
+///   `101`, which `int.tryParse` turns into `101 > 25`: the one reading that means
+///   "external power" would pass a naive `percent < 25` gate harmlessly, but a battery
+///   below 25 % **on the charger** would be paused for a reading that is recovering.
+/// * **What un-pauses it.** A pause nobody can clear is worse than a sync that runs the
+///   battery flat — `SyncEngine.pause` is the user's, and there is no path that resumes
+///   a battery pause. Resuming on a recovered reading needs a UI, and stopping mid-item
+///   needs a decision about the partially written file.
+///
+/// So the honest change is to delete the claim. Re-adding it means adding those three
+/// answers with it, and `verify_sync.dart` now fails for any stage value that nothing
+/// assigns, so a re-added one cannot be dead again.
 enum SyncStage {
   queued,
   downloadingPreview,
@@ -71,7 +99,6 @@ enum SyncStage {
   stalled,
   pausedNoCamera,
   pausedByUser,
-  pausedLowBattery,
   failed,
   done;
 
@@ -82,7 +109,6 @@ enum SyncStage {
         SyncStage.stalled => 'Stalled, retrying',
         SyncStage.pausedNoCamera => 'Paused, camera away',
         SyncStage.pausedByUser => 'Paused by you',
-        SyncStage.pausedLowBattery => 'Paused, camera battery low',
         SyncStage.failed => 'Failed',
         SyncStage.done => 'Saved',
       };
@@ -103,7 +129,6 @@ enum SyncStage {
         SyncStage.stalled => SyncStageCodes.stalled,
         SyncStage.pausedNoCamera => SyncStageCodes.pausedNoCamera,
         SyncStage.pausedByUser => SyncStageCodes.pausedByUser,
-        SyncStage.pausedLowBattery => SyncStageCodes.pausedLowBattery,
         // `failed` has no code on purpose: its sentence is not this enum's — see
         // `SyncItem.note`, which carries the actual reason the camera gave, and
         // which is what the list appends to the stage label.
@@ -113,9 +138,7 @@ enum SyncStage {
 
   bool get isTerminal => this == SyncStage.done || this == SyncStage.failed;
   bool get isPaused =>
-      this == SyncStage.pausedNoCamera ||
-      this == SyncStage.pausedByUser ||
-      this == SyncStage.pausedLowBattery;
+      this == SyncStage.pausedNoCamera || this == SyncStage.pausedByUser;
   bool get isActive =>
       this == SyncStage.downloadingPreview ||
       this == SyncStage.downloadingOriginal ||
@@ -320,16 +343,18 @@ class SyncEngine {
   ///
   /// The design guide's recommendation (§5.3) is to pause, because on this
   /// hardware the stream and a full-resolution download genuinely compete for
-  /// **one** 802.11n link. Measured on the real body, both are in the same league:
-  /// the live view runs at **~52–57 KB per datagram at ~30 per second, about
-  /// 12–14 Mbit/s** (48 697 datagrams / 2.56 GB, counted by
-  /// `tools/camera_bridge.py`), and a `GetFile` runs at ~13.5 Mbit/s. An earlier
-  /// version of this comment put the stream at ~4.2 Mbit/s; that number came from a
-  /// 40-frame sample of a *flat* scene and understated it about threefold — **the
-  /// contention is real, the arithmetic was wrong**. But a user who wants to keep
-  /// framing a shot while a backlog drains is making a legitimate choice, and a
-  /// preview that freezes with no way to opt out reads as a bug. So it is a
-  /// setting, not hard-coded behaviour.
+  /// **one** 802.11n link. Measured on the real body, the live view runs at
+  /// **~52–57 KB per datagram at ~30 per second, about 12–14 Mbit/s**
+  /// (48 697 datagrams / 2.56 GB, counted by `tools/camera_bridge.py`), which is
+  /// the same order as a multi-megabyte `GetFile` — the file sizes are in
+  /// `measured_sizes.dart` and the transfer's own rate is deliberately not quoted (see
+  /// `CameraAlbum.timeout`). An earlier version of this comment put the stream at
+  /// ~4.2 Mbit/s and the transfer at ~13.5 Mbit/s; the first came from a 40-frame
+  /// sample of a *flat* scene and understated it about threefold, and the second was
+  /// derived from a wrong file size — **the contention is real, the arithmetic was
+  /// wrong twice**. But a user who wants to keep framing a shot while a backlog drains
+  /// is making a legitimate choice, and a preview that freezes with no way to opt out
+  /// reads as a bug. So it is a setting, not hard-coded behaviour.
   // PauseMovieStream/ResumeMovieStream are structurally known but have never
   // been accepted by a real YI M1. Sending an unverified command immediately
   // before GetFile can wedge this watchdog-less camera, so the safe default is
@@ -382,13 +407,18 @@ class SyncEngine {
   /// So the release is armed on a timer as well, and fires whether or not the
   /// transfer ever returns.
   ///
-  /// The value is a compromise. Too short and a legitimate 9 MB transfer on a
-  /// slow link trips it, which puts the stream back into competition with the
+  /// The value is a compromise. Too short and a legitimate multi-megabyte transfer
+  /// on a slow link trips it, which puts the stream back into competition with the
   /// transfer it was paused for; too long and a genuinely wedged run leaves the
   /// preview frozen for that long. Two minutes is more than an order of magnitude
-  /// longer than a healthy full-resolution transfer (9.4 MB measured in 5.6 s on
-  /// an idle link) and short enough that a stuck run does not look like a hang
-  /// forever. It costs nothing when things work: every normal exit cancels it.
+  /// longer than any transfer this project has watched complete — the measured file
+  /// sizes are 4.9–5.6 MB for a JPEG and 31.9 MB for a RAW (`measured_sizes.dart`) —
+  /// and short enough that a stuck run does not look like a hang forever. It costs
+  /// nothing when things work: every normal exit cancels it.
+  ///
+  /// No rate is quoted: an earlier version compared two minutes against "9.4 MB
+  /// measured in 5.6 s", and both halves of that were unsupported. See
+  /// `CameraAlbum.timeout` for the retraction.
   final Duration streamPauseWatchdog;
 
   Timer? _streamWatchdog;
@@ -852,7 +882,7 @@ class SyncEngine {
   ///
   /// **What this is not:** it does not delete anything on the camera, and it does
   /// not forget anything already on the phone. It empties the job list — the answer
-  /// to "I queued the whole card by accident and I am not waiting for 900 MB over
+  /// to "I queued the whole card by accident and I am not waiting for all of it over
   /// this link". Re-queueing is one tap away: the automatic modes queue what is
   /// listed when the album is browsed again, or when the mode is re-selected.
   ///
@@ -1277,8 +1307,8 @@ class SyncEngine {
         resolution: res,
         onProgress: (n) {
           item.bytesReceived = n;
-          // Throttle notifications: a 9 MB file arrives in many chunks and repainting per
-          // chunk is wasted work.
+          // Throttle notifications: a 4.9 MB file arrives in many chunks and repainting
+          // per chunk is wasted work.
           //
           // ## The condition this replaced, and what it actually did
           //

@@ -301,6 +301,20 @@
   "viewerFetchPreview": "Load a preview from the camera",
   "viewerCameraNotConnected": "Camera not connected",
   "viewerLocalCopy": "Showing the copy saved on this phone.",
+  "viewerLoadingPreview": "Loading a preview from the camera…",
+  "viewerFetchFullSize": "Load the full size from the camera",
+  "viewerPosition": "{index} of {total}",
+  "@viewerPosition": {
+    "description": "Where the photo being viewed sits in the album, in the viewer's app bar.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "viewerLoadingFromCamera": "Loading from the camera — {size}",
   "@viewerLoadingFromCamera": {
     "placeholders": {
@@ -407,7 +421,6 @@
   "liveVideoTab": "Video",
   "liveAlbumTab": "Album",
   "liveEvReference": "· reference",
-  "liveRetry": "Retry",
   "liveConnectToCamera": "Connect to camera",
   "joinOutcomeGranted": "Joined. Looking for the camera...",
   "joinOutcomeSaved": "Android saved the network. Allow the notification, or pick it in Wi-Fi.",
@@ -454,7 +467,6 @@
   "diagGranted": "granted",
   "diagNotGranted": "NOT granted",
   "diagUnknown": "unknown",
-  "diagUnknownValue": "?",
   "@_section7": "Camera readout (live view)",
   "readoutMode": "Mode",
   "readoutShutter": "Shutter",
@@ -907,7 +919,6 @@
   "stageStalled": "Stalled, retrying",
   "stagePausedNoCamera": "Paused, camera away",
   "stagePausedByUser": "Paused by you",
-  "stagePausedLowBattery": "Paused, camera battery low",
   "stageDone": "Saved",
   "syncNoteCameraAway": "The camera went away. Sync resumes when it is back.",
   "syncNotePausedByUser": "Paused by you.",
@@ -1176,14 +1187,6 @@
   "localeSystem": "Follow the phone",
   "localeEnglish": "English",
   "localeChinese": "简体中文",
-  "localeSelected": "Selected: {name}",
-  "@localeSelected": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "@_section17": "Parameter values as displayed. The wire value sent to the camera is never translated — these are display labels only, keyed by the firmware's own string so a label can never be sent by mistake.",
   "paramAuto": "Auto",
   "paramManual": "Manual",

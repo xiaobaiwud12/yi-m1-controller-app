@@ -1,12 +1,12 @@
 YI M1 controller - app-only release export manifest
 ===================================================
 
-generated    : 2026-09-16T23:14:06.7471212+08:00
+generated    : 2026-09-18T14:10:55.3103686+08:00
 generator    : tools/release/export_app_release.ps1 (development repository)
 source repo  : the private development repository 'yi-m1-controller' - its filesystem path is
                withheld deliberately, because this manifest is published and the
                path names one machine's account
-source HEAD  : e4a1b09 (e4a1b096203d5663271cf22e227dc1efb46a6c5a)
+source HEAD  : 942fbde (942fbde51d490f733c08bdc48ab0034a18eb11a4)
 source branch: main
 source tree  : clean
 publishes to : https://github.com/xiaobaiwud12/yi-m1-controller-app
@@ -15,22 +15,22 @@ The release repository must never contain anything from the development
 repository except the material listed here. This manifest records what the
 export produced; SHA256SUMS.txt records its exact content.
 
-files        : 224
-payload      : 3.77 MB
+files        : 248
+payload      : 4.12 MB
 apache text  : tools/release/metadata/APACHE-2.0.txt sha256 cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
 
 Sizes:
-  development repository, tracked        : 6620 files, 281.1 MB
-  of which vendor / reverse-engineering  : 229.1 MB
-  app files on the allow list            : 204 files, 3.6 MB
-  this export tree                       : 224 files, 3.77 MB
+  development repository, tracked        : 6670 files, 302.1 MB
+  of which vendor / reverse-engineering  : 249.4 MB
+  app files on the allow list            : 227 files, 3.9 MB
+  this export tree                       : 248 files, 4.12 MB
 
 Ship list (select.allow, app-relative, with the reason each entry exists):
-  lib/**                         60 file(s)  the application: protocol, transport, sync, platform, state, ui, and the ARB files plus their generated bindings
-  android/**                     28 file(s)  the Android host: Kotlin platform code, manifest, resources, Gradle config
-  test/**                        54 file(s)  the widget suite; the release repository's only end-to-end evidence
+  lib/**                         63 file(s)  the application: protocol, transport, sync, platform, state, ui, and the ARB files plus their generated bindings
+  android/**                     42 file(s)  the Android host: Kotlin platform code, manifest, resources, Gradle config
+  test/**                        59 file(s)  the widget suite; the release repository's only end-to-end evidence
   testdata/**                    43 file(s)  40 captured live-view datagrams and 3 parameter blocks; verify_transport.dart needs them and they cannot be re-captured without the camera
-  tool/**                        12 file(s)  the pure-VM verification programs and the release checks; this is the release repository's verify
+  tool/**                        13 file(s)  the pure-VM verification programs and the release checks; this is the release repository's verify
   docs/PROTOCOL.md                1 file(s)  the authority for the client implementation, written from hardware with per-value confidence markers
   .gitignore                      1 file(s)  keeps .dart_tool/, build/ and *.iml out of the release repository's own history
   .metadata                       1 file(s)  pins the Flutter revision the project was built with

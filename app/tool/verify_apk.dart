@@ -276,6 +276,37 @@ int _crc32(List<int> data) {
 // The checks
 // ---------------------------------------------------------------------------
 
+/// What a `--stamp` argument means: a stamp to look for, a refusal, or "not asked".
+class StampState {
+  /// The stamp to look for, or null when there is nothing to look for.
+  final String? stamp;
+
+  /// Why the argument is unusable, or null when it is fine or absent.
+  final String? reason;
+
+  const StampState(this.stamp, this.reason);
+}
+
+/// Decide what to do with the `--stamp` argument.
+///
+/// Split out of [verifyApk] so the self-test can drive the three cases directly instead
+/// of only through a whole synthetic archive — `analysis/79` #12 is about this exact
+/// decision, and `'abc'.contains('')` is a property of the *argument*, not of the APK.
+StampState checkStamp(String? stamp) {
+  if (stamp == null) return const StampState(null, null);
+  if (stamp.trim().isEmpty) {
+    return const StampState(
+        null,
+        'the build stamp is empty, so there is nothing to look for: '
+        "every artefact contains the empty string, and a check that cannot fail is "
+        'worse than no check. `tools/task.ps1` produces this when `git` is '
+        'unavailable — a build that cannot name itself must not be reported as '
+        'identified');
+  }
+  return StampState(stamp, null);
+}
+
+/// Every check performed on one `.apk`.
 ApkResult verifyApk(String path, {String? stamp, bool allowDebugSigning = false}) {
   final file = File(path);
   if (!file.existsSync()) {
@@ -333,7 +364,27 @@ ApkResult verifyApk(String path, {String? stamp, bool allowDebugSigning = false}
       'dex/so entries -> $markerHits hit(s)');
 
   // --- 3. the build stamp --------------------------------------------------
-  if (stamp != null) {
+  //
+  // ## Why an empty stamp is refused rather than skipped
+  //
+  // `'abc'.contains('')` is **true**, so `--stamp ''` used to walk into the "is it in
+  // libapp.so?" branch and pass for every artefact in the world — including one with no
+  // identity at all. That is `analysis/79` #12, and it is the section-4 failure shape
+  // (`the check reports the state of the world and never asserts anything about it`) one
+  // step further on: it asserts something that is always true.
+  //
+  // `tools/task.ps1` produced exactly that stamp on a machine without `git`:
+  // `git rev-parse` writes nothing to stdout, and `"$short$dirty"` is then `''` or
+  // `-dirty`. So the empty value is not hypothetical, and the two checks that consume it
+  // — this one and the PowerShell scan at the end of `Invoke-Build` — both have to refuse
+  // it. A build that cannot name itself is a build whose whole point (answering "is this
+  // the APK I just made?") is gone, and `--stamp` was supplied by a caller who believes
+  // it checked something.
+  final stampState = checkStamp(stamp);
+  if (stampState.reason != null) {
+    r.add('build-stamp', 'FAIL', stampState.reason!);
+  } else if (stampState.stamp != null) {
+    final s = stampState.stamp!;
     final libs = entries.where((e) => e.name.endsWith('libapp.so')).toList();
     if (libs.isEmpty) {
       r.add('build-stamp', 'FAIL',
@@ -341,15 +392,15 @@ ApkResult verifyApk(String path, {String? stamp, bool allowDebugSigning = false}
     } else {
       var found = false;
       for (final e in libs) {
-        if (_printableOf(zip.read(e), chunk: true).contains(stamp)) found = true;
+        if (_printableOf(zip.read(e), chunk: true).contains(s)) found = true;
       }
       if (!found) {
         r.add('build-stamp', 'FAIL',
-            "'$stamp' is not in libapp.so — the app would show a stale or absent "
+            "'$s' is not in libapp.so — the app would show a stale or absent "
             'build identity, and "is this the build I just made?" would be '
             'unanswerable again');
       } else {
-        r.stats.add('stamp   : "$stamp" found in libapp.so');
+        r.stats.add('stamp   : "$s" found in libapp.so');
       }
     }
   } else {
@@ -496,6 +547,26 @@ int runSelfTest() {
       problems.add('the debug certificate was not reported');
     }
 
+    // The **empty** stamp, which is a different hazard from the absent one and the one
+    // `analysis/79` #12 found: `'abc'.contains('')` is true, so an empty `--stamp` used
+    // to certify every artefact in the world — including `good.apk`, which carries the
+    // stamp `abc1234` and therefore could not have satisfied a real lookup for `''` in
+    // any meaningful sense. Asserted twice: on the argument, and end to end on that
+    // artefact, so removing `checkStamp` from the call path fails the self-test too.
+    for (final empty in <String>['', '   ']) {
+      final s = checkStamp(empty);
+      if (s.reason == null || s.stamp != null) {
+        problems.add('an empty stamp argument was accepted '
+            '(${jsonEncode(empty)} -> stamp ${s.stamp}, reason ${s.reason})');
+      }
+    }
+    if (checkStamp('abc1234').stamp != 'abc1234') {
+      problems.add('a real stamp argument was refused');
+    }
+    if (checkStamp(null).stamp != null || checkStamp(null).reason != null) {
+      problems.add('an absent stamp argument was treated as a hazard');
+    }
+
     // And the other direction: the same archive with nothing wrong in it, plus the
     // debug signature explicitly allowed, must be clean apart from that warning.
     final goodManifest =
@@ -517,6 +588,17 @@ int runSelfTest() {
           '${good.fails.map((f) => '${f.check}: ${f.detail}').join('; ')}');
     }
 
+    // The end-to-end half of the empty-stamp hazard: `good.apk` carries `abc1234`, so a
+    // lookup for `''` must be refused rather than satisfied. Without this, deleting
+    // `checkStamp` from [verifyApk]'s call path would leave the argument unit cases above
+    // passing while the check went back to certifying everything.
+    final emptyStamp =
+        verifyApk(goodApk.path, stamp: '', allowDebugSigning: true);
+    if (!emptyStamp.fails.any((f) => f.check == 'build-stamp')) {
+      problems.add('an empty --stamp certified a stamped artefact instead of being '
+          'refused');
+    }
+
     stdout.writeln('   self-test: hazard apk -> ${r.fails.length} FAIL '
         '(${r.findings.length} finding(s)); clean apk -> ${good.fails.length} FAIL');
     if (problems.isNotEmpty) {
@@ -528,7 +610,7 @@ int runSelfTest() {
       return 1;
     }
     stdout.writeln('   self-test: PASS - missing permission, instrument marker, '
-        'absent stamp and debug signature were all reported');
+        'absent stamp, empty stamp and debug signature were all reported');
     return 0;
   } finally {
     try {

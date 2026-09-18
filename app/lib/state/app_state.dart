@@ -27,6 +27,7 @@ import '../transport/album.dart';
 import '../transport/album_delete.dart';
 import '../transport/album_thumbnail_cache.dart';
 import '../transport/camera_connection.dart';
+import '../transport/camera_request_gate.dart';
 import '../transport/capture_guard.dart';
 import '../transport/frame_gate.dart';
 import '../transport/wifi_join_contract.dart';
@@ -113,6 +114,25 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Album, available once connected.
   CameraAlbum? album;
+
+  /// The one serial queue every camera file request goes through.
+  ///
+  /// ## Why it is owned here rather than by a page
+  ///
+  /// The camera is a single-threaded HTTP server with no watchdog (`AGENTS.md` §4.6),
+  /// and there are three callers that reach `GetFile`: the album grid's serial
+  /// thumbnail loop, the sync engine's serial queue, and — since this round — the
+  /// photo viewer loading a preview when it opens. Each of the first two is serial
+  /// **on its own**, which was enough while there were two of them; three
+  /// independently-serial loops make a parallel set between them.
+  ///
+  /// A gate owned by a page would serialise that page against itself and nothing else,
+  /// which is the defect rather than the fix. So it is created once, beside the album
+  /// it guards, and handed to every `CameraAlbum` this app builds — including the one
+  /// rebuilt on a reconnect.
+  final CameraRequestGate cameraGate = CameraRequestGate(
+    onLog: (m) => debugPrint('[camera] $m'),
+  );
 
   /// Test-only download seam, handed to [album] when it is created. See the
   /// constructor argument of the same name.
@@ -246,7 +266,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// **Off until the user asks**, which is the decision `transport/album.dart`
   /// (`SyncPlan.skipRaw`) documents and which nothing in `lib/` used to implement:
   /// every queue path enqueued `AssetGroup.assets`, RAW included, so one tap queued
-  /// ~32 MB where the user's mental model was ~5 MB (`analysis/79`, finding #2).
+  /// ~32 MB where the user's mental model was the measured 4.9 MB (`analysis/79`, finding #2).
   ///
   /// Exposed here rather than read off `uiPrefs` at each call site so the page has one
   /// place to read and write it, and so a rebuild triggered by the engine's own
@@ -682,7 +702,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     // Test-only. Supplies the remembered first-run answers, so the launch path that
     // applies them can be driven from a store with a known mode in it.
     OnboardingPrefs? testOnboardingPrefs,
-    // Test-only, same reason as 	estOnboardingPrefs: keeps the launch path off the
+    // Test-only, same reason as `testOnboardingPrefs`: keeps the launch path off the
     // platform channel so _load() does not gain an asynchronous gap under it.
     UiPrefs? testUiPrefs,
   }) : connection = CameraConnection(
@@ -824,7 +844,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _applyFrameWiring();
     if (s.stage == LinkStage.ready) {
       album ??= CameraAlbum(connection.http,
-          overrideDownload: _testAlbumDownload);
+          overrideDownload: _testAlbumDownload, gate: cameraGate);
       sync.cameraConnected();
       // Do not auto-start a transfer merely because BLE/Wi-Fi reached ready.
       // The camera exposes one small HTTP server; starting GetFile traffic here

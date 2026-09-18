@@ -460,6 +460,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewerLocalCopy => 'Showing the copy saved on this phone.';
 
   @override
+  String get viewerLoadingPreview => 'Loading a preview from the camera…';
+
+  @override
+  String get viewerFetchFullSize => 'Load the full size from the camera';
+
+  @override
+  String viewerPosition(int index, int total) {
+    return '$index of $total';
+  }
+
+  @override
   String viewerLoadingFromCamera(String size) {
     return 'Loading from the camera — $size';
   }
@@ -589,9 +600,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveEvReference => '· reference';
 
   @override
-  String get liveRetry => 'Retry';
-
-  @override
   String get liveConnectToCamera => 'Connect to camera';
 
   @override
@@ -718,9 +726,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagUnknown => 'unknown';
-
-  @override
-  String get diagUnknownValue => '?';
 
   @override
   String get readoutMode => 'Mode';
@@ -1285,9 +1290,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stagePausedByUser => 'Paused by you';
 
   @override
-  String get stagePausedLowBattery => 'Paused, camera battery low';
-
-  @override
   String get stageDone => 'Saved';
 
   @override
@@ -1620,11 +1622,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get localeChinese => '简体中文';
-
-  @override
-  String localeSelected(String name) {
-    return 'Selected: $name';
-  }
 
   @override
   String get paramAuto => 'Auto';

@@ -10,12 +10,143 @@ file declares. That coupling is the point: a tag, a pubspec and an installed bui
 to be checkable against each other, or "which build is this?" becomes unanswerable
 again.
 
+Releases so far: **`0.2.0+2`**, the first public one, and **`0.2.1+3`**.
+
 This file was reconstructed from the project's development history. Where an
 entry states something the project paid to learn, it says what the symptom was —
 "the button was green and the shutter had never been sent" is worth more to the
 next reader than "fixed a wiring defect".
 
 Grouping follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+---
+
+## [0.2.1]
+
+### Added
+
+- **The app has its own launcher icon.** Until this release it shipped Flutter's
+  template icon — a stock blue-and-white placeholder that says nothing and is nobody's
+  design. The new mark is a lens ring with a white glass at its centre and two
+  broadcast waves opening to the upper right: a camera you command over a radio link.
+  It is **original work by this project under this project's licence**, drawn from
+  three primitives; `NOTICE` §6 records what it is and, just as deliberately, what it
+  is not — no vendor logo, wordmark or trade dress was traced or approximated, and
+  nothing came from the vendor's decompiled application. It is a real adaptive icon
+  rather than one bitmap: the API 26+ foreground and background layers, a
+  `<monochrome>` layer so Android 13+ can recolour it to the wallpaper palette, and
+  ten legacy PNGs for API 24–25, all derived from one set of geometry constants.
+- **`dart tool/verify_icon.dart`** — 115 assertions over the icon, runnable with plain
+  `dart`. It decodes the ten PNGs with a real decoder rather than reading their
+  headers, asserts they are neither blank nor single-coloured nor duplicates of each
+  other, requires the round ones to be genuinely round, and re-derives the safe-zone
+  arithmetic by parsing the written vector instead of trusting the generator's own
+  numbers. Its first runs found four defects that would otherwise have shipped: every
+  legacy PNG a dark rectangle with the mark drawn off-canvas, a ring whose inner
+  contour was a four-lobed blob, `android:roundIcon` never declared — so the resource
+  shrinker deleted every round variant — and two XML comments containing `--`, which
+  XML forbids, breaking the release resource packaging twice.
+
+### Changed
+
+- **The name under the launcher icon follows the phone's language.** `android:label`
+  was the literal `M1 Controller`, and it is the one string that survives the app being
+  closed: the launcher reads it from the APK's resources, so the in-app translation
+  could not reach it and a Chinese phone showed English under the icon however good
+  that translation was. It is now a string resource with an English and a Chinese
+  value. **Which one is used is decided by the *system* locale**, through
+  `PackageManager`, before any Dart code runs — so this follows the phone's language
+  setting and *not* the language picked inside the app. That is a platform property
+  rather than a defect, and it is stated in the manifest, in the README and in `NOTICE`
+  §6 rather than glossed.
+- **An expanded settings group now survives switching between the "Shooting" and
+  "Sync" tabs**, and a remembered group is drawn expanded on the panel's first frame
+  instead of opening with a visible twitch. Before, switching away and back left the
+  group **collapsed** — so it had to be opened again — and the switch itself silently
+  expanded a *different* group nobody had tapped, the sync tab's connection
+  diagnostics, throwing five or six framework errors while it did. One cause: a group's
+  `State` object was being handed to another group when the list was rebuilt.
+- **A zoomed photo in the album viewer now fills the viewing area** — to the screen
+  edges left and right, to the bottom, and up to the app bar. It used to be confined to
+  the photo's own intrinsic size, so magnifying a thumbnail-sized picture magnified it
+  *inside* a thumbnail-sized box. The zoom limit was never the problem: it has always
+  been 6×, and the cause was a `Center` whose size was derived from its child.
+- **Opening a photo that is not on the phone loads one preview automatically**,
+  instead of showing an empty frame until the fetch button is pressed. It is one
+  `MidThumb` — measured at 196,495 B on the real camera, against 5,565,238 B for the
+  same photo's full-size original — it is fetched only for the page actually on screen,
+  and it takes priority over the album grid's thumbnail requests. The full-size
+  original is still an explicit press, and the button now says which of the two it will
+  do.
+- **The viewer pages left and right** instead of having to be closed and reopened,
+  **double-tap zooms to 3×** about the point tapped, and **dragging after zoom pans the
+  photo rather than turning the page** — which is what makes the edges of a photo
+  reachable at all. The app bar shows where you are (`3 of 12`), and the information
+  strip now floats over the photo rather than sitting under it, so the photo's height
+  no longer changes with the interface language.
+- **The thumbnail cache keeps its 8 MiB cap.** The cap is deliberately over a measured
+  1000-shot card rather than under one photograph: what it protects is that
+  reconnecting and opening the album does not re-fetch a card's worth of tiles from a
+  single-threaded camera. The justification written next to the number is now the
+  measured one, and the number that used to argue it — 9.4 MB for one photo, where the
+  real figure is 4.9 MB — is gone.
+
+### Fixed
+
+- **One camera file request at a time, for everything.** The album grid's thumbnail
+  loop, the sync engine's queue and the viewer each serialise their own requests, and
+  each was correct on its own — but the viewer becoming a third caller made two of
+  those serial loops into a pair of parallel ones, which is the one thing this camera
+  cannot take. A single gate now serialises every file request, gives the photo on
+  screen priority, never sends a request whose page has been swiped away, and lets an
+  in-flight request finish with its bytes discarded rather than pretending a
+  single-threaded server can be interrupted.
+- **A preview that never arrives leaves a usable viewer**: the failure is shown, the
+  spinner is gone, and the fetch button is back and still works. It does not retry on
+  every rebuild, which against this camera would be a request storm.
+- **A photo that is already on the phone still asks the camera for nothing** — not
+  even a thumbnail. That was the guardrail this round had to keep green, and it is the
+  one the automatic preview was allowed to move next to, not through.
+- **The invented byte figures are now measured ones.** One figure for the size of a
+  full-size JPEG was quoted in nine places across five files and matched neither of the
+  two real measurements (4,897,837 B and 5,565,238 B); `MidThumb` was quoted as
+  "~186 KB, measured" where its two measurements are 106,375 B and 196,495 B. They are
+  now named constants with their provenance, and a check fails on any `N MB` / `N KB`
+  figure in the code that is not one of them — a number in a comment cannot be tested,
+  and this one had already drifted into a decision.
+- **The localisation mechanism gained the direction it was missing.** The checks
+  proved that every key existed, had a translation and had matching placeholders; none
+  asked whether anything ever *read* the key. That check now exists, and it found three
+  keys nothing could reach.
+- **Two camera parameters were being read back under a key they were not set with,
+  and nothing checked either direction.** Thirteen commands take a value and are then
+  re-read to show the camera's state; two of them spell the two keys differently, so a
+  typo in either table is a value the camera never receives and the interface never
+  notices. Both tables are now single-source and checked from two sides — against
+  parameter blocks recorded from the camera, and against the app's own state.
+- **The build stamp could be empty, and the check that reads it passed anyway.** The
+  artifact check asks whether the shipped `libapp.so` contains the build stamp, and an
+  empty string is contained in every string — so on a machine without `git`, where
+  there is no commit to name, the one check whose job is "the binary can name itself"
+  certified any file at all. The stamp's producer and its reader both refuse an empty
+  value now, and the release check carries a self-test that plants that hazard.
+- **A sync stage that could never happen was removed rather than implemented.** The
+  low-battery pause was declared, labelled "camera battery low", unreachable, and wrong
+  three times over: the battery level it would watch is the *camera's* while the phone
+  is what runs down, `101` on this camera means *charging* rather than empty, and
+  nothing would have resumed the transfer it paused. A check now fails any sync stage
+  with no assignment anywhere in the code, which is the shape that let this one stay
+  alive.
+- **Three published documents contradicted the release they shipped with.** `NOTICE`
+  still said the app has no in-app licence screen — `0.2.0` added one — and that the
+  launcher icon was Flutter's template icon, which this release replaces; the README
+  still said no APK had been published, while `0.2.0`'s was attached to a GitHub
+  Release and downloaded. All three are corrected, and the corrections are kept as a
+  record rather than overwritten.
+- **The README's safety rule was narrowed to match the code.** "An explicit request is
+  required to fetch" was true of the full-size original and false of the automatic
+  preview, so the rule now reads as the one that always held: a photo already on the
+  phone is never fetched from the camera again.
 
 ---
 

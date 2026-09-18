@@ -132,11 +132,58 @@
 
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 
+    <!-- ==================================================================
+         The label, and why it is a resource rather than a literal.
+
+         This is the ONE string that survives the app being closed: the launcher
+         draws it under the icon, reading it from this APK's resources through
+         `PackageManager.getApplicationLabel()`. Flutter's localisation never
+         touches it; `lib/l10n/app_*.arb` only reaches text the Dart code
+         renders, so a literal here is English on every phone forever, however
+         good the in-app translation is. `analysis/79` finding #16 is exactly
+         that: the ARB shipped "M1 控制器" while this attribute said
+         "M1 Controller".
+
+         `@string/app_name` resolves against the **system** language, which is a
+         platform property: the launcher asks before any Dart runs, so the
+         in-app language picker cannot influence it. Both files therefore carry
+         the ARB's own `appTitle` verbatim rather than a second translation.
+
+         Do not turn this back into a literal, and do not add other strings to
+         those files: one source of truth for every visible string is the point.
+         `tools/audit_app_capabilities.py` asserts this stays a resource
+         reference, and `app/tool/verify_apk.dart` reads the label out of the
+         built APK in the release repository.
+         ================================================================== -->
     <application
-        android:label="M1 Controller"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:networkSecurityConfig="@xml/network_security_config">
+
+        <!-- ==============================================================
+             `android:roundIcon` is not decoration, and leaving it out was a
+             real defect rather than a missing nicety.
+
+             The attribute was added in API 25 to name the icon a launcher uses
+             when it wants a round one. Without it, nothing in the APK refers to
+             `mipmap/ic_launcher_round` at all, so the resource shrinker **deletes
+             it**: the first build of this icon shipped zero `ic_launcher_round`
+             variants, and `aapt2 dump resources` on the artifact listed only
+             `mipmap/ic_launcher`. The round artwork existed in the source tree
+             and was not in the app.
+
+             What a round launcher did instead, on API 24-25 where there is no
+             adaptive icon to mask, was take the square `ic_launcher.png` and round
+             it itself: the mark would have been cropped, which is exactly the
+             failure the round bitmap is drawn to avoid.
+
+             `minSdk` is 24 and the attribute arrives in 25. On API 24 an
+             unrecognised manifest attribute is ignored by the platform, so this
+             is safe rather than merely tolerated, and Android Lint agrees
+             (`-Only lint` is clean: an attribute is not an unguarded API call).
+             ============================================================== -->
 
         <activity
             android:name=".MainActivity"

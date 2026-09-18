@@ -4,33 +4,56 @@ import 'dart:typed_data';
 
 /// How much of the phone the album's thumbnails may occupy, on disk.
 ///
-/// ## Why this number, and it is bounded on both sides
+/// ## Why this number
 ///
-/// A grid thumbnail is **one request of ~7 KB** (measured on the real body:
+/// A grid thumbnail is **one request of a few KB** (measured on the real body:
 /// `analysis/50` §2, reproduced in `analysis/61` §1 — a `.JPG` at `Thumbnail` answers
-/// `200` with about 6.8 KB), so a 1000-photo card is **6.8 MB**.
+/// `200` with 3,552 B and 6,785 B in the two samples). At the larger measured cost, a
+/// full **1000-shot card is `kThousandShotCardBytes`**, and this cap holds one with room over.
 ///
-/// * **Above it**: 8 MB holds that card — the design point — with about 1.2 MB, or ~180
-///   thumbnails, to spare, so the largest card that has been measured never evicts
-///   anything.
-/// * **Below it**: 8 MB is under the size of a single `Original` on this camera (9.4 MB
-///   for the measured JPEG, 32 MB for the RAW — `analysis/50` §2). A cache for 170dp
-///   pictures must not be able to claim more room than one photograph, and this is the
-///   bound that says so. `tool/verify_transport.dart` asserts both sides.
+/// **The bound that matters is the card, because the card is the feature.** The maintainer
+/// asked for this cache because *"every time I connect and open the album the thumbnails
+/// reload"* — so a cap that forces a large card to re-fetch most of itself has given back
+/// what the cache was built to save, and on a **single-threaded camera** each of those is a
+/// request competing with the live view (`AGENTS.md` §4 item 6).
 ///
-/// At the cap the oldest entries go first, so a card past ~1200 shots degrades to exactly
-/// the behaviour the app had before this cache existed for its oldest part — those tiles
-/// are fetched from the camera again. It is never *worse* than no cache.
+/// ## The bound that was argued here before, and why it is gone
+///
+/// The previous justification was *"the cap has to be smaller than one photograph, so a
+/// cache for 170dp pictures can never become a place originals are kept"* — argued from
+/// **9.4 MB**, a figure that was never measured (`analysis/79` #19/#20). The real
+/// `Original` is **4,897,837 B** (`analysis/50` §2), so at 8 MiB the sentence was false;
+/// the inflated number is what hid it.
+///
+/// **It was then replaced with 2 MiB to make the sentence true, and that traded the wrong
+/// thing.** The two claims are arithmetically incompatible — a cap under one 4.9 MB
+/// photograph cannot also be over a 6.8 MB card — and the smaller one preserves a rule
+/// about **8 MB of a reclaimable cache directory** at the cost of re-fetching **~705 tiles
+/// on a 1000-shot card**, every session. Being under one photograph protects nothing a user
+/// would notice; holding the card is what they asked for.
+///
+/// **What actually bounds this cache is that it is bounded** — growth is capped, eviction
+/// is oldest-fetched first, entries over `kThumbMaxEntryBytes` are never kept, only
+/// successes are written, and the whole directory is one Android can reclaim. That is the
+/// property to keep, and it does not need a number smaller than a photograph to hold.
 const int kAlbumThumbnailCacheMaxBytes = 8 * 1024 * 1024;
 
 /// The largest single response worth keeping: a thumbnail, or the `MidThumb` the
-/// viewer asks for (~186 KB, measured — `album_page.dart`'s `AssetViewerPage` note).
+/// viewer asks for.
+///
+/// **The size is a declared measurement, not a round number.** This said "~186 KB,
+/// measured — `album_page.dart`'s `AssetViewerPage` note", and neither half held: 186 KB
+/// is not a measurement this tree contains, and the note it cited was itself an
+/// unmeasured assertion (`analysis/79` #20). The two recorded `MidThumb` responses are
+/// **106,375 B and 196,495 B** (`analysis/50` §2, `analysis/61` §1) — 106 KB and 196 KB,
+/// a factor of nearly two apart, which is the actual reason this limit is a *shape*
+/// (one small rendition) rather than a size.
 ///
 /// Deliberately **not** unbounded. The grid's chain is
 /// `Thumbnail → MidThumb → Original`, and for a file with no small rendition it
-/// therefore reaches the original: 9.4 MB for a JPEG, 32 MB for a `.DNG`
-/// (`analysis/50` §2). Three of those would evict a whole card's worth of thumbnails to
-/// store pictures that are not thumbnails. A tile drawn from such a response still
+/// therefore reaches the original: 4.9–5.6 MB for a JPEG, 31.9 MB for a `.DNG`
+/// (`measured_sizes.dart`). Three of those would evict a whole card's worth of thumbnails
+/// to store pictures that are not thumbnails. A tile drawn from such a response still
 /// shows the picture in memory — it is simply not persisted, and the next visit asks
 /// the camera again.
 const int kAlbumThumbnailCacheMaxEntryBytes = 512 * 1024;
@@ -52,9 +75,10 @@ const int kAlbumThumbnailCacheMaxEntryBytes = 512 * 1024;
 ///
 /// Not a single JSON file with base64 thumbnails. The established stores
 /// (`FilePairingStore`, `FileSyncStore`) are single files written whole and renamed into
-/// place, and that shape is wrong for this payload: a card's worth of thumbnails is
-/// ~7 MB, and a whole-file rewrite **per thumbnail** would be ~7 GB of writes to fill
-/// one album. One small file per entry makes each write ~7 KB and each read one file.
+/// place, and that shape is wrong for this payload: a measured 1000-shot card of
+/// thumbnails is **6.8 MB** (`kMeasuredCardOfThumbnailsBytes`), and a whole-file rewrite
+/// **per thumbnail** would be gigabytes of writes to fill one album. One small file per
+/// entry makes each write a few KB and each read one file.
 ///
 /// The directory is the app's **cache** directory (`getApplicationCacheDirectory`,
 /// wired in `lib/platform/thumbnail_cache.dart`) rather than its documents directory,

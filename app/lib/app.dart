@@ -482,7 +482,11 @@ void main() {
       // optimisation that can prevent the app from launching is worse than the
       // memory churn it avoids.
       try {
-        PaintingBinding.instance.imageCache.maximumSizeBytes = 8 << 20; // 8 MB
+        // 8 MiB of decoded images and 12 entries. This is the **Flutter image cache**,
+        // which holds decoded bitmaps in memory — a different budget from the album's
+        // on-disk thumbnail cache (`AlbumThumbnailCache`), and the two numbers are
+        // unrelated even though both are "8 MB"-ish.
+        PaintingBinding.instance.imageCache.maximumSizeBytes = 8 << 20; // 8 MiB
         PaintingBinding.instance.imageCache.maximumSize = 12;
       } on Object catch (e) {
         debugPrint('could not bound the image cache ($e); continuing');

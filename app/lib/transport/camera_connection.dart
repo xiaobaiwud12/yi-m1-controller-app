@@ -493,12 +493,14 @@ class CameraConnection {
   /// Generous on purpose.  The camera serves everything from one tiny HTTP
   /// server over its own 802.11n access point, and while the live-view stream is
   /// running that link is already busy — a 5-second timeout produces spurious
-  /// failures on a camera that is merely slow.  Verified: a full-resolution photo is
-  /// ~9 MB, and the stream is **not** cheap — measured at ~52-57 KB per datagram at
-  /// ~30/s, about **12-14 Mbit/s** (`analysis/50` §3).  An earlier version of this
-  /// comment said 4.2 Mbit/s, from a 40-frame sample of a plain scene; the two are
-  /// comparable rather than the stream being negligible, which is the case that makes
-  /// the generous timeout necessary.
+  /// failures on a camera that is merely slow.  Verified: a full-resolution JPEG is
+  /// **4.9–5.6 MB** and a `.DNG` is **31.9 MB** (`analysis/50` §2, `analysis/61` §1;
+  /// the byte counts are in `measured_sizes.dart`), and the stream is **not** cheap —
+  /// measured at ~52-57 KB per datagram at ~30/s, about **12-14 Mbit/s**
+  /// (`analysis/50` §3).  An earlier version of this comment said 4.2 Mbit/s, from a
+  /// 40-frame sample of a plain scene, and quoted the photo as ~9 MB; the two streams
+  /// are comparable rather than the live view being negligible, which is the case that
+  /// makes the generous timeout necessary.
   final Duration commandTimeout;
 
   /// Timeout for album transfers, which move megabytes rather than bytes.

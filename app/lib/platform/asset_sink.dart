@@ -42,10 +42,12 @@ import 'media_store_bridge.dart';
 /// * the filename is supplied through `DISPLAY_NAME` and is preserved — a suffix
 ///   appears only on a genuine collision, which for this camera means two different
 ///   shots sharing a name; and
-/// * identity is not the filename anyway. `AssetGroup`/`syncKey` pair a RAW+JPEG
-///   shot by the **name stem**, so `YI000123.JPG` beside `YI000123.DNG` still
-///   pairs. The camera's own naming is what makes that work, which is precisely
-///   why it must be preserved.
+/// * identity is not the filename anyway. `AssetGroup` pairs a RAW+JPEG shot by the
+///   **name stem**, so `YI000123.JPG` beside `YI000123.DNG` still pairs — and the
+///   synced-set identity is `AssetId.key` (`path|captureSeconds`), which is not the
+///   display name at all. (A `syncKey` getter used to be named here; it was removed as
+///   dead code in `analysis/79` #17 — see `AlbumFile`.) The camera's own naming is what
+///   makes the stem pairing work, which is precisely why it must be preserved.
 ///
 /// ## Capture date (T15) — and exactly what is set, and what is not
 ///

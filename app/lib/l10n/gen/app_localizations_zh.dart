@@ -432,6 +432,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get viewerLocalCopy => '正在显示本机保存的副本。';
 
   @override
+  String get viewerLoadingPreview => '正在从相机读取预览图……';
+
+  @override
+  String get viewerFetchFullSize => '从相机取原图';
+
+  @override
+  String viewerPosition(int index, int total) {
+    return '第 $index / $total 张';
+  }
+
+  @override
   String viewerLoadingFromCamera(String size) {
     return '正在从相机读取 —— $size';
   }
@@ -559,9 +570,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get liveEvReference => 'EV 参考';
 
   @override
-  String get liveRetry => '重试';
-
-  @override
   String get liveConnectToCamera => '连接相机';
 
   @override
@@ -683,9 +691,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diagUnknown => '未知';
-
-  @override
-  String get diagUnknownValue => '？';
 
   @override
   String get readoutMode => '模式';
@@ -1227,9 +1232,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stagePausedByUser => '被你暂停';
 
   @override
-  String get stagePausedLowBattery => '已暂停，相机电量低';
-
-  @override
   String get stageDone => '已保存';
 
   @override
@@ -1549,11 +1551,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get localeChinese => '简体中文';
-
-  @override
-  String localeSelected(String name) {
-    return '当前：$name';
-  }
 
   @override
   String get paramAuto => '自动';

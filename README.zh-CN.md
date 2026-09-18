@@ -11,14 +11,17 @@
 
 本仓库只包含这个应用，别无其他。
 
-> **状态：首个公开版本，`0.2.0+2`。** 还没有发布过任何 APK；第一个会挂在 GitHub
-> Release 上，并用维护者自己的密钥签名（见 `RELEASING.md`）。这个应用只在一台相机、
-> 一台手机上、由一个人验证过。`CHANGELOG.md` 和下面各节把有证据的部分和没有证据的
-> 部分分开写。
+> **状态：`0.2.1+3`。** `0.2.0+2` 是第一个公开版本：它的 APK 挂在 GitHub Release 上，
+> 用维护者自己的密钥签名（见 `RELEASING.md`）。`app/pubspec.yaml` 里的版本号就是这个
+> 产物的身份，每个版本改了什么记在 `CHANGELOG.md` 里。这个应用只在一台相机、一台手机上、
+> 由一个人验证过。`CHANGELOG.md` 和下面各节把有证据的部分和没有证据的部分分开写。
 >
 > 应用自带**英文与简体中文**。默认跟随手机的语言；语言选择器在
 > **设置 → 同步 → 系统与诊断 → 语言**（`setting-locale`），立即生效并且会被记住。
-> 一个例外见下文「未经验证，也不作声称」：同步栏那行摘要是英文的，两种语言下都是。
+> 有两处字符串按平台规则不受这个选择器控制：**启动器图标下面那个名字跟随的是手机的
+> 系统语言** —— 启动器在 Dart 跑起来之前就通过 `PackageManager` 从 APK 的资源里读它
+> （见下文「启动图标与图标下的名字」）。另一个例外见下文「未经验证，也不作声称」：
+> 同步栏那行摘要是英文的，两种语言下都是。
 > 它也在应用内声明自己的许可：顶栏的信息按钮（`btn-licences`）打开许可页，页面上列出
 > 每一个随附组件，并明确写着这不是厂商的应用。
 >
@@ -168,8 +171,8 @@ physical **Accept** on the camera body, and the camera stores only one pairing.
 
 ### 在桌面上验证过
 
-- **[V]** 跨越协议、传输、同步三层共 674 项纯逻辑断言（传输套件 450 项、同步套件
-  224 项），外加 29 项一致性检查，用普通的 `dart` 就能跑，不需要 Flutter 引擎：
+- **[V]** 跨越协议、传输、同步三层共 686 项纯逻辑断言（传输套件 456 项、同步套件
+  230 项），外加 29 项一致性检查，用普通的 `dart` 就能跑，不需要 Flutter 引擎：
 
   ```powershell
   cd app
@@ -350,7 +353,7 @@ cd app
 dart tool/verify.dart
 ```
 
-这就是这个仓库验证工作的全部：分析器、三套纯 Dart 逻辑测试（合起来 674 项断言，
+这就是这个仓库验证工作的全部：分析器、三套纯 Dart 逻辑测试（合起来 686 项断言，
 外加 29 项一致性检查，而且它们必须在*没有* Flutter 的情况下保持能编译 —— 那是一条
 架构不变量，不是偏好）、widget 测试、扫过整个仓库的泄漏扫描，以及两项属于发布流程
 而不属于应用本身的检查的自检。加上 `--with-android` 会连 Kotlin 的 JVM 单测一起跑
@@ -434,7 +437,7 @@ flutter run -d emulator-5554 --dart-define=MARIONETTE=1 --dart-define=FAKE_CAMER
 | `app/lib/state/` | `AppState`，唯一的状态源。 |
 | `app/lib/ui/` | 页面与控件。可交互控件都带 `ValueKey<String>` 名字（`btn-*`、`toggle-*`、`banner-*`），这样它们可以被远程定位。 |
 | `app/lib/l10n/` | 翻译源文件（`app_en.arb`、`app_zh.arb`）和生成的 `AppLocalizations`。 |
-| `app/tool/verify*.dart` | 674 项纯 VM 断言，外加 `verify.dart`（入口）、`verify_release.dart`（泄漏扫描）和 `verify_apk.dart`（产物检查）。全都能用普通的 `dart` 跑，不需要 Flutter 引擎。 |
+| `app/tool/verify*.dart` | 686 项纯 VM 断言（transport 456 + sync 230），外加 29 项 conformance 检查，以及 `verify.dart`（入口）、`verify_release.dart`（泄漏扫描）、`verify_apk.dart`（产物检查）和 `verify_icon.dart`（启动图标）。全都能用普通的 `dart` 跑，不需要 Flutter 引擎。 |
 | `app/test/` | widget 测试、溢出与字号缩放测试、夹具。 |
 | `app/android/` | Kotlin：`MediaStorePublish`、`WifiJoinDiagnosis`、`MediaKind`，外加 JVM 单测。 |
 | `app/testdata/liveview/` | 从相机抓下来的 40 个真实 UDP 数据报。`tool/verify_transport.dart` 会读它们，缺了它们帧格式检查就跑不了。 |
@@ -443,7 +446,7 @@ flutter run -d emulator-5554 --dart-define=MARIONETTE=1 --dart-define=FAKE_CAMER
 三个不含 Flutter 的层是硬约束，不是风格偏好：`dart tool/verify_transport.dart` 和
 `dart tool/verify_sync.dart` 必须继续在一个没有 Flutter 引擎的纯 Dart VM 里编译并
 运行 —— 它们都不 import `app/lib/transport/` 里那四个确实 import 了 Flutter 的
-文件 —— 而这就是 674 项断言能在几秒内跑完的原因。`app/lib/protocol/` 与
+文件 —— 而这就是 686 项断言能在几秒内跑完的原因。`app/lib/protocol/` 与
 `app/lib/sync/` 里完全没有 `package:flutter` 的 import。
 
 ---
@@ -455,8 +458,12 @@ flutter run -d emulator-5554 --dart-define=MARIONETTE=1 --dart-define=FAKE_CAMER
 而不仅仅写在文档里：
 
 1. **把一次下载放进队列，不等于开始传输。** 开始它的是同步栏。
-2. **已经同步过的照片永远不会再从相机取一次。** 查看页读的是手机自己的那份副本；
-   要取图必须由用户显式请求。
+2. **已经在手机上的照片，永远不会再从相机取一次。** 查看页读的是手机自己的那份副本，
+   所以已同步的照片在相机关机时也能打开。**未同步**的照片在打开时可以自己取**一张**
+   `MidThumb` 预览图 —— 这条规则是被有意收窄的，条件是三条：任何时刻只有一个相机请求
+   在飞（全应用共用一个闸门，与网格、同步引擎共用，屏幕上的那张优先）；页面翻走时
+   **还在排队**的请求**根本不发**；失败必须显示出来，而不是一直转圈。取**原图**仍然
+   必须由用户显式按按钮。
 3. **取景流的暂停/恢复默认关闭**，因为它从未在真机上验证过。
 
 另外：相机的热点**一次只接纳一个客户端**。一台手机和一台 PC 不能同时挂在上面，
@@ -476,5 +483,31 @@ flutter run -d emulator-5554 --dart-define=MARIONETTE=1 --dart-define=FAKE_CAMER
 
 本项目是一个独立的第三方控制器。它与 YI M1 的制造商没有隶属、背书或支持关系。
 「YI」「Xiaoyi」和「YI M1」是各自所有者的商标，在这里只用来说明这个软件是做什么
-用的。没有随附任何厂商的美术资源、logo 或素材 —— 启动图标就是 Flutter 模板自带的
-那个。
+用的。没有随附任何厂商的美术资源、logo 或素材 —— 启动图标是本项目自己的作品
+（见 `NOTICE` §6），几何形状由本项目自己定义并保存在本仓库里。
+
+---
+
+## 启动图标与图标下的名字
+
+- **[V]** 应用有了自己的图标：一个镜头环，中间是白色镜片，右上方两道向外扩散的
+  广播弧线 —— 「用无线链路指挥的相机」。它是**本项目的原创作品，按本项目的许可发布**，
+  其中没有任何厂商的美术资源、字标或商业外观；`NOTICE` §6 记着它是什么，也特意记着
+  它**不是**什么。它是一个真正的自适应图标，而不是一张位图：`mipmap-anydpi-v26/`
+  放前景与背景图层，`mipmap-anydpi-v33/` 多一层 `<monochrome>`，所以 Android 13+
+  可以按用户的壁纸配色给它重新上色；`mipmap-{m,h,xh,xxh,xxx}dpi/` 里是 API 24–25
+  用的十张传统 PNG。所有产物都由同一组几何常数推导出来。
+- **[V]** 图标下面那个名字是字符串资源，有英文和中文两个值
+  （`app/android/app/src/main/res/values/strings.xml` 与 `values-zh/`），不是字面量，
+  所以中文手机显示中文名。
+- **它跟随哪一种语言是平台属性，不是这个应用里的设置。** 启动器通过
+  `PackageManager` 按**系统**语言解析 `android:label`，这发生在 Dart 跑起来之前，
+  所以应用内的语言选择器影响不了它：系统设成英文的手机，即使在这个应用里选了中文，
+  图标下面仍然是英文名，反过来也一样。这里把它写清楚而不是含糊过去，因为它是应用内
+  本地化永远够不到的那一个可见字符串 —— `app/lib/l10n/app_*.arb` 只提供 Dart 代码
+  渲染的文字。
+- **[V]** 这个图标有一条会失败的检查：`dart tool/verify_icon.dart`，115 项断言。
+  它用真正的解码器（zlib 与全部五种扫描线滤波器）解出那十张 PNG，而不是读文件头；
+  断言它们既不是空白、也不是单色、彼此也不重复；要求圆形图标真的是圆的；并且通过解析
+  写出来的矢量**重新推导**安全区算术，而不是复用生成器自己的数字。它读的是 `res/`
+  与清单，所以在这个仓库里能跑；它不在 `dart tool/verify.dart` 的流程里。

@@ -65,7 +65,7 @@ wrapper are both gone. If your `JAVA_HOME` is JDK 24 or newer, set
 `org.gradle.java.home` in `~/.gradle/gradle.properties`; `README.md` explains why.
 
 **You do not need the camera to contribute to the protocol, transport, sync or UI
-layers.** Those have 674 assertions and a widget suite that run without hardware.
+layers.** Those have 686 assertions and a widget suite that run without hardware.
 What you cannot verify without hardware is anything involving pairing, joining the
 camera's access point, the wire protocol, the live-view stream, or whether a photo
 actually appears in the system gallery. Say which side of that line your change is
@@ -101,7 +101,7 @@ on, and do not claim a hardware result you did not get.
   The build is supposed to refuse; if it does not, that is the bug.
 - Breaking the plain-VM invariant: `tool/verify_transport.dart` and
   `tool/verify_sync.dart` must keep compiling and running in a plain Dart VM, without
-  Flutter, so the 674 assertions finish in seconds. **That is the rule the tree actually
+  Flutter, so the 686 assertions finish in seconds. **That is the rule the tree actually
   enforces**, and it is deliberately narrower than "these layers are Flutter-free":
   `app/lib/protocol/` and `app/lib/sync/` are clean, but four files in `app/lib/transport/`
   do import Flutter (`file_pairing_store.dart`, `flutter_ble_transport.dart`,

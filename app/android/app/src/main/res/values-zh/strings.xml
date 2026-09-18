@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Chinese launcher label, shown when the phone's system language is Chinese.
+
+    `values-zh` and not `values-zh-rCN`, to match `lib/l10n/app_zh.arb`: one
+    Chinese translation serves every Chinese region, and a `-rCN` qualifier would
+    leave a phone set to `zh-TW` or `zh-HK` falling back to the English default.
+
+    This resolves against the **system** language, not the language picked inside
+    the app; see the comment in `values/strings.xml`. That is a platform
+    property, not a shortcut taken here: the launcher reads the label from
+    `PackageManager` before the app runs.
+
+    The value must stay identical to `appTitle` in `lib/l10n/app_zh.arb`.
+-->
+<resources>
+    <string name="app_name">M1 控制器</string>
+</resources>

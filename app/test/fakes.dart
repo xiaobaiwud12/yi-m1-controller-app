@@ -112,9 +112,40 @@ void useTempStorage(String dir) {
 ///
 /// The disconnected state — which is what the app launches into, and worth
 /// testing on its own.
+///
+/// ## The launch path is started by the constructor, and the test owns it
+///
+/// `AppState`'s constructor calls `unawaited(loadDurableState())`, so building one
+/// starts a chain of **four** store reads and a `notifyListeners()` that nobody waits
+/// for. The production stores go through `path_provider`, which in a test raises
+/// `MissingPluginException` (swallowed, correctly — see the note on
+/// [connectedTestAppState]'s `onboardingPrefs`) **after an asynchronous gap**. Two
+/// outcomes:
+///
+///  * a **widget** test is fine without doing anything, because `pump` drains the
+///    microtask queue inside the test body — that is [connectedTestAppState]'s note;
+///  * a **plain `test()` is not**: its body returns in microseconds, the load lands
+///    after `dispose()`, and `notifyListeners()` on a disposed notifier asserts
+///    `A AppState was used after being disposed`, raised from `AppState._load`.
+///    **Measured here**: a test that builds an `AppState`, disposes it and then drains
+///    the event queue fails 100% of the time, and the same test passes when it awaits
+///    `loadDurableState()` first. That is `l10n_link_status_test.dart` — reported green
+///    3/3 alone and red intermittently under a full suite (the extra load moves the
+///    timing), and `first_run_gate_test.dart` drains the same assertion by name.
+///
+/// So [testUiPrefs] and [testOnboardingPrefs] are injected here for the reason
+/// [connectedTestAppState] gives (remove the channel hop rather than paper over it),
+/// and **a test that is not a widget test must `await app.loadDurableState()` before
+/// disposing**. That future *is* the constructor's load, so awaiting it is what makes
+/// the test own the lifecycle it started — it is not a wait, and it cannot pass by
+/// taking longer. Do not replace it with a sleep, and do not guard the notifier: the
+/// assertion is the only thing in the suite that reports launch work outliving the
+/// object that started it.
 AppState testAppState() => AppState(
       ble: FakeBleTransport(),
       sink: NullAssetSink(),
+      testUiPrefs: UiPrefs(store: MemoryPrefsStore()),
+      testOnboardingPrefs: OnboardingPrefs(store: MemoryPrefsStore()),
     );
 
 /// An [AppState] that believes it is talking to the camera.

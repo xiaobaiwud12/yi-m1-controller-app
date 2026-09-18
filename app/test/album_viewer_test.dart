@@ -60,6 +60,13 @@ void main() {
     );
   }
 
+  /// Whether the viewer has stopped working: no spinner anywhere on it.
+  ///
+  /// Deliberately not "an image is on screen": two of these checks pass bytes that cannot
+  /// decode (the ledger cases), and their subject is the message rather than a picture.
+  bool settled(WidgetTester tester) =>
+      find.byType(CircularProgressIndicator).evaluate().isEmpty;
+
   Future<void> pumpViewer(WidgetTester tester,
       {required dynamic app, required AssetGroup group}) async {
     await tester.binding.setSurfaceSize(const Size(1080, 2136));
@@ -68,10 +75,25 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
-      home: AssetViewerPage(app: app, group: group),
+      home: AssetViewerPage(app: app, groups: [group]),
     ));
-    await tester.pump(const Duration(milliseconds: 50));
+    // ## Why this is real time and not `pump(Duration(milliseconds: 50))`
+    //
+    // It was the latter, and it was enough while opening a photo fetched nothing. Now the
+    // viewer loads a preview on open, and whether the fetch has **settled** decides what is
+    // on screen: during it the status band says the photo is loading, after it the band
+    // offers the full size. A fixed fake-clock pump lands somewhere inside that, so an
+    // assertion about which control is present would be a race dressed as a check.
+    // `runAsync` steps outside the fake-async zone, where the platform channel and the
+    // image decode — and the album's `overrideDownload` — actually complete.
+    for (var i = 0; i < 200; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)));
+      await tester.pump(const Duration(milliseconds: 2));
+      if (settled(tester)) break;
+    }
   }
+
 
   testWidgets('an injected connection reaches the album at all', (tester) async {
     // The verification harness found this the hard way: `connectedTestAppState()`
@@ -122,11 +144,22 @@ void main() {
     expect(find.textContaining(en.viewerLocalCopy), findsOneWidget);
   });
 
-  testWidgets('opening an unsynced photo still does not touch the camera',
+  testWidgets('opening an unsynced photo loads one preview, and no more',
       (tester) async {
-    // The camera is a deliberate second step, not a side effect of a tap. The
-    // album grid already loads thumbnails for browsing; opening one must not add
-    // a full-size request to that traffic.
+    // ## What this test used to say, and why it changed
+    //
+    // It used to assert `downloads` is **empty** — "the viewer reached the camera without
+    // being asked to" — and that was correct for `analysis/39`'s rule. The maintainer then
+    // asked for the preview to load when a photo opens, so the rule was narrowed to the
+    // half that was always load-bearing (`AGENTS.md` §4.6, `analysis/81` §2.1): **a shot
+    // with a ledger entry is never fetched**, and a shot without one may load **one**
+    // preview.
+    //
+    // So the camera *is* reached here, deliberately — and the assertions that matter are
+    // that it is reached **exactly once**, at the measured `MidThumb` rendition, and that
+    // the full-size file still needs the explicit button. Those numbers are here rather
+    // than only in `album_viewer_layout_test.dart` because this file is the command log
+    // of record for the viewer, and "one request" is a fact about the camera.
     final commands = <String>[];
     final downloads = <String>[];
     final app = connectedTestAppState(onCommand: commands.add);
@@ -136,13 +169,19 @@ void main() {
 
     await pumpViewer(tester, app: app, group: shot());
 
-    expect(downloads, isEmpty,
-        reason: 'the viewer reached the camera without being asked to');
-    expect(commands.where((c) => c == 'GetFile'), isEmpty,
-        reason: 'the viewer drove GetFile without being asked to');
-    expect(find.byKey(const ValueKey<String>('btn-viewer-fetch-camera')),
-        findsOneWidget,
-        reason: 'there must be a named way to fetch it, or the photo is stuck');
+    // Exactly one request, and it is the cheap rendition. `Original` for this camera is
+    // 5,565,238 B against `MidThumb`'s 196,495 B (`analysis/61` §1), and a tap on a photo
+    // is not the user asking for five megabytes.
+    expect(downloads, ['YI000001.JPG:MidThumb'],
+        reason: 'opening a large photo must load exactly one preview — not none, and '
+            'not the full-size original. Got $downloads');
+    // **Not asserted through `commands`.** `GetFile` is the one command whose response
+    // *is* the file, so it does not go through `CameraHttpClient.send` and never reaches
+    // `onCommand` — a count of it there is always zero, which is a check that cannot
+    // fail. The `downloads` list above is the seam that sees it, and it sees the
+    // rendition too. (`analysis/81` §1.7 is this same shape three more times.)
+    expect(find.textContaining(en.qualityPreview), findsOneWidget,
+        reason: 'the viewer must say the copy on screen is a preview, not the real file');
   });
 
   testWidgets('a ledger entry whose bytes are gone says so instead of refetching',

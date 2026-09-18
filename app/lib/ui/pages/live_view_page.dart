@@ -3394,6 +3394,11 @@ class _SettingsPanelState extends State<_SettingsPanel>
                 else
                   for (final g in shown.groups)
                     _SettingsGroupTile(
+                      // The identity of the *group*, not of its position in this tab.
+                      // Without it the two tabs' lists — different ids, different
+                      // lengths — are matched positionally and one group inherits
+                      // another's state; see `_SettingsGroupTile`'s class doc.
+                      key: ValueKey<String>('settings-group-tile-${g.id}'),
                       group: g,
                       open: g.collapsible && app.isSettingsGroupOpen(g.id),
                       onToggle: () => widget.onToggleGroup(g.id),
@@ -3556,13 +3561,45 @@ IconData _iconFor(String name) => switch (name) {
 ///
 /// `ExpansionTile` is used rather than a hand-rolled equivalent because it already
 /// has the header, chevron and reveal animation, and because its colours come from
-/// the theme. It is **driven** by an `ExpansionTileController` rather than by
+/// the theme. It is **driven** by an `ExpansibleController` rather than only by
 /// `initiallyExpanded`, for a reason that is not obvious from its API:
 /// `initiallyExpanded` is only read when the tile's element is first created, so a
 /// tile that is already built keeps whatever the user last did to it and ignores
 /// the restored preference. The preference is this group's single source of truth,
-/// so every rebuild pushes it into the tile; `didUpdateWidget` is what makes the
-/// restored state survive the panel being closed and reopened.
+/// so every rebuild pushes it into the tile.
+///
+/// ## Why the widget carries a key, and what happened without it
+///
+/// `_SettingsPanelState` builds one tab's groups as a plain list, and the two tabs have
+/// different group ids and different counts (Capture four, Sync three). With no key on
+/// this widget, Flutter matched them to the previous tab's elements **by position**, so
+/// one group's `State` — and its `ExpansibleController` — was handed to a *different*
+/// group. The `collapse()` that shake-out performed is a change on the controller, and
+/// `ExpansionTile` reports every controller change through `onExpansionChanged`, which
+/// here is `widget.onToggle()` — so **switching tabs wrote group preferences nobody
+/// touched**. Measured: on Capture→Sync the tile that had been `image` collapsed as
+/// `connection` and left `connection` open; on the way back `image` was built with the
+/// state its *predecessor in that slot* had left behind, so it came back collapsed.
+/// Giving the widget its group's identity makes each tile mount fresh and correct, which
+/// is what removes the whole chain.
+///
+/// ## Why both `initState` and `initiallyExpanded` set the same thing
+///
+/// A fresh mount gets a fresh controller, and `ExpansibleController` starts collapsed.
+/// `ExpansionTile` passes `initiallyExpanded` down and `Expansible` reads it, so the
+/// first frame is right either way — that half is checked
+/// (`settings_tab_switch_state_test.dart`, "a group remembered as open is open the moment
+/// the panel is built"). Putting the controller into the same state in `initState` is
+/// what keeps the two from disagreeing at all, and it is safe there because the
+/// `ExpansionTile` that listens to the controller is a **child**: nothing is subscribed
+/// yet, so no callback fires.
+///
+/// **What is measured and what is not** (so this docstring does not claim more than the
+/// evidence): reverting the `key` above puts four of the five checks red; reverting the
+/// `initState` block, or the guard on `onExpansionChanged`, leaves all five green. The
+/// root cause is the identity, not the timing — the other two are what stop this widget
+/// from *reporting a reconciliation as a user decision*, which is the class the key fixed
+/// one instance of.
 class _SettingsGroupTile extends StatefulWidget {
   final SettingsGroup group;
   final bool open;
@@ -3581,6 +3618,7 @@ class _SettingsGroupTile extends StatefulWidget {
   final IconData icon;
 
   const _SettingsGroupTile({
+    super.key,
     required this.group,
     required this.open,
     required this.onToggle,
@@ -3600,19 +3638,31 @@ class _SettingsGroupTile extends StatefulWidget {
 class _SettingsGroupTileState extends State<_SettingsGroupTile> {
   final ExpansibleController _tile = ExpansibleController();
 
-  /// What the tile was last told to show.
-  ///
-  /// Tracked so the controller is only driven on a real change: `didUpdateWidget`
-  /// runs on every frame the camera's state JSON changes — about thirty times a
-  /// second — and calling `expand()` on an already-open tile would restart its
-  /// animation every time.
-  late bool _shown = widget.open;
+  @override
+  void initState() {
+    super.initState();
+    // Put the controller into the remembered state **before the tile is built**, so the
+    // frame it is first laid out in is already the right one and the widget never has to
+    // be reconciled after the fact. See the class doc: the first frame is really carried
+    // by `initiallyExpanded`, and this is what keeps the two from disagreeing. Safe here
+    // because the `ExpansionTile` that listens to this controller is a **child** —
+    // nothing is subscribed yet, so no callback fires.
+    if (widget.open) {
+      _tile.expand();
+    } else {
+      _tile.collapse();
+    }
+  }
 
   @override
   void didUpdateWidget(_SettingsGroupTile old) {
     super.didUpdateWidget(old);
-    if (widget.open == _shown) return;
-    _shown = widget.open;
+    // The widget is the source of truth, so the controller follows it — but only when it
+    // is not already where it should be. `didUpdateWidget` runs on every frame the
+    // camera's state JSON changes (about thirty times a second), and every controller
+    // change is reported as an expansion, so asking a tile that is already correct would
+    // both restart its animation and look like a tap.
+    if (widget.open == _tile.isExpanded) return;
     if (widget.open) {
       _tile.expand();
     } else {
@@ -3663,7 +3713,18 @@ class _SettingsGroupTileState extends State<_SettingsGroupTile> {
       // being reset by the reordering of anything else in the list.
       key: PageStorageKey<String>('settings-group-${group.id}'),
       controller: _tile,
-      onExpansionChanged: (_) => widget.onToggle(),
+      // What makes the **first** frame of a freshly mounted tile correct: `ExpansionTile`
+      // passes this to `Expansible`, which reads it in its own `initState`.
+      initiallyExpanded: widget.open,
+      // Only a change that leaves the tile out of step with the preference is a user
+      // toggle. A programmatic `expand()`/`collapse()` arrives here too, and calling
+      // `onToggle()` for one would flip the preference that asked for the change — which
+      // is exactly how the tab-switch defect corrupted it. Kept as the guard against that
+      // class of mistake, not as a fix for a case that is still reachable.
+      onExpansionChanged: (open) {
+        if (open == widget.open) return;
+        widget.onToggle();
+      },
       tilePadding: const EdgeInsets.symmetric(horizontal: 12),
       childrenPadding: EdgeInsets.zero,
       expansionAnimationStyle: const AnimationStyle(

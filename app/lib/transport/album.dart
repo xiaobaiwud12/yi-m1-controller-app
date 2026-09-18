@@ -27,6 +27,30 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'http_transport.dart';
+import 'camera_request_gate.dart';
+
+/// Raised when a queued camera request is dropped before it is sent.
+///
+/// ## Why this is not an [AlbumException]
+///
+/// An `AlbumException` means **the camera said no**, and every caller treats it that
+/// way: the grid marks the tile "no picture", the sync engine counts an attempt and
+/// retries, the viewer shows the reason. This is the opposite fact — the camera was
+/// never asked. Reporting it as a camera failure would put a "could not load" message
+/// on screen for a photo the user swiped away from, and would burn a retry against a
+/// file that is fine.
+///
+/// So it is its own type, callers above drop it silently, and the only place it is
+/// expected to surface is a log line. See `CameraRequestTicket.wanted` for what
+/// "dropped" can and cannot mean when the request is already on the wire.
+class CameraRequestDropped implements Exception {
+  const CameraRequestDropped();
+
+  @override
+  String toString() =>
+      'CameraRequestDropped: the request was no longer wanted before it was sent, '
+      'so the camera was never asked';
+}
 
 /// One entry from `GetFileList`.
 class AlbumFile {
@@ -144,10 +168,35 @@ class AlbumFile {
     );
   }
 
-  /// Stable identity for sync bookkeeping. `date` is second-resolution and the
-  /// filename can repeat across folders, so use both.
-  String get syncKey => '$path|${captureTime?.millisecondsSinceEpoch ?? 0}';
-
+  /// **There is deliberately no `syncKey` here.** One used to be:
+  ///
+  /// ```dart
+  /// String get syncKey => '$path|${captureTime?.millisecondsSinceEpoch ?? 0}';
+  /// ```
+  ///
+  /// documented as "stable identity for sync bookkeeping — `date` is second-resolution and
+  /// the filename can repeat across folders, so use both". Both of those statements are
+  /// true and **nothing ever read it**: its only reader in the whole repository was the
+  /// assertion that it contained a timestamp (`analysis/79` #17).
+  ///
+  /// That is worse than dead weight, which is why it was removed rather than left — and
+  /// the reason got **stronger** on inspection, not weaker. In this tree the identity of a
+  /// shot is `path|seconds` in two places that must agree:
+  ///
+  /// * `AssetId.key` — `'$path|$dateSeconds'`, which `assetIdOf` builds by dividing
+  ///   milliseconds by 1000, so a ledger written at one call site is readable at another;
+  /// * the album thumbnail cache's key — documented in `album_thumbnail_cache.dart` as the
+  ///   same `path|captureSeconds`, and the grid tile's `ValueKey` after it.
+  ///
+  /// The getter above was **`path|milliseconds`**: the same shape, the same pair of facts,
+  /// and off by a factor of a thousand. A `syncKey`-keyed rewrite of the ledger or a
+  /// `syncKey`-keyed cache would therefore have compiled, looked right, and missed on every
+  /// single lookup — silently, in both directions, exactly the failure `assetIdOf`'s own
+  /// comment warns about. A name that promises "the identity" while disagreeing with the
+  /// two real ones is not neutral dead code; it is a trap.
+  ///
+  /// Anything that needs an identity should use `AssetId` (or `assetIdOf`), which is the
+  /// one that already has consumers and tests.
   factory AlbumFile.fromJson(Map<String, dynamic> j) {
     final rawDate = j['date'];
     DateTime? t;
@@ -309,13 +358,39 @@ class CameraAlbum {
   final Future<Uint8List> Function(AlbumFile file, FileResolution resolution)?
       overrideDownload;
 
+  /// The gate every request in this class goes through — see
+  /// `camera_request_gate.dart`.
+  ///
+  /// ## Why it lives here and not in each caller
+  ///
+  /// Three callers reach `GetFile` on a real device: the album grid's serial thumbnail
+  /// loop, the sync engine's serial queue, and the photo viewer. Each of them was
+  /// written to be serial **on its own**, and each of them is right to be — but three
+  /// independently-serial loops make a parallel set between them, and the camera is a
+  /// **single-threaded HTTP server with no watchdog** (`AGENTS.md` §4.6, paid for three
+  /// times in `analysis/37`–`39`). The viewer loading a preview when it opens is
+  /// exactly the call that turned two loops into three.
+  ///
+  /// So the serialisation sits at the one point all of them already share. The loops
+  /// above keep their own ordering and do not have to know about one another.
+  ///
+  /// One gate per album, and one album per camera: `AppState` owns both.
+  final CameraRequestGate gate;
+
   /// Timeout for one file transfer.
   ///
-  /// Generous by necessity: a full-resolution photo is ~9 MB and the camera
-  /// serves it over its own 802.11n AP at roughly 1.7 MB/s, so a 20-second limit
-  /// fails on exactly the transfers the feature exists for.  Measured on
-  /// hardware: 9.4 MB in 5.6 s on an idle link, and markedly slower while the
-  /// live-view stream is running.
+  /// Generous by necessity: a full-resolution JPEG is **4.9–5.6 MB** measured
+  /// (`analysis/50` §2, `analysis/61` §1 — the two samples are in
+  /// `measured_sizes.dart`), and a `.DNG` `Original` is **31.9 MB**, so a
+  /// 20-second limit fails on exactly the transfers the feature exists for.
+  ///
+  /// The rate is deliberately **not** quoted here. An earlier version of this
+  /// comment said "9.4 MB in 5.6 s", which was wrong twice: the size was not 9.4 MB,
+  /// and 5.6 s is one wall-clock observation with no record of whether the live-view
+  /// stream was running — the one variable this whole file exists to manage. The
+  /// same derivation (`~13.5 Mbit/s`) was retracted in `analysis/16` for the stream
+  /// on the same grounds, and has now been withdrawn here too. What is [V] is the
+  /// sizes; what is [V] is that a download takes seconds, not minutes.
   final Duration timeout;
   final HttpClient _client;
 
@@ -323,8 +398,10 @@ class CameraAlbum {
       {String? host,
       this.port = 80,
       this.timeout = const Duration(seconds: 90),
-      this.overrideDownload})
+      this.overrideDownload,
+      CameraRequestGate? gate})
       : host = host ?? CameraHttpClient.defaultHost,
+        gate = gate ?? CameraRequestGate(),
         _client = HttpClient() {
     _client.connectionTimeout = timeout;
   }
@@ -401,10 +478,19 @@ class CameraAlbum {
   ///
   /// Throws [AlbumException] if the camera refuses the path (including the
   /// 50-character limit, which is checked up front rather than round-tripped).
+  ///
+  /// ## Serialised for the whole camera, not just for this caller
+  ///
+  /// Every request goes through [gate], so a preview being opened on screen cannot
+  /// overlap a grid tile or a sync transfer. See `camera_request_gate.dart` for why
+  /// that moved here. The path-length check stays **outside** the gate on purpose: a
+  /// path the firmware's 50-byte buffer cannot hold is refused without taking a turn,
+  /// so a listing full of them cannot queue behind each other.
   Future<Uint8List> download(
     AlbumFile file, {
     FileResolution resolution = FileResolution.original,
     void Function(int received)? onProgress,
+    CameraRequestPriority priority = CameraRequestPriority.background,
   }) async {
     if (file.isPathTooLong) {
       throw AlbumException(
@@ -414,6 +500,30 @@ class CameraAlbum {
         AlbumErrorCodes.pathTooLong,
         {'length': file.path.length, 'path': file.path},
       );
+    }
+    return gate.run(
+      (ticket) => _downloadNow(file,
+          resolution: resolution, onProgress: onProgress, ticket: ticket),
+      priority: priority,
+    );
+  }
+
+  /// The request itself, once this caller has the camera's turn.
+  Future<Uint8List> _downloadNow(
+    AlbumFile file, {
+    required FileResolution resolution,
+    void Function(int received)? onProgress,
+    required CameraRequestTicket ticket,
+  }) async {
+    // ## The one check that saves a request, taken after the wait
+    //
+    // A ticket is handed out before the request, and a caller may have been waiting
+    // behind a 31.9 MB `Original`; by the time its turn comes the user may have moved
+    // on. Asking here — after the gate, immediately before the send — is what makes a
+    // queued request skippable. The gate enforces the same thing for a caller that
+    // forgets, so this is the readable half of one rule rather than a second guard.
+    if (!ticket.wanted) {
+      throw const CameraRequestDropped();
     }
 
     final override = overrideDownload;
@@ -547,6 +657,7 @@ class CameraAlbum {
     ],
     bool skipNoContent = false,
     void Function(int received)? onProgress,
+    CameraRequestPriority priority = CameraRequestPriority.background,
   }) async {
     Object? lastError;
     // Named rather than silent: when every rendition is unavailable, "no thumbnail"
@@ -554,11 +665,20 @@ class CameraAlbum {
     final unavailable = <String>[];
     for (final res in chain) {
       try {
-        final bytes = await download(file, resolution: res, onProgress: onProgress);
+        final bytes = await download(file,
+            resolution: res, onProgress: onProgress, priority: priority);
         if (bytes.isNotEmpty) return (bytes, res);
         // Unreachable through `download`, which now refuses an empty body; kept
         // because the override seam is not required to.
         lastError = AlbumException('empty body for ${file.path} at ${res.wire}');
+      } on CameraRequestDropped {
+        // **A dropped request ends the chain, and must not degrade to the next
+        // rung.** The other renditions are *smaller*, and the reason this request
+        // was dropped is that nobody is waiting for it any more — so walking on
+        // would send more requests to a single-threaded camera for a photo the user
+        // has already left. `analysis/70` is the round that had to make this exact
+        // distinction for `204`; this is the same question with the opposite answer.
+        rethrow;
       } on AlbumException catch (e) {
         if (e.isNoContent) {
           unavailable.add(res.wire);

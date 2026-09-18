@@ -42,13 +42,13 @@ signature explicitly with `--android-project-arg=allowDebugSigning=true`. The ro
 | `lib/ui/` | Pages and widgets. Interactive controls carry `ValueKey<String>` names. |
 | `lib/l10n/` | Translation sources (`app_en.arb`, `app_zh.arb`). |
 | `tool/verify.dart` | The one verification command; it runs everything below and then says what it could not check. |
-| `tool/verify_*.dart` | 674 pure-VM assertions, plus the leak scan (`verify_release.dart`) and the artifact check (`verify_apk.dart`). |
+| `tool/verify_*.dart` | 686 pure-VM assertions, plus the leak scan (`verify_release.dart`), the artifact check (`verify_apk.dart`) and the launcher-icon check (`verify_icon.dart`). |
 | `test/` | Widget tests, overflow and text-scale tests, fakes. |
 | `android/` | Kotlin platform code and its JVM unit tests. |
 | `testdata/liveview/` | 40 real UDP datagrams off the camera. The framing checks cannot run without them. |
 | `docs/PROTOCOL.md` | The wire-protocol reference the client is written against. |
 
 Keeping `protocol`, `transport` and `sync` free of `package:flutter` is a hard
-constraint, not a style preference — it is what lets 674 assertions run in a
+constraint, not a style preference — it is what lets 686 assertions run in a
 plain Dart VM in seconds. Implementations that need Flutter belong in
 `lib/platform/`.

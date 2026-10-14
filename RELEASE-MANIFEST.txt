@@ -1,12 +1,12 @@
 YI M1 controller - app-only release export manifest
 ===================================================
 
-generated    : 2026-10-14T16:36:22.7011922+08:00
+generated    : 2026-10-14T17:16:54.6248873+08:00
 generator    : tools/release/export_app_release.ps1 (development repository)
 source repo  : the private development repository 'yi-m1-controller' - its filesystem path is
                withheld deliberately, because this manifest is published and the
                path names one machine's account
-source HEAD  : 645098a (645098a34dc9e2d847cf44754002820fe418d060)
+source HEAD  : c176cdd (c176cdd3ba45783ff5bcf3d33d8f58f18be05ab2)
 source branch: codex/android-structure-refactor
 source tree  : clean
 publishes to : https://github.com/xiaobaiwud12/yi-m1-controller-app
@@ -20,7 +20,7 @@ payload      : 4.09 MB
 apache text  : tools/release/metadata/APACHE-2.0.txt sha256 cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
 
 Sizes:
-  development repository, tracked        : 6607 files, 307.6 MB
+  development repository, tracked        : 6611 files, 307.6 MB
   of which vendor / reverse-engineering  : 254.9 MB
   app files on the allow list            : 243 files, 3.9 MB
   this export tree                       : 264 files, 4.09 MB
@@ -70,8 +70,7 @@ Excluded material that must never reach a public repository:
   AGENTS.md, app/tools/, app/re/, app/build/, app/.dart_tool/, app/lvprobe/,
   app/android/keystore*, and both submodules.
 
-Denylist result:
-PASS
+Denylist result: PASS
 
 Redactions applied:
   app/android/app/src/main/kotlin/com/cem1/yi_m1_controller/wifi/CameraAp.kt : test-unit-ssid x1
@@ -100,7 +99,6 @@ Notes:
     the first thing a contributor hit). If your JAVA_HOME is JDK 24 or newer,
     set org.gradle.java.home in ~/.gradle/gradle.properties; README.md says so.
   * The Gradle wrapper is complete in this tree (gradlew, gradlew.bat and the
-    jar), unlike either repository's git state. See buildInputs above.
+    jar). See buildInputs above.
   * The release build refuses to run without app/android/keystore.properties.
-    RELEASING.md has the keytool invocation and says what must never be
-    committed.
+    RELEASING.md describes signing identity and excluded materials.

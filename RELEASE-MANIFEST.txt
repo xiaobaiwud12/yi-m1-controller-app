@@ -1,12 +1,12 @@
 YI M1 controller - app-only release export manifest
 ===================================================
 
-generated    : 2026-10-14T17:16:54.6248873+08:00
+generated    : 2026-10-14T17:20:20.3121475+08:00
 generator    : tools/release/export_app_release.ps1 (development repository)
 source repo  : the private development repository 'yi-m1-controller' - its filesystem path is
                withheld deliberately, because this manifest is published and the
                path names one machine's account
-source HEAD  : c176cdd (c176cdd3ba45783ff5bcf3d33d8f58f18be05ab2)
+source HEAD  : dafa2f7 (dafa2f7e42aaee4de4358912a29fbe974f38a774)
 source branch: codex/android-structure-refactor
 source tree  : clean
 publishes to : https://github.com/xiaobaiwud12/yi-m1-controller-app

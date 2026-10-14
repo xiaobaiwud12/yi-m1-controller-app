@@ -1,54 +1,36 @@
-# yi_m1_controller — the Flutter application
+# Application source guide
 
-This directory is the application. The repository's front page, `README.md` at
-the root, is the documentation: what the app does, what has been verified and
-what has not, the hardware and toolchain you need, how to build and run it, and
-the safety rules the camera imposes.
+This directory contains the Flutter application for the YI M1 (`C59Y1`). For user-facing behavior, limits and release status, see the [application README](../README.md). For build, signing and publication steps, see the [release guide](../RELEASING.md).
 
-Start there rather than here.
+## Verify and build
 
-## The short version
+Run commands from this `app/` directory. The unified offline checks are:
 
-```powershell
-flutter pub get
-dart tool/verify.dart        # analyzer, logic suites, widget tests, leak scan
+```bash
+dart tool/verify.dart
 ```
 
-Individual pieces, if you want a faster signal:
+For release preparation and artifact checks, follow the [release guide](../RELEASING.md). Signing requirements and certificate handling are documented there.
 
-```powershell
-dart analyze                      # the fastest signal; should be silent
-flutter test
-dart tool/verify_transport.dart   # pure Dart VM, no Flutter engine
-dart tool/verify_sync.dart
-dart tool/conformance.dart
-```
+## Source layout
 
-Nothing machine-specific has to be edited before that works — the JDK path and the
-missing Gradle wrapper are both fixed. A **release** build needs the maintainer's
-signing key and refuses to run without it; for a local build ask for the debug
-signature explicitly with `--android-project-arg=allowDebugSigning=true`. The root
-`README.md` §2b and `RELEASING.md` explain both.
-
-## Where things are
-
-| Path | What it is |
+| Path | Responsibility |
 |---|---|
-| `lib/protocol/` | Wire formats, the 45-command table, parameter pools, coordinate mapping, layout maths. **No Flutter.** |
-| `lib/transport/` | BLE, HTTP, live view, album, Wi-Fi join, capture interlock. **Four files import Flutter; the pure-VM verifiers avoid them.** |
-| `lib/sync/` | Transfer queue, sync ledger, pause contract. **No Flutter.** |
-| `lib/platform/` | The implementations that do need Flutter: MediaStore, file sinks. |
-| `lib/state/` | `AppState`, the single source of truth. |
-| `lib/ui/` | Pages and widgets. Interactive controls carry `ValueKey<String>` names. |
-| `lib/l10n/` | Translation sources (`app_en.arb`, `app_zh.arb`). |
-| `tool/verify.dart` | The one verification command; it runs everything below and then says what it could not check. |
-| `tool/verify_*.dart` | 686 pure-VM assertions, plus the leak scan (`verify_release.dart`), the artifact check (`verify_apk.dart`) and the launcher-icon check (`verify_icon.dart`). |
-| `test/` | Widget tests, overflow and text-scale tests, fakes. |
-| `android/` | Kotlin platform code and its JVM unit tests. |
-| `testdata/liveview/` | 40 real UDP datagrams off the camera. The framing checks cannot run without them. |
-| `docs/PROTOCOL.md` | The wire-protocol reference the client is written against. |
+| `lib/app/` | Startup, application assembly and navigation. |
+| `lib/features/*/presentation/` | Feature screens and their presentation logic. |
+| `lib/platform/` | Flutter and native platform adapters. |
+| `lib/protocol/` | Camera protocol formats and command definitions; pure Dart. |
+| `lib/transport/` | BLE, HTTP, live-view and camera transport; pure Dart, no Flutter imports. |
+| `lib/sync/` | Transfer queue and sync logic; pure Dart, no Flutter imports. |
+| `lib/state/app_state.dart` | Compatibility facade; shared synchronization ownership belongs to `SyncSession`. |
+| `lib/ui/` | Shared widgets and theme. |
+| `lib/l10n/` | English and Simplified Chinese translations. |
+| `tool/` | Unified verification entry point and focused offline checks. |
+| `test/` | Widget and application tests. |
+| `android/` | Kotlin platform code and JVM tests. |
+| `testdata/liveview/` | Captured camera datagrams used for offline framing checks. |
+| `docs/PROTOCOL.md` | Protocol reference for the client. |
 
-Keeping `protocol`, `transport` and `sync` free of `package:flutter` is a hard
-constraint, not a style preference — it is what lets 686 assertions run in a
-plain Dart VM in seconds. Implementations that need Flutter belong in
-`lib/platform/`.
+`lib/protocol/`, `lib/transport/` and `lib/sync/` remain independent of Flutter so their checks can compile and run on the Dart VM. Platform integrations belong in `lib/platform/`; `AppState` remains a compatibility facade rather than the owner of shared sync state.
+
+Offline fixtures include captured live-view data and a privacy-safe EXIF layout derived from a camera original with other payloads zeroed. These fixtures support offline checks; they do not establish current real-camera behavior. The camera is currently unusable, so this source has not been retested with a real camera.

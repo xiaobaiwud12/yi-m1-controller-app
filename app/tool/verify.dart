@@ -65,13 +65,18 @@ class Step {
   final List<String> args;
   final String proves;
   final String? dir;
-  Step(this.name, this.command, this.args, this.proves, {this.dir});
+  final Map<String, String> environment;
+  Step(this.name, this.command, this.args, this.proves,
+      {this.dir, this.environment = const {}});
 }
 
 Future<int> _run(Step step) async {
   stdout.writeln('');
   stdout.writeln('== ${step.name} — ${step.proves}');
   stdout.writeln('   \$ ${step.command} ${step.args.join(' ')}');
+  if (step.environment.isNotEmpty) {
+    stdout.writeln('   child environment: ${step.environment}');
+  }
   final sw = Stopwatch()..start();
   // `runInShell` is not optional on Windows: `flutter` and `dart` are `.bat` files
   // there, and a process started without a shell cannot execute one. This is the same
@@ -81,6 +86,7 @@ Future<int> _run(Step step) async {
     step.command,
     step.args,
     workingDirectory: step.dir ?? Directory.current.path,
+    environment: step.environment,
     mode: ProcessStartMode.inheritStdio,
     runInShell: Platform.isWindows,
   );
@@ -139,7 +145,11 @@ Future<void> main(List<String> argv) async {
     Step('transport', 'dart', <String>['tool/verify_transport.dart'],
         'the transport layer runs on a plain Dart VM (no Flutter import crept in)'),
     Step('sync', 'dart', <String>['tool/verify_sync.dart'],
-        'the sync engine and its ledger run on a plain Dart VM'),
+        'the sync engine and its ledger run on a plain Dart VM',
+        // EXIF regressions must measure an actual timezone shift; keep the
+        // fixed UTC+8 test zone local to this subprocess, including on UTC hosts.
+        // POSIX TZ syntax also works with the Windows Dart runtime.
+        environment: const {'TZ': 'CST-8'}),
     Step('widget', 'flutter', <String>['test'],
         'every screen builds and the widget regressions hold'),
     if (withAndroid)

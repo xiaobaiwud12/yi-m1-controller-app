@@ -2,24 +2,18 @@
 
 All notable changes to this application are recorded here.
 
-**Nothing in this file had been published before `0.2.0`.** The first release is
-`0.2.0+2`, signed with the maintainer's own key and attached to a GitHub Release.
-The version is declared in exactly one place — `app/pubspec.yaml` — and
-`dart tool/verify_release.dart` fails if this file does not mention the version that
-file declares. That coupling is the point: a tag, a pubspec and an installed build have
-to be checkable against each other, or "which build is this?" becomes unanswerable
-again.
-
-Releases so far: **`0.2.0+2`**, the first public one, and **`0.2.1+3`**.
-
-This file was reconstructed from the project's development history. Where an
-entry states something the project paid to learn, it says what the symptom was —
-"the button was green and the shutter had never been sent" is worth more to the
-next reader than "fixed a wiring defect".
-
-Grouping follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The app version is declared in [`app/pubspec.yaml`](../../../app/pubspec.yaml), and `dart tool/verify_release.dart` checks that this changelog references it.
+Historical changes are grouped by version below; entries retain the relevant symptoms and fixes.
+For current publication status and APK downloads, see the [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases) page.
+Entries follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
+
+## [Unreleased]
+
+### Fixed
+
+- The contributor verification entry point sets a non-UTC timezone only for its sync test subprocess, so EXIF timezone-shift regressions run on UTC hosts without changing system settings. App behavior and the published APK are unchanged.
 
 ## [0.2.2] — 2026-10-14
 

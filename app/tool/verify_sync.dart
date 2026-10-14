@@ -19,6 +19,8 @@ import 'package:yi_m1_controller/sync/exif_wall_clock.dart';
 import 'package:yi_m1_controller/sync/stream_pause_contract.dart';
 import 'package:yi_m1_controller/sync/sync_engine.dart';
 import 'package:yi_m1_controller/sync/sync_ledger.dart';
+import 'package:yi_m1_controller/sync/sync_mode.dart';
+import 'package:yi_m1_controller/sync/sync_session.dart';
 import 'package:yi_m1_controller/sync/transfer_queue.dart';
 import 'package:yi_m1_controller/transport/album.dart';
 import 'package:yi_m1_controller/transport/camera_connection.dart';
@@ -26,6 +28,13 @@ import 'package:yi_m1_controller/transport/http_transport.dart';
 
 int _pass = 0;
 int _fail = 0;
+
+void _finish() {
+  print('\n${'=' * 52}');
+  print('  $_pass passed, $_fail failed');
+  exitCode = _fail == 0 ? 0 : 1;
+  print('${'=' * 52}');
+}
 
 void check(String name, bool ok, [String? detail]) {
   if (ok) {
@@ -112,7 +121,7 @@ String wallClock(DateTime t) {
 /// The wall clock the **camera** writes, as the fixture's model of the body.
 ///
 /// The body has one clock and no timezone at all: the firmware image contains the
-/// single string `GMT` and no offset table (`analysis/_frag-clock.md` §D.5), and
+/// single string `GMT` and no offset table (`analysis/PROTOCOL.md#source-connectivity-evidence-appendices` §D.5), and
 /// the RTC is set from the app's BLE time-sync, which sends Unix epoch seconds
 /// (`wire_format.dart`, verified against the official app). A clock with no zone
 /// formats a naive date field as GMT — i.e. as the **UTC wall clock**.
@@ -393,7 +402,173 @@ class FakeStreamPause implements StreamPauseController {
 
 // ---------------------------------------------------------------------------
 
-Future<void> main() async {
+// Source-boundary checks run in the same plain VM as the engine. Each directory
+// must be present and non-empty, so moving the code cannot quietly skip them.
+String? _boundaryViolation(String source, String dependency) {
+  final layer = source.split('/').first;
+  if (dependency.startsWith('dart:')) {
+    return dependency == 'dart:ui' && layer != 'state' ? dependency : null;
+  }
+  const ownPackage = 'package:yi_m1_controller/';
+  final target = dependency.startsWith(ownPackage)
+      ? dependency.substring(ownPackage.length)
+      : dependency.startsWith('package:')
+          ? dependency
+          : Uri.parse(source).resolve(dependency).path;
+  final presentation =
+      target.startsWith('ui/') || target.startsWith('features/');
+  if (layer == 'features') {
+    return target.startsWith('features/') &&
+            target.split('/')[1] != source.split('/')[1]
+        ? target
+        : null;
+  }
+  if (layer == 'state') return presentation ? target : null;
+  return target.startsWith('package:') ||
+          target.startsWith('platform/') ||
+          target.startsWith('state/') ||
+          presentation
+      ? target
+      : null;
+}
+
+void _verifySourceBoundaries() {
+  print('=== dependency boundaries ===');
+  check(
+      'negative control: state cannot reach a UI helper',
+      _boundaryViolation('state/model.dart', '../ui/pages/helper.dart') !=
+          null);
+  check(
+      'negative control: sync cannot import a platform plugin',
+      _boundaryViolation('sync/store.dart', 'package:path_provider/x.dart') !=
+          null);
+  check(
+      'negative control: own package URI cannot hide a platform adapter',
+      _boundaryViolation('transport/client.dart',
+              'package:yi_m1_controller/platform/wifi.dart') !=
+          null);
+  check(
+      'core-to-core dependencies remain allowed',
+      _boundaryViolation('sync/engine.dart', '../transport/album.dart') ==
+          null);
+
+  check('negative control: one feature cannot import another feature page',
+      _boundaryViolation('features/live_view/presentation/live.dart',
+          '../../album/presentation/page.dart') != null);
+  check('pages inside the same feature may share types',
+      _boundaryViolation('features/album/presentation/grid.dart',
+          'viewer.dart') == null);
+
+  final directives =
+      RegExp(r'''^(?:import|export)\s+.*?;''', multiLine: true, dotAll: true);
+  final strings = RegExp(r'''['"]([^'"]+)['"]''');
+  for (final layer in ['state', 'protocol', 'transport', 'sync', 'features']) {
+    final directory = Directory('lib/$layer');
+    final files = directory.existsSync()
+        ? directory
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart'))
+            .toList()
+        : <File>[];
+    check('$layer has source files to verify', files.isNotEmpty);
+    for (final file in files) {
+      final source = file.path.replaceAll('\\', '/').substring(4);
+      final violations = <String>[];
+      for (final directive in directives.allMatches(file.readAsStringSync())) {
+        for (final uri in strings.allMatches(directive.group(0)!)) {
+          final violation = _boundaryViolation(source, uri.group(1)!);
+          if (violation != null) violations.add(violation);
+        }
+      }
+      check('$source respects its dependency boundary', violations.isEmpty,
+          violations.join(', '));
+    }
+  }
+}
+
+Future<void> _verifySyncSession() async {
+  final ledgerStore = MemorySyncStore();
+  final queueStore = MemorySyncStore();
+  final firstCommands = <String>[];
+  final secondCommands = <String>[];
+  CameraHttpClient client(List<String> commands) => CameraHttpClient(
+        overrideSend: (command, params) async {
+          commands.add(command);
+          return const CameraResponse(code: 200, data: {}, raw: '{}');
+        },
+      );
+  var currentClient = client(firstCommands);
+  var httpReads = 0;
+  var albumReads = 0;
+  SyncSession create() => SyncSession(
+        ledgerStore: ledgerStore,
+        queueStore: queueStore,
+        sink: RecordingSink(),
+        album: () {
+          albumReads++;
+          return CameraAlbum(currentClient);
+        },
+        http: () {
+          httpReads++;
+          return currentClient;
+        },
+        previewRunning: () => true,
+      );
+
+  final session = create();
+  check('session construction does not read a disconnected client or album',
+      httpReads == 0 && albumReads == 0);
+  check('one session ledger is the engine source of truth',
+      identical(session.engine.ledger, session.ledger));
+  check('one session queue is the engine queue',
+      identical(session.engine.queue, session.queue));
+  check('stream pause remains explicitly opt-in after assembly',
+      !session.engine.pauseStreamDuringTransfer);
+
+  final completed = jpg('YI000101');
+  final pending = jpg('YI000102');
+  session.engine.enqueue([completed, pending]);
+  session.ledger.record(
+      AssetId(path: completed.path,
+          dateSeconds: completed.captureTime!.millisecondsSinceEpoch ~/ 1000),
+      AssetQuality.original);
+  await session.ledger.save();
+  await session.queue.save();
+
+  final restored = create();
+  await restored.loadStores();
+  restored.engine.restore();
+  check('reassembled session restores only unfinished work',
+      restored.engine.items.length == 1 &&
+          restored.engine.items.single.file.path == pending.path);
+  check('restoring durable work does not ask the camera',
+      httpReads == 0 && albumReads == 0);
+
+  // This is a fake client only. Exercise the wiring across a client replacement,
+  // not the unverified commands against hardware.
+  await session.streamPause.pause();
+  currentClient = client(secondCommands);
+  await session.streamPause.resume();
+  check('stream controller resolves the current client after reconnect',
+      firstCommands.length == 1 && firstCommands.single == 'PauseMovieStream' &&
+          secondCommands.length == 1 && secondCommands.single == 'ResumeMovieStream');
+}
+
+Future<void> main(List<String> args) async {
+  if (args.contains('--self-test-exit')) {
+    check('deliberate failure must return a failing process status', false);
+    _finish();
+    return;
+  }
+  _verifySourceBoundaries();
+  await _verifySyncSession();
+  for (final mode in SyncMode.values) {
+    check('persisted ${mode.name} maps to the same mode in a plain VM',
+        syncModeFromId(mode.name) == mode);
+  }
+  check('unknown persisted mode keeps the existing default',
+      syncModeFromId('future-mode') == SyncMode.autoPreviewThenOriginal);
   print('=== RAW+JPEG pairing ===');
 
   final paired = groupAssets([
@@ -1895,7 +2070,7 @@ Future<void> main() async {
 
   // ------------- the same rewrite, against the camera's own file in the tree
 
-  print('\n=== the rewrite on a real M1 original, not on a fixture ===');
+  print('\n=== the rewrite on a camera original or derived camera layout ===');
 
   {
     // `capture_test/probe_original.jpg` is an `Original` fetched from the 3.1-cn
@@ -1905,16 +2080,22 @@ Future<void> main() async {
     // they came from the same head. This one runs the real transform over the real
     // body's own bytes: 16 IFD0 entries, a 36-entry ExifIFD, a 13 KB MakerNote and
     // a 690-byte private block, none of which the transform may touch.
+    // Public exports preserve independently captured TIFF directories/offsets
+    // and three date values, with other payloads/pixels zeroed for privacy.
+    // The derived layout checks structure, not preservation of real pixels.
     final candidates = [
       'capture_test/probe_original.jpg',
       'app/capture_test/probe_original.jpg',
+      'testdata/exif_camera_layout.bin',
+      'app/testdata/exif_camera_layout.bin',
     ];
     final path = candidates.firstWhere((p) => File(p).existsSync(), orElse: () => '');
-    check('the real camera JPEG is in the tree to check against', path.isNotEmpty,
+    check('camera original or privacy-safe EXIF layout is available', path.isNotEmpty,
         'looked for ${candidates.join(' or ')} from ${Directory.current.path} — it is '
             'committed, so a missing one means the checkout is incomplete');
 
     if (path.isNotEmpty) {
+      print('  evidence: ${path.endsWith('.bin') ? 'derived EXIF layout; no image pixels' : 'full camera original'}');
       final real = File(path).readAsBytesSync();
       final realStamps = dateStamps(real);
       check('the body writes three date fields into one photo',
@@ -1941,11 +2122,7 @@ Future<void> main() async {
       check('the camera\'s own GMT rendering is gone from it',
           !after.any((s) => s.text == realStamps.first.text),
           '${after.map((s) => s.text)}');
-      // The file this runs on is the real camera original committed under
-      // `testdata/` (4.9 MB, recorded as 4,897,837 B in `analysis/50` §2 and declared
-      // in `lib/transport/measured_sizes.dart`). This check used to say "9.4 MB",
-      // which is not a size any measurement in this tree contains — the same invented
-      // figure as `analysis/79` #19.
+      // Compare the actual selected input's size; the public layout has no pixels.
       check('the original is still the same length after the EXIF rewrite',
           stamped.bytes.length == real.length,
           '${stamped.bytes.length} vs ${real.length}');
@@ -1961,7 +2138,7 @@ Future<void> main() async {
           if (firstOutside < 0) firstOutside = i;
         }
       }
-      check('and nothing else in it moved — not the MakerNote, not the pixels',
+      check('all non-date bytes of the selected input remain unchanged',
           outside == 0,
           '$outside byte(s) outside the date fields, first at $firstOutside');
     }
@@ -2190,9 +2367,7 @@ Future<void> main() async {
         '${e6.summary.pending}');
   }
 
-  print('\n${'=' * 52}');
-  print('  $_pass passed, $_fail failed');
-  print('${'=' * 52}');
+  _finish();
 }
 
 /// An in-memory stand-in for the on-disk queue and ledger files.

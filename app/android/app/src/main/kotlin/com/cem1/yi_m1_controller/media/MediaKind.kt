@@ -1,4 +1,4 @@
-package com.cem1.yi_m1_controller
+package com.cem1.yi_m1_controller.media
 
 /**
  * Chooses the MediaStore table a fetched file belongs in, and its MIME type.

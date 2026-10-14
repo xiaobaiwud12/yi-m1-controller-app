@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
-import 'sync_ledger.dart';
+import '../sync/sync_ledger.dart';
 
 /// File-backed persistence for the sync ledger, the transfer queue **and the
 /// UI layout preferences**.

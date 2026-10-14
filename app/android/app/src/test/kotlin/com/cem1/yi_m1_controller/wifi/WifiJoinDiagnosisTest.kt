@@ -1,4 +1,4 @@
-package com.cem1.yi_m1_controller
+package com.cem1.yi_m1_controller.wifi
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

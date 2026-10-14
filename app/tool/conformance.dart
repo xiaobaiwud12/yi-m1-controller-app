@@ -11,11 +11,17 @@
 library;
 
 import 'dart:convert';
+import 'dart:io';
 
 import '../lib/protocol/wire_format.dart';
 
 int _pass = 0;
 int _fail = 0;
+
+void _finish() {
+  print('\n$_pass passed, $_fail failed');
+  exitCode = _fail == 0 ? 0 : 1;
+}
 
 void check(String name, Object? got, Object? want) {
   final ok = got == want;
@@ -28,7 +34,12 @@ void check(String name, Object? got, Object? want) {
   }
 }
 
-void main() {
+void main(List<String> args) {
+  if (args.contains('--self-test-exit')) {
+    check('deliberate failure must return a failing process status', 1, 0);
+    _finish();
+    return;
+  }
   print('wire-format conformance\n');
 
   // ------------------------------------------------------------------ CRC32
@@ -109,5 +120,5 @@ void main() {
           int.parse(buildTimeSyncPayload(DateTime.utc(2026, 6, 1))),
       true);
 
-  print('\n$_pass passed, $_fail failed');
+  _finish();
 }

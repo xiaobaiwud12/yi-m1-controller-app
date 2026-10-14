@@ -1,4 +1,4 @@
-package com.cem1.yi_m1_controller
+package com.cem1.yi_m1_controller.media
 
 /**
  * Decides whether a MediaStore insert actually became a *visible* photo.

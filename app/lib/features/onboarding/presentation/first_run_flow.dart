@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../l10n/l10n.dart';
-import '../../l10n/message_text.dart';
-import '../../platform/onboarding_prefs.dart';
-import '../../state/app_state.dart';
-import '../../sync/sync_engine.dart';
-import '../../transport/camera_connection.dart';
+import '../../../l10n/l10n.dart';
+import '../../../l10n/message_text.dart';
+import '../../../platform/onboarding_prefs.dart';
+import '../../../state/app_state.dart';
+import '../../../transport/camera_connection.dart';
 
 /// Below this height the flow switches to its compact layout.
 ///
@@ -68,7 +67,7 @@ const double kFirstRunCompactBelow = 520;
 /// Recording the mode is not applying it. `SyncEngine.mode` lives in the sync layer
 /// and is set by the album screen's dropdown; this flow writes the preference and
 /// hands it over. The one-line wiring the owner must add is named in
-/// `analysis/56-first-run-and-pairing.md` §6 and asserted absent-or-present by
+/// `analysis/APPLICATION.md#source-56` §6 and asserted absent-or-present by
 /// nothing, because it is a fact about another file — see that section for why the
 /// preference is still worth recording without it.
 enum FirstRunEntry {
@@ -1187,15 +1186,4 @@ class _StatusCard extends StatelessWidget {
     );
   }
 }
-
-/// Kept so `SyncMode` remains the single authority on what the names mean.
-///
-/// [kSyncModeChoices] stores the *names* the preference file holds; this maps them
-/// back for anyone who needs the enum, and it is the reason the ids above are not
-/// invented strings. `analysis/56` §6 names the call the sync owner has to add.
-SyncMode syncModeFromId(String id) => switch (id) {
-      'autoOriginalOnly' => SyncMode.autoOriginalOnly,
-      'manualOnly' => SyncMode.manualOnly,
-      _ => SyncMode.autoPreviewThenOriginal,
-    };
 

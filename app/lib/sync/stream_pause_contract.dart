@@ -1,6 +1,6 @@
 /// The stream-pause seam the sync engine talks to during a bulk transfer.
 ///
-/// `analysis/ce-app-competitive-spec.md` §5.3 is the specification for this file: a
+/// `analysis/RESEARCH.md#source-ce-app-competitive-spec` §5.3 is the specification for this file: a
 /// full-resolution `GetFile(Original)` moves several megabytes (4.9–5.6 MB for a JPEG,
 /// 31.9 MB for a `.DNG` — `measured_sizes.dart`) and the live-view stream shares **one**
 /// 802.11n link with it, so running them together makes both slower — which is why the

@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yi_m1_controller/protocol/camera_state.dart';
 import 'package:yi_m1_controller/protocol/viewfinder_layout.dart';
-import 'package:yi_m1_controller/ui/pages/live_view_page.dart';
+import 'package:yi_m1_controller/features/live_view/presentation/live_view_page.dart';
 
 import 'fakes.dart';
 

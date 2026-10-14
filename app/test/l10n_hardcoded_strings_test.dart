@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'presentation_sources.dart';
+
 /// A source scan that fails when a user-visible string is left hardcoded in `lib/ui/`.
 ///
 /// ## Why a scan and not a widget test
@@ -44,21 +46,17 @@ void main() {
   /// Empty is the goal. Anything added must name a concrete blocker.
   const notYetLocalized = <String, String>{};
 
-  final dir = Directory('lib/ui');
-  final files = dir
-      .listSync(recursive: true)
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.dart'))
-      .toList()
-    ..sort((a, b) => a.path.compareTo(b.path));
+  final files = presentationSources();
 
   test('the scan is looking at real files', () {
     // `AGENTS.md` §8: a layer that found nothing because it ran over nothing looks
     // exactly like a layer that found nothing because there was nothing to find.
     expect(files.length, greaterThanOrEqualTo(5),
-        reason: 'the scanner walked ${files.length} dart files under ${dir.path}');
+        reason: 'the scanner walked ${files.length} presentation dart files');
     expect(files.map((f) => _rel(f.path)),
-        contains('pages/album_page.dart'));
+        containsAll(['features/album/presentation/album_page.dart',
+          'features/video/presentation/video_page.dart', 'app/home_shell.dart']));
+    expect(isPresentationSource('lib/features/album/data/store.dart'), isFalse);
   });
 
   test('no user-visible string is hardcoded in lib/ui', () {
@@ -78,7 +76,7 @@ void main() {
   test('the not-yet-localized list names only files that still need it', () {
     final stale = <String>[];
     for (final entry in notYetLocalized.entries) {
-      final f = File('lib/ui/${entry.key}');
+      final f = File('lib/${entry.key}');
       if (!f.existsSync()) {
         stale.add('${entry.key}: no such file');
         continue;
@@ -113,7 +111,7 @@ void main() {
   });
 }
 
-String _rel(String p) => p.replaceAll(r'\', '/').replaceFirst('lib/ui/', '');
+String _rel(String p) => p.replaceAll(r'\', '/').replaceFirst('lib/', '');
 
 class _Hit {
   final int line;

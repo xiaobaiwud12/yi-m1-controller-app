@@ -154,9 +154,9 @@ AppState testAppState() => AppState(
 ///
 /// The screens the user has reported bugs in — the two landscape side bands, the
 /// shutter bar, the camera readout, the paused-preview banner — are all gated on
-/// `link.isReady`, which needs a paired camera. The real sequence starts with BLE,
-/// and an Android emulator **has no Bluetooth adapter**, so the connected UI
-/// cannot be reached on one; a widget test has no radio at all. Injecting the HTTP
+/// `link.isReady`, which needs a paired camera. An emulator can use the virtual
+/// BLE peripheral described in `analysis/58`; a widget test has no radio.
+/// Injecting the HTTP
 /// client is enough to render all of it, which is what makes the landscape band
 /// widths and the banner's actions **measurable** rather than something verified
 /// by reading the layout code.

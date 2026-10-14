@@ -15,12 +15,13 @@ import '../platform/asset_sink.dart';
 import '../platform/media_store_bridge.dart';
 import '../platform/onboarding_prefs.dart';
 import '../platform/thumbnail_cache.dart';
-import '../ui/pages/first_run_flow.dart' show syncModeFromId;
+import '../sync/sync_mode.dart';
 import '../protocol/wire_format.dart';
 import '../sync/asset_sink_contract.dart';
 import '../sync/sync_engine.dart';
-import '../sync/file_sync_store.dart';
+import '../platform/file_sync_store.dart';
 import '../sync/sync_ledger.dart';
+import '../sync/sync_session.dart';
 import '../sync/transfer_queue.dart';
 import '../sync/ui_prefs.dart';
 import '../transport/album.dart';
@@ -164,7 +165,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// Created up front rather than on connect, because the ledger must be loaded
   /// before the album is browsed — otherwise previously synced photos look new
   /// and get fetched again.
-  final SyncLedger ledger = SyncLedger(store: FileSyncStore());
+  SyncLedger get ledger => _syncSession.ledger;
 
   /// The durable queue of pending work.
   ///
@@ -172,7 +173,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// adds the items the user asked for *last* session, and if the first album
   /// page had already been enqueued the same shots would be inserted twice and
   /// the list would visibly flicker.
-  final TransferQueue queue = TransferQueue(store: FileSyncStore.forQueue());
+  TransferQueue get queue => _syncSession.queue;
 
   /// The album grid's thumbnails, kept on disk so opening the album twice does not ask
   /// the camera for the same pictures twice.
@@ -199,7 +200,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// thumbnail, which is long after the UI is up, and a cache that cannot resolve it
   /// reports a miss instead of throwing.
   ///
-  /// `analysis/77-album-thumbnail-cache.md` records the format, the key, the cap and
+  /// `analysis/APPLICATION.md#source-77` records the format, the key, the cap and
   /// what invalidates an entry.
   late final AlbumThumbnailCache thumbnailCache = appThumbnailCache();
 
@@ -229,10 +230,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// kind of claim that let a never-persisted sync mode pass every in-memory assertion.
   final OnboardingPrefs onboardingPrefs;
 
-  late final SyncEngine sync;
+  late final SyncSession _syncSession;
+  SyncEngine get sync => _syncSession.engine;
 
   /// The camera's stream pause, for the sync run and for the UI to read.
-  late final HttpStreamPauseController streamPause;
+  HttpStreamPauseController get streamPause => _syncSession.streamPause;
 
   /// Whether a sync run may pause the live view, straight from §5.3.
   ///
@@ -422,8 +424,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// returns without clearing them.  The stranded flags then zero the status word
   /// mid-capture, the preview/EVF resume never runs, the encoder starves and the
   /// HTTP task blocks forever — with **no watchdog**, so the battery is the only
-  /// way back (see `analysis/04-camera-hang-bug.md` and
-  /// `analysis/re-imaging-and-hang-rootcause.md`).
+  /// way back (see `analysis/FIRMWARE.md#source-04` and
+  /// `analysis/FIRMWARE.md#source-re-imaging-and-hang-rootcause`).
   ///
   /// `focusAt` used to serialise against *itself* only: a 350 ms debounce, a
   /// 250 ms gap, and an `_focusInFlight` flag that the shutter neither read nor
@@ -773,13 +775,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     // is nothing to pause and the command would be sent to a camera that has no
     // reason to expect it — which is a risk not worth taking on a device with no
     // watchdog. A skipped pause costs nothing, because the stream is already off.
-    streamPause = HttpStreamPauseController(
+    _syncSession = SyncSession(
+      ledgerStore: FileSyncStore(),
+      queueStore: FileSyncStore.forQueue(),
+      sink: sink ?? MediaStoreSink(),
       http: () => _liveHttp,
-      isAvailable: () => link.previewRunning,
-      onLog: (m) => debugPrint(m),
-    );
-
-    sync = SyncEngine(
+      previewRunning: () => link.previewRunning,
       album: () {
         final a = album;
         if (a == null) {
@@ -788,18 +789,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         }
         return a;
       },
-      ledger: ledger,
-      sink: sink ?? MediaStoreSink(),
-      queue: queue,
-      streamPause: streamPause,
-      // The queue is written on the engine's own schedule — after a preview
-      // lands, after an item finishes, at the end of a run — rather than through
-      // a getter, so that the file always reflects the last thing that actually
-      // happened rather than the last time a screen was built.
-      onQueueChanged: () => unawaited(queue.save()),
-      // The engine is deliberately Flutter-free — it is verified offline by
-      // tool/verify_sync.dart — so it reports changes through a callback rather
-      // than a ChangeNotifier.
       onChanged: notifyListeners,
       onLog: (m) => debugPrint(m),
     );
@@ -887,8 +876,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   late Future<void> _loading;
 
   Future<void> _load() async {
-    await ledger.load();
-    await queue.load();
+    await _syncSession.loadStores();
     // Read before the first build that can open the settings panel, so the user's
     // arrangement is the one they see rather than a default that visibly
     // corrects itself a frame later.

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 import 'permission_gate.dart';
-import 'wifi_join_contract.dart';
+import '../transport/wifi_join_contract.dart';
 
 /// The Android implementation of [WifiJoinDelegate].
 ///

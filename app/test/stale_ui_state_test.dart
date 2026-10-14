@@ -8,8 +8,8 @@ import 'package:yi_m1_controller/platform/onboarding_prefs.dart';
 import 'package:yi_m1_controller/state/app_state.dart';
 import 'package:yi_m1_controller/transport/album.dart';
 import 'package:yi_m1_controller/transport/http_transport.dart';
-import 'package:yi_m1_controller/ui/pages/album_page.dart';
-import 'package:yi_m1_controller/ui/pages/first_run_flow.dart';
+import 'package:yi_m1_controller/features/album/presentation/album_page.dart';
+import 'package:yi_m1_controller/features/onboarding/presentation/first_run_flow.dart';
 
 import 'fakes.dart';
 import 'package:yi_m1_controller/l10n/l10n.dart';

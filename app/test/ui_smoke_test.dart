@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yi_m1_controller/state/app_state.dart';
-import 'package:yi_m1_controller/ui/pages/album_page.dart';
-import 'package:yi_m1_controller/ui/pages/live_view_page.dart';
-import 'package:yi_m1_controller/ui/pages/video_page.dart';
+import 'package:yi_m1_controller/features/album/presentation/album_page.dart';
+import 'package:yi_m1_controller/features/live_view/presentation/live_view_page.dart';
+import 'package:yi_m1_controller/features/video/presentation/video_page.dart';
 
 import 'fakes.dart';
 import 'package:yi_m1_controller/l10n/l10n.dart';
@@ -195,8 +195,8 @@ void main() {
 
   group('while connected', () {
     // The states the user has actually reported bugs in. They are all gated on
-    // `link.isReady`, which needs a paired camera — and an Android emulator has no
-    // Bluetooth adapter, so the real sequence cannot be shortened there. Injecting
+    // `link.isReady`, which needs a paired camera or the virtual BLE peripheral
+    // described in `analysis/58`. A widget test has no radio, so injecting
     // the HTTP client reaches them in a plain widget test, which is what makes
     // "landscape squeezes the picture" and "the banner's buttons" **measurable**
     // instead of something argued from the layout code.

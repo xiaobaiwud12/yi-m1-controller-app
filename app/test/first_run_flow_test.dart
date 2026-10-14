@@ -7,7 +7,7 @@ import 'package:yi_m1_controller/state/app_state.dart';
 import 'package:yi_m1_controller/sync/asset_sink_contract.dart';
 import 'package:yi_m1_controller/sync/sync_ledger.dart';
 import 'package:yi_m1_controller/sync/ui_prefs.dart';
-import 'package:yi_m1_controller/ui/pages/first_run_flow.dart';
+import 'package:yi_m1_controller/features/onboarding/presentation/first_run_flow.dart';
 
 import 'fakes.dart';
 import 'silent_ble.dart';

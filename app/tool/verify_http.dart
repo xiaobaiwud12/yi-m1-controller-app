@@ -108,7 +108,7 @@ Future<void> main(List<String> args) async {
     } on CameraHttpException catch (e) {
       bad('GetCameraStatus', '$e');
       print('\nCannot reach the camera. Join its Wi-Fi first '
-          '(see docs/HARDWARE-VERIFICATION.md).');
+          '(see docs/PROTOCOL.md).');
       _summary();
       return;
     }

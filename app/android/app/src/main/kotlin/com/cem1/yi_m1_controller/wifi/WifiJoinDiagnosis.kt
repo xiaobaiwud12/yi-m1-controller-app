@@ -1,4 +1,4 @@
-package com.cem1.yi_m1_controller
+package com.cem1.yi_m1_controller.wifi
 
 /**
  * Turns the platform's opaque Wi-Fi join failures into something the user can act

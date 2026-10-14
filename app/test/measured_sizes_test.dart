@@ -82,7 +82,7 @@ void main() {
       'lib/sync/sync_engine.dart',
       'lib/transport/album.dart',
       'lib/transport/album_thumbnail_cache.dart',
-      'lib/ui/pages/album_page.dart',
+      'lib/features/album/presentation/album_page.dart',
       'tool/verify_sync.dart',
       'tool/verify_transport.dart',
     },
@@ -96,7 +96,7 @@ void main() {
     // The invented MidThumb size, in the cache's own retraction.
     '186 KB': {
       'lib/transport/album_thumbnail_cache.dart',
-      'lib/ui/pages/album_page.dart',
+      'lib/features/album/presentation/album_page.dart',
     },
   };
 

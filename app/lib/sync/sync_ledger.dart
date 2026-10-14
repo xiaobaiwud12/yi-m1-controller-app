@@ -1,6 +1,6 @@
 /// The durable sync ledger, free of Flutter so it can be verified offline.
 ///
-/// `analysis/ce-app-competitive-spec.md` §5.4 is explicit about why this is a
+/// `analysis/RESEARCH.md#source-ce-app-competitive-spec` §5.4 is explicit about why this is a
 /// *ledger* rather than a "newest date seen" watermark: the camera has no RTC and
 /// is set from the phone on connect, so if its battery went flat the clock can
 /// move **backwards**, and a watermark would then quietly skip everything. A set

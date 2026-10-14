@@ -2,576 +2,62 @@
 
 # yi-m1-controller-app
 
-An open-source Android controller for the **YI M1** (小蚁微单, model `C59Y1`)
-mirrorless camera. It replaces the vendor's abandoned official app.
+An open-source Android controller for the YI M1 (`C59Y1`) mirrorless camera. It pairs over Bluetooth Low Energy (BLE), joins the camera's Wi-Fi network, sends HTTP controls, receives JPEG live view over UDP, and copies selected camera files to the phone.
 
-It pairs with the camera over **Bluetooth Low Energy**, reads the camera's Wi-Fi
-credentials from it, joins the camera's own access point at `192.168.0.10`, then
-drives it over **HTTP commands** and a **UDP 54321 JPEG live-view stream**, and
-syncs photos off the SD card into the phone's system gallery.
+This is an independent project, not affiliated with or endorsed by the camera manufacturer.
 
-This repository contains the application. Nothing else.
+## Release status
 
-> **Status: `0.2.1+3`.** `0.2.0+2` was the first public release: its APK is attached to
-> a GitHub Release and signed with the maintainer's own key (see `RELEASING.md`). The
-> version in `app/pubspec.yaml` is the artefact's identity, and `CHANGELOG.md` records
-> what changed in each one. The app has been verified on exactly one camera unit by
-> one person, on one phone. `CHANGELOG.md` and the sections below separate what has
-> evidence from what does not.
->
-> The app ships **English and Simplified Chinese**. It follows the phone's language by
-> default; the picker is at **Settings → Sync → System and diagnostics → Language**
-> (`setting-locale`), it takes effect immediately, and it is remembered. Two strings are
-> outside that picker by construction: the name under the launcher icon follows the
-> **system** language, because the launcher reads it from the APK's resources through
-> `PackageManager` before any Dart code runs (see "The launcher icon and the name under
-> it" below). One line the user reads is English in both locales — see "Not verified,
-> and not claimed" below.
-> It states its own licences in-app: the info button in the app bar (`btn-licences`)
-> opens the licence page, which lists every bundled component and says plainly that
-> this is not the manufacturer's app.
+The current source version is **`0.2.2+4`**. See [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases) for published versions and APK downloads. `app/pubspec.yaml` is the single source of the app version, and `CHANGELOG.md` records release changes. This maintenance includes an internal architecture split and stable keys for the main bottom navigation; it adds no pages or camera features.
 
----
+The maintainer confirmed that the original delivered app works. The camera is now unusable, so the current source has not been verified with a real camera. Offline and emulator checks cannot establish real-camera behavior.
 
-## Screenshots
+## Features and operating limits
 
-<!--
-  PROVENANCE — what these four PNGs are, and what they are not.
+- Pair with a YI M1 over BLE and obtain its Wi-Fi settings.
+- Connect to the camera's access point and send supported HTTP controls.
+- Display the camera's JPEG live-view stream.
+- Browse camera-card media and select files to transfer to the phone.
 
-  They are screenshots of the app, at its native device pixels (1080x2400 and
-  2400x1080 @ 420 dpi, Pixel-6-class AVD `yi_m1_test`), captured with
-  `adb shell screencap` and NOT downscaled; the <img width> attributes below
-  control display size only. Do not upscale or re-encode them to a different
-  size — that would make the captions' claim about the preview and the dial
-  geometry untrue.
+The camera handles HTTP requests serially. Media selection adds work to a queue; the user starts transfer from the sync controls. Connection readiness does not start downloads. RAW and JPEG files captured as a pair are grouped, and selecting the pair queues both. A `204` response to a thumbnail request means that resolution is unavailable, not that the file is missing; RAW files require an original-size request.
 
-  Build       : a **debug** build of the app source in this repository, run with
-                `flutter run -d emulator-5554 --dart-define=MARIONETTE=1
-                --dart-define=FAKE_CAMERA=1`. `live-view.png` carries the app's
-                own build stamp in its app bar and it reads `dev`, which is what
-                `BUILD_STAMP` defaults to, so a build with no stamp passed reads
-                as a development build rather than a release one. **The other
-                three do not show that chip** — do not send a reader looking for
-                it in them. `FAKE_CAMERA` fabricates the
-                connection and the camera's answers; the camera protocol is not
-                exercised by these images and they are not evidence that any
-                command works.
-  Camera      : **none.** No M1 was connected or used. There is no real camera
-                anywhere in these shots.
-  Locale      : `live-view.png` and `dials-landscape.png` are the **English**
-                interface; `album-sync.png` and `first-run.png` are
-                **简体中文**. The app follows the phone's language by default
-                (Settings → Language), so the Chinese shots are what a Chinese
-                phone shows with no configuration, and the two together are the
-                evidence that both locales are really drawn — not only claimed.
-  Preview     : **synthetic, and deliberately so.** The app's own live-view
-                receiver, JPEG decode, readout strip and histogram are all real
-                and running — but the picture in the preview is a public-domain
-                painting, not the camera's output. It is fed to the running app
-                as datagrams in the measured live-view format (frame index,
-                timestamp, `0x79CE4283`, 2272-byte parameter block, SOI at
-                +2284), so what is rendered is the app's real pipeline operating
-                on a still life. The camera state in the readout strip is a real
-                capture from the maintainer's M1 (its RAW+JPEG, ISO, shutter and
-                battery values), replayed for the frame.
+The shutter uses press-and-hold, and capture is unavailable while the camera reports Continuous drive mode. Pause/resume of the live-view stream is an explicit experiment and is off by default.
 
-                **Nothing here is presented as a photograph of a real scene
-                through the app.** The alternative was photographing a desk with
-                the maintainer's home in it, which is worse.
-  Grid        : **off in both shots that have a preview.** The grid toggle in
-                `live-view.png` and `dials-landscape.png` draws the struck-through
-                icon (`Icons.grid_off`), which is what the app draws while the grid
-                is off, and no rule-of-thirds lines are drawn over the picture in
-                either one. Do not describe the grid as visible here; re-shoot with
-                the toggle on if that is the shot you want. The histogram is on in
-                both of those shots; `album-sync.png` and `first-run.png` have no
-                preview at all, so neither toggle appears in them.
+## Requirements
 
-  Captions are bilingual on purpose: the camera is a Chinese product (小蚁微单)
-  and its users are the reason the app is being localised, while the
-  application's code and commit history are English. If you prefer one language,
-  delete the other line from each caption — nothing else depends on it.
--->
+- YI M1 (`C59Y1`) and an Android phone running Android 7.0 (API 24) or later, with BLE and Wi-Fi.
+- Release APKs target **`arm64-v8a`**. Install on a compatible device. Android may ask you to allow installation from the source used to open the APK.
+- To build from source, use Flutter/Dart, Android SDK, JDK and Git.
 
-> **What these four images are — read this before judging the app by them.**
-> They are screenshots of this app's own UI, at native device resolution
-> (1080x2400 and 2400x1080), from an emulator, with **no camera connected**. The
-> connection is stubbed (`FAKE_CAMERA`) and the picture in the preview is a
-> public-domain still life fed through the app's real live-view path — so the
-> layout, the readout, the dials and the histogram are the app's own rendering,
-> while **the photograph is not the camera's**. Two shots are in English and two
-> are in 简体中文, because the app follows the phone's language. The full
-> provenance — build flags, locales, and the exact JPEG fixture — is in the HTML
-> comment above.
+A simulator with fake-camera flags is for UI and integration checks only. It does not connect to a physical camera.
 
-<table>
-<tr>
-<td width="50%">
+## Checks and APK verification
 
-<img src="docs/screens/live-view.png" width="300"
-     alt="Portrait shooting screen: the camera's live preview fills the upper area, with the state readout, the shutter button and the settings panel below it.">
-
-**Live view · 取景页.** Portrait, connected, preview running — the app's own
-render. The readout bar carries the camera's own state; the histogram sits
-between it and the picture. Shown here in **English**; `album-sync.png` and
-`first-run.png` below are the same app in **简体中文**.
-
-**中文**：竖屏取景页，已连接、预览在跑。读数栏显示相机自己的状态，直方图在预览上方。
-本图为**英文**界面；下方 `album-sync.png` 与 `first-run.png` 为**简体中文**界面。
-
-</td>
-<td width="50%">
-
-<img src="docs/screens/dials-landscape.png" width="700"
-     alt="Landscape full screen: the preview fills the display and the mode-aware exposure dial rail runs down both sides.">
-
-**Landscape full screen with the dials · 横屏全屏与拨盘.** S is the mode the
-camera reported here, so the right rail is EV plus the parameter S controls
-(shutter) and ISO/Mode stay on the left. The composition grid is **off** in this
-shot — the top bar's grid toggle draws the struck-through icon — and the histogram
-sits below the shutter.
-
-**中文**：这里的模式是相机回报的 S 档，因此右侧拨盘为 EV 加 S 档控制的参数（快门），
-ISO 与模式固定在左侧。这一张里构图网格是**关**的（顶栏的网格开关画的是带斜杠的
-图标）；直方图在快门下方。
-
-</td>
-</tr>
-<tr>
-<td>
-
-<img src="docs/screens/album-sync.png" width="300"
-     alt="The album page: a grid of thumbnails from the camera's SD card, with selection controls and the sync bar.">
-
-**Album and sync · 相册与同步.** The card's contents, grouped into RAW+JPEG
-pairs. Selecting items queues them; **the sync bar is what starts the transfer** —
-queueing never starts one.
-
-**中文**：相册把 RAW 与 JPEG 配成一对。勾选只是**入队**，真正开始传输的是同步栏。
-
-</td>
-<td>
-
-<img src="docs/screens/first-run.png" width="300"
-   alt="The first-run flow: a three-step guide that walks through pairing the phone with the camera over Bluetooth.">
-
-**First run and pairing · 首次使用与配对.** Three steps, skippable and
-reopenable from the app bar. Pairing needs a physical **Accept** on the camera
-body, and the camera stores only one pairing.
-
-**中文**：三步、可跳过，也能从顶栏重开。配对需要在**相机机身上按一次「接受」**
-（Accept），而且相机只保存一个配对。
-
-</td>
-</tr>
-</table>
-
----
-
-## What works today
-
-Claims here carry markers: **[V]** means the behaviour was observed and is
-recorded, **[H]** means it is judgement or reasoning rather than an observation.
-
-### Verified against a real camera
-
-- **[V]** BLE pairing, reading the Wi-Fi credentials, joining the camera's
-  access point, HTTP commands, and remote parameter control (aperture, shutter,
-  ISO, white balance).
-- **[V]** The shutter really fires. The owner's report was *"the count went down
-  and it is in the gallery"* — a platform-level observation, not a green button.
-- **[V]** Album protocol details reproduced on hardware: a `204` from a
-  `Thumbnail` request means *"this resolution cannot be produced"*, not *"the
-  file is absent"*; a RAW (`.DNG`) can only be fetched at `Original` (31.9 MB, a
-  real DNG); `DeleteFile` takes a `file_list` **array**, and a wrong request shape
-  answers `404` for an existing file and a nonexistent one alike.
-- **[V]** Photos sync into the phone's system gallery, and a write is only
-  counted as done once `IS_PENDING` is confirmed cleared — the query shows
-  `is_pending=0`, not merely a returned URI.
-- **[V]** RAW+JPEG pairs are grouped, and selecting one entry queues both.
-- **[V]** **The camera has no watchdog.** A capture command sent while the drive
-  mode is `Continuous` starts a burst that only a cancel command stops — nothing
-  on the camera ends it by itself — and the camera then strands and needs its
-  battery pulled. What kills it is *sending any other request during a burst*.
-  The app therefore uses press-and-hold to shoot and refuses to shoot in
-  `Continuous` at all.
-
-### Verified on a desk
-
-- **[V]** 686 pure-logic assertions across the protocol, transport and sync (456 in
-  the transport suite, 230 in the sync one) plus 29 conformance checks, runnable with
-  plain `dart` and no Flutter engine:
-
-  ```powershell
-  cd app
-  dart tool/verify.dart             # everything, in order
-  ```
-
-  Or individually: `dart tool/verify_transport.dart`, `dart tool/verify_sync.dart`,
-  `dart tool/conformance.dart`.
-
-- **[V]** the widget suite, covering the live view, the album, the viewer, the
-  first-run flow, overflow at large system text sizes, and the licence page:
-
-  ```powershell
-  cd app
-  flutter test
-  ```
-
-- **[V]** The whole connection sequence — scan → discover → pair → read
-  credentials → join → HTTP → ready — against a **virtual camera** injected into
-  the Android emulator's radio, with no change to the app:
-
-  ```powershell
-  cd app
-  flutter run -d emulator-5554 --dart-define=MARIONETTE=1 --dart-define=FAKE_CAMERA=1
-  ```
-
-- **[V]** The release artefact is inspected rather than trusted, and **that check
-  ships here** rather than only existing on the machine that built it:
-
-  ```powershell
-  dart tool/verify_apk.dart build/app/outputs/flutter-apk/app-release.apk --stamp <stamp>
-  ```
-
-  It unpacks the APK and asserts that all eight required permissions are in the
-  **packaged** manifest, that no test instrumentation reached the dex or
-  `libapp.so`, that the build stamp is inside the shipped `libapp.so`, and that the
-  artifact is not signed with the public Android debug key.
-
-### The launcher icon and the name under it
-
-- **[V]** The app has its own icon: a lens ring with a white glass at its centre and
-  two broadcast waves opening to the upper right — a camera you command over a radio
-  link. It is **original work by this project under this project's licence**, and
-  contains no vendor artwork, wordmark or trade dress; `NOTICE` §6 records what it is
-  and, just as deliberately, what it is not. It is a real adaptive icon rather than one
-  bitmap: `mipmap-anydpi-v26/` carries the foreground and background layers,
-  `mipmap-anydpi-v33/` adds a `<monochrome>` layer so Android 13+ can recolour the icon
-  to the user's wallpaper palette, and `mipmap-{m,h,xh,xxh,xxx}dpi/` carry the ten
-  legacy PNGs for API 24–25. Every artefact is derived from one set of constants.
-- **[V]** The name under that icon is a string resource with an English and a Chinese
-  value (`app/android/app/src/main/res/values/strings.xml` and `values-zh/`), not a
-  literal, so a Chinese phone shows the Chinese name.
-- **Which language it follows is a platform property, not a setting in this app.** The
-  launcher resolves `android:label` against the **system** locale through
-  `PackageManager`, before Dart runs, so the in-app language picker cannot influence
-  it: a phone set to English shows the English name even when this app is set to
-  Chinese, and the reverse. That is stated here rather than glossed because it is the
-  one visible string the in-app localisation can never reach — `app/lib/l10n/app_*.arb`
-  only supplies text the Dart code renders.
-- **[V]** The icon has a check that can fail: `dart tool/verify_icon.dart`, 94
-  assertions. It decodes the ten PNGs with a real decoder (zlib and all five scanline
-  filters) rather than reading their headers, asserts they are neither blank nor
-  single-coloured nor duplicates of one another, requires the round ones to be genuinely
-  round, and re-derives the safe-zone arithmetic by parsing the written vector rather
-  than reusing the generator's numbers. It reads `res/` and the manifest, so it runs
-  here; it is not part of `dart tool/verify.dart`.
-
-### Hardware facts that constrain what the app can do
-
-These are properties of the camera, not of this app, and they are why several
-obvious-looking features are absent.
-
-- **[V]** **The live view is a JPEG stream over UDP**, one 800×600 frame per
-  datagram, roughly **12–14 Mbit/s** at about 30 frames per second. The client
-  deliberately does **no frame dropping** — that is an explicit product decision,
-  not an oversight.
-- **[V]** **The camera is a single-threaded HTTP server with one Wi-Fi client
-  slot and no authentication.** Anything else talking to it contends with the
-  preview.
-- **[V]** **The camera has no real-time clock.** The app must therefore set the
-  camera's clock over BLE after every power-up, or every photo's capture date is
-  wrong.
-- **[H]** Host Bluetooth passthrough to the Android emulator does not work on
-  Windows: libusb cannot take a non-WinUSB device. Consequence: the BLE path can
-  only be exercised against a **real phone** or against the emulator's **virtual
-  peripheral** — never against your camera through the host radio.
-
-### Built, but not yet exercised on real hardware
-
-- **[V]** `GetMLFileList` always returns `{"code":200,"data":[]}` even with
-  photos on the card. The cause is **not** known.
-- **[H]** Roughly 15 of the camera's 45 HTTP commands have been exercised.
-- **[H]** Only one camera unit and one phone have been used. A different firmware
-  version can move things.
-
-### Not verified, and not claimed
-
-- **The dials' appearance.** Every dimension was measured programmatically, so
-  the geometry is checked and the *look* is not.
-- **Preview stutter under real conditions.** What the stream *feels* like on a
-  phone is unmeasured.
-- **Pause/resume of the live-view stream.** Never verified on a real camera, and
-  using it unverified once wedged the camera. It is off by default
-  (`pauseStreamDuringTransfer = false`) and exposed only as an explicit
-  experiment (`toggle-pause-stream`).
-- **Burst shooting beyond what has been established.** What a burst at full card
-  speed actually produces was not measured.
-- **USB and HDMI live-view output.** Analysis concluded both are infeasible; the
-  complete UVC descriptor in the camera's firmware is dead code with zero
-  references. Do not expect this feature.
-- **A fully Chinese interface.** Both locales ship and a check asserts that every
-  key exists in both files, but one line a user reads is English in either
-  language: the sync bar's summary, which the Flutter-free sync layer builds
-  (`SyncSummary.toString()`) and which that file documents as not localized. It is
-  visible in `album-sync.png` above (`0 of 1 — 0 originals, 0 previews`). Whether
-  the Chinese *reads* well is a judgement, not an observation.
-
----
-
-## Hardware and software you need
-
-**Hardware**
-
-- A **YI M1** (`C59Y1`) camera, powered on and charged. The vendor abandoned the
-  product line; this project is unaffiliated with it.
-- An Android phone with **Bluetooth LE** and Wi-Fi, on **Android 7.0 (API 24)**
-  or newer. Release builds target `arm64-v8a`.
-- A computer to build on. The project is developed on Windows; the build itself
-  is platform-independent apart from the two machine-specific settings below.
-
-**Software**
-
-| | Version used | Notes |
-|---|---|---|
-| Flutter | `3.47.4` stable | pinned in `app/.metadata` by revision `9584c6713b` |
-| Dart | `3.13.3` | comes with Flutter |
-| JDK | **21** | the Android build needs a JDK that can `jlink` `core-for-system-modules.jar`; **JDK 25 fails**, and the failure surfaces as a misleading "upgrade your AGP version" hint from Flutter |
-| Gradle | `9.3.1` | via `app/android/gradle/wrapper` |
-| Android Gradle Plugin | `9.1.0` | `app/android/settings.gradle.kts` |
-| Kotlin | `2.4.0` | |
-| Android SDK | `compileSdk` 36, `targetSdk` 36, `minSdk` 24, NDK `28.2.13676358` | inherited from the Flutter SDK's defaults, not written down explicitly |
-
----
-
-## Getting started
-
-### 1. Clone
+From the repository's `app/` directory, run the unified offline verification entry point:
 
 ```bash
-git clone https://github.com/xiaobaiwud12/yi-m1-controller-app
-cd yi-m1-controller-app
-```
-
-There are no submodules. Everything needed to build is in this repository.
-
-> The repository name ends in `-app` on purpose. The reverse-engineering work that
-> produced this code — the firmware images, the decompiled vendor application, the
-> analysis notes that the comments in `app/lib/` cite as `analysis/NN` — lives in a
-> **separate, private** repository. It is not published and cannot be made available,
-> which is why some comments cite material you will not find here. `tool/verify_release.dart`
-> counts those citations and this README says so rather than leaving you to wonder
-> whether your clone is incomplete; it is not.
-
-### 2. Nothing machine-specific to change
-
-Earlier versions of this tree asked you to edit two files before the build would
-work. Both are fixed:
-
-- **`app/android/gradle.properties` no longer pins one machine's JDK.**
-  Gradle ignores `JAVA_HOME` whenever `org.gradle.java.home` is set, so the pinned
-  path made a perfectly good JDK invisible and produced nothing but
-  `Java home supplied is invalid`. Set it on your machine if you need to — in
-  `~/.gradle/gradle.properties` (`%USERPROFILE%\.gradle\gradle.properties`), which
-  is not tracked by anything. You need it if your `JAVA_HOME` is **JDK 24 or
-  newer**: the Android build derives a JDK image from `core-for-system-modules.jar`
-  with `jlink`, and that transform fails on JDK 25 behind a misleading "upgrade
-  your AGP version" hint from Flutter. JDK 21 works.
-- **The Gradle wrapper is complete here** — `gradlew`, `gradlew.bat` and
-  `gradle/wrapper/gradle-wrapper.jar` are all committed, so `./gradlew` works from a
-  fresh clone. (Flutter's own template gitignores all three; that is why an earlier
-  export of this tree could not run the wrapper at all.)
-
-### 2b. Signing: what a release build needs, and what a local build needs
-
-A **release** APK must be signed with the maintainer's key, read from
-`app/android/keystore.properties` (`storeFile`, `storePassword`, `keyAlias`,
-`keyPassword`). That file is deliberately **not** in this repository: a key that can
-impersonate the app cannot be un-published. Without it, a release build **fails**:
-
-```
-Release build refused: no signing key.
-Looked for : .../app/android/keystore.properties
-```
-
-That failure is the point. Until 2026-09-16 the release build type silently used the
-**debug** keystore — a publicly known key with a fixed alias and password, shipped in
-every Android SDK — which would have let anybody build an "update" that Android
-accepts. `RELEASING.md` has the `keytool` invocation and the whole procedure.
-
-For a local build you do not intend to distribute, ask for the debug key explicitly:
-
-```bash
-flutter build apk --release --android-project-arg=allowDebugSigning=true
-```
-
-It prints a warning naming what you asked for, and `tool/verify_apk.dart` refuses the
-resulting artifact unless you pass `--allow-debug-signing`.
-
-### 3. Fetch packages
-
-```powershell
-cd app
-flutter pub get
-dart analyze
-```
-
-`dart analyze` is the fastest signal available. It should be silent.
-
-### 3b. Verify — one command
-
-```powershell
-cd app
 dart tool/verify.dart
 ```
 
-That is the whole verification story for this repository: the analyzer, the three
-pure-Dart logic suites (686 assertions between them, plus 29 conformance checks, and they must keep compiling
-*without* Flutter — that is an architectural invariant, not a preference), the widget
-tests, the leak scan over this repository, and the self-tests of the two checks that
-belong to the release rather than to the app. Add `--with-android` to run the Kotlin
-JVM tests too (needs a JDK and the Android SDK).
+To inspect a release APK from the same directory:
 
-`dart tool/verify.dart` prints, at the end of every run, the list of things it cannot
-check — the camera, the firmware notes that are not published, and the Android build.
-That list is part of the output on purpose.
-
-### 4. Build
-
-```powershell
-cd app
-flutter build apk --release --target-platform android-arm64
+```bash
+dart tool/verify.dart --apk build/app/outputs/flutter-apk/app-release.apk --stamp <commit-stamp>
 ```
 
-The APK lands in `app/build/app/outputs/flutter-apk/app-release.apk`. The build
-stamps itself with the short commit hash plus `-dirty` when the tree is dirty,
-renders that in the app bar, and fails if the stamp is not inside the shipped
-`libapp.so`.
+The APK check inspects packaged permissions, rejects test-only instrumentation, checks the embedded build stamp, and rejects the public Android debug signing key.
 
-Then check the artifact itself — this needs no Android SDK, and it is the only check
-whose subject is what a user would install:
+`MARIONETTE`, `FAKE_CAMERA`, and `DIRECT_CAMERA` are test or experiment flags. They must not be enabled in a formal APK.
 
-```powershell
-dart tool/verify_apk.dart build/app/outputs/flutter-apk/app-release.apk --stamp <the stamp>
-```
+## Licensing
 
-It reads the **packaged** manifest (the eight required permissions — one of them,
-`CHANGE_NETWORK_STATE`, was missing from shipped APKs for three rounds while the
-manifest *source* looked complete), searches `classes*.dex` and `lib/**/*.so` for the
-test-instrumentation markers, looks for the build stamp in `libapp.so`, and refuses an
-APK signed with the debug certificate.
+This application is licensed under **Apache-2.0**; see `LICENSE`. `NOTICE` lists third-party components and applicable notices, including MIT-licensed generated protocol material. Preserve notices when redistributing the source or bundled components. The in-app licence page lists bundled components.
 
-Two compile-time seams exist purely so that screens which only exist *after* a
-connection can be reached without a camera:
+## Project links
 
-- `--dart-define=FAKE_CAMERA=1` — a stub camera that answers the commands the UI
-  actually reads. It prints `FAKE_CAMERA_VERIFICATION_ONLY: simulating a
-  connected camera` at startup. **It is not evidence that any command works.**
-- `--dart-define=DIRECT_CAMERA=1` — skip BLE and talk HTTP to a camera at a
-  fixed address.
-- `--dart-define=MARIONETTE=1` — enables the widget-tree inspection channel used
-  to drive the app remotely during development.
-
-**None of the three may be defined in a release build.** The build asserts their
-marker strings are absent from the artefact; if you build a release with one of
-them and the build succeeds, that is a bug worth reporting.
-
-### 5. Run it
-
-```powershell
-# On a phone that is already paired with the camera, over USB:
-cd app
-flutter run --release
-
-# On an emulator, with a fake camera so the post-connection UI is reachable:
-flutter run -d emulator-5554 --dart-define=MARIONETTE=1 --dart-define=FAKE_CAMERA=1
-```
-
----
-
-## Development
-
-### What you can verify here, and what you cannot
-
-`dart tool/verify.dart` (above) runs everything that can run without hardware.
-**Read its last paragraph before you trust a green run**: the camera-facing
-conclusions in `app/docs/PROTOCOL.md` were established against a real YI M1, and
-nothing in this repository can re-derive them.
-
-Anything that involves the camera — pairing, joining its access point, the
-protocol, the live-view stream, and whether a photo actually appears in the
-system gallery — **cannot be verified without the hardware**. No emulator
-substitutes for it.
-
-### The one rule
-
-**Every new capability needs a check that can actually fail.** "The code is
-written" is not done. A bug fix should arrive with the check that would have
-caught it, and that check stays. See `CONTRIBUTING.md`.
-
-### Layout
-
-| Path | What it is |
-|---|---|
-| `app/lib/protocol/` | Wire formats, the 45-command table, parameter pools, coordinate mapping, layout maths. **No Flutter.** |
-| `app/lib/transport/` | BLE, HTTP, live view, album, Wi-Fi join, capture interlock. Four files import Flutter (`file_pairing_store.dart`, `flutter_ble_transport.dart`, `screen_control.dart`, `wifi_joiner.dart`); the two pure-VM verifiers do not import them. |
-| `app/lib/sync/` | Transfer queue, sync ledger, pause contract. **No Flutter.** |
-| `app/lib/platform/` | The implementations that do need Flutter: MediaStore, file sinks. |
-| `app/lib/state/` | `AppState`, the single source of truth. |
-| `app/lib/ui/` | Pages and widgets. Interactive controls carry `ValueKey<String>` names (`btn-*`, `toggle-*`, `banner-*`) so they can be located remotely. |
-| `app/lib/l10n/` | Translation sources (`app_en.arb`, `app_zh.arb`) and the generated `AppLocalizations`. |
-| `app/tool/verify*.dart` | 686 pure-VM assertions, plus `verify.dart` (the entry point), `verify_release.dart` (the leak scan), `verify_apk.dart` (the artifact check) and `verify_icon.dart` (the launcher icon). All runnable with plain `dart`, no Flutter engine. |
-| `app/test/` | Widget tests, overflow and text-scale tests, fakes. |
-| `app/android/` | Kotlin: `MediaStorePublish`, `WifiJoinDiagnosis`, `MediaKind`, plus JVM unit tests. |
-| `app/testdata/liveview/` | 40 real UDP datagrams captured from the camera. `tool/verify_transport.dart` reads them and the framing checks cannot run without them. |
-| `app/docs/PROTOCOL.md` | The wire-protocol reference the client is written against, with a confidence marker on every entry. |
-
-The three Flutter-free layers are a hard constraint, not a style preference:
-`dart tool/verify_transport.dart` and `dart tool/verify_sync.dart` must keep
-compiling — and running — in a plain Dart VM with no Flutter engine, and neither
-imports the four files in `app/lib/transport/` that do import Flutter. That is what
-makes 686 assertions finish in seconds. `app/lib/protocol/` and `app/lib/sync/`
-carry no `package:flutter` import at all.
-
----
-
-## Safety notes
-
-The camera is a **single-threaded HTTP server with one Wi-Fi client slot** and no
-authentication. Three rules exist because breaking them cost real hardware time.
-They are enforced in code, not merely documented:
-
-1. **Queueing a download does not start a transfer.** The sync bar starts it.
-2. **A photo that is already on the phone is never fetched from the camera again.**
-   The viewer reads the phone's own copy, so a synced photo opens with the camera off.
-   An **unsynced** photo may load itself **one** `MidThumb` preview when it is opened —
-   that rule was narrowed deliberately, and the three conditions are: only one camera
-   request is ever in flight (one gate, shared with the grid and the sync engine, and
-   the open photo takes priority), a request that is still queued when the page is
-   swiped away is never sent at all, and a failure is shown rather than left spinning.
-   Fetching the full-size original is still an explicit button press.
-3. **Pause/resume of the live-view stream is off by default** because it was
-   never verified on real hardware.
-
-Also: the camera's access point accepts **one client at a time**. A phone and a
-PC cannot both be on it, and the second one's failure looks like a wrong
-password.
-
----
-
-## Contributing, security, licence
-
-- `CONTRIBUTING.md` — what the project will and will not accept.
-- `SECURITY.md` — how to report a vulnerability, and why the camera's own
-  protocol is out of scope.
-- `CHANGELOG.md` — every notable change.
-- `LICENSE` — **Apache License 2.0**. `NOTICE` lists the third-party components
-  this app is built from and the notices their licences require.
-
-This project is an independent third-party controller. It is not affiliated
-with, endorsed by or supported by the manufacturer of the YI M1. "YI", "Xiaoyi"
-and "YI M1" are their owners' trademarks and are used here only to say what the
-software is for. No vendor artwork, logo or asset is bundled — the launcher icon is
-this project's own work (`NOTICE` §6), drawn from geometry defined for it and saved
-in this repository.
+- [Release notes](CHANGELOG.md)
+- [Release instructions](RELEASING.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Protocol notes](app/docs/PROTOCOL.md)
+- [Issue tracker](https://github.com/xiaobaiwud12/yi-m1-controller-app/issues)

@@ -37,7 +37,7 @@ import 'package:yi_m1_controller/state/app_state.dart';
 import 'package:yi_m1_controller/sync/asset_sink_contract.dart';
 import 'package:yi_m1_controller/transport/capture_guard.dart';
 import 'package:yi_m1_controller/transport/http_transport.dart';
-import 'package:yi_m1_controller/ui/pages/live_view_page.dart';
+import 'package:yi_m1_controller/features/live_view/presentation/live_view_page.dart';
 
 import 'fakes.dart';
 import 'package:yi_m1_controller/l10n/l10n.dart';

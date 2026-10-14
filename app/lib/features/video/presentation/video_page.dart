@@ -2,18 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../l10n/l10n.dart';
-import '../../l10n/message_text.dart';
-import '../../protocol/camera_state.dart';
-import '../../protocol/http_params.dart';
-import '../../state/app_state.dart';
-import '../../transport/http_transport.dart';
+import '../../../l10n/l10n.dart';
+import '../../../l10n/message_text.dart';
+import '../../../protocol/camera_state.dart';
+import '../../../protocol/http_params.dart';
+import '../../../state/app_state.dart';
+import '../../../transport/http_transport.dart';
 
 /// Remote video recording: the capability the official app does not have.
 ///
 /// The firmware dispatches **14 video commands** and the official YI app sends
 /// none of them — it can only take stills from the phone, which is the single
-/// largest gap this project exists to close (`analysis/ce-app-competitive-spec.md`
+/// largest gap this project exists to close (`analysis/RESEARCH.md#source-ce-app-competitive-spec`
 /// §1.6, §D5). Everything on this page is one of those commands.
 ///
 /// ## What the camera can and cannot tell us
@@ -44,7 +44,7 @@ import '../../transport/http_transport.dart';
 ///
 /// `VideoRecordingStart`/`Stop` and `RCVideoFormatSet` were accepted by a real
 /// camera, but the project's checklist still has the **SD-card write** awaiting
-/// manual confirmation (`app/docs/HARDWARE-VERIFICATION.md:14`). The four video
+/// manual confirmation (`analysis/HISTORY.md#source-hardware-verification`). The four video
 /// *quality* commands were verified only structurally, from the firmware's
 /// dispatch table — and a pool read that way once listed `720P_120`, which the
 /// hardware answered with a 404. A user has to be told that before they trip over
@@ -65,14 +65,14 @@ class _VideoPageState extends State<VideoPage> {
   /// three switch commands take `Operation`.
   ///
   /// Evidence (each key seen as a literal next to its handler):
-  /// * `Resolution` — `analysis/10-handler-request-params.md:86`, and
+  /// * `Resolution` — `analysis/PROTOCOL.md#source-10`, and
   ///   `analysis/http_param_values.json` lists it in the firmware pool that
   ///   `app/lib/transport/http_transport.dart:180` already uses.
   /// * `Operation` — inline in the `RCVASwitchSet` handler,
   ///   `analysis/handler_args.json:362-365`, corroborated by
-  ///   `analysis/10-handler-request-params.md:101`.
+  ///   `analysis/PROTOCOL.md#source-10`.
   /// * `Vol` — `analysis/handler_params.json:882-892` (the `RCVAVolSet` handler's
-  ///   own pool) and `analysis/10-handler-request-params.md:99`.
+  ///   own pool) and `analysis/PROTOCOL.md#source-10`.
   ///
   /// `Operation` and `Vol` are **single-source** for `RCVANoiseReduceSet`,
   /// `RCEisSwitchSet` and `RCVAVolSet`; that is exactly why the whole family is
@@ -87,7 +87,7 @@ class _VideoPageState extends State<VideoPage> {
 
   /// The two audio-switch values the firmware's own capability table carries:
   /// `ON` and `OFF` sit immediately after the `VASwitch` name at
-  /// `text:0x1520E4`-`0x1520F4` (`analysis/mod-research-video.md:268-293`), and the
+  /// `text:0x1520E4`-`0x1520F4` (`analysis/FIRMWARE.md#source-mod-research-video`), and the
   /// live-view snapshot renders the field the way it was set — the reference
   /// dump has `"VASwitch":"ON"` (`app/capture_test/lv_state.json`).
   static const String _on = 'ON';
@@ -95,8 +95,8 @@ class _VideoPageState extends State<VideoPage> {
 
   /// Recording formats, transcribed from the firmware's **literal pool**
   /// (`analysis/http_param_values.json`, `firmware_literal_values`) rather than
-  /// invented here, and cross-listed in `analysis/ce-app-competitive-spec.md:183`
-  /// and `analysis/MOD-PROPOSAL.md:49`.
+  /// invented here, and cross-listed in `analysis/RESEARCH.md#source-ce-app-competitive-spec`
+  /// and `analysis/FIRMWARE.md#source-MOD-PROPOSAL`.
   ///
   /// Two facts this list carries, both learned the hard way:
   ///
@@ -355,7 +355,7 @@ class _VideoPageState extends State<VideoPage> {
   /// the person pressing the button:
   ///
   /// * `VideoRecordingStart`/`Stop` and `RCVideoFormatSet` were sent to a real
-  ///   camera and came back `code:200` (`app/docs/HARDWARE-VERIFICATION.md:14`),
+  ///   camera and came back `code:200` (`analysis/HISTORY.md#source-hardware-verification`),
   ///   but the project's own checklist still has the **SD-card write** as
   ///   awaiting manual confirmation — so "the camera accepted it" is not the same
   ///   claim as "there is a clip on the card";

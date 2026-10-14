@@ -2,8 +2,8 @@
 //
 // ## Why the release repository needs its own
 //
-// The development repository runs `pwsh tools/task.ps1 verify` — eight layers,
-// parallel, about 36 seconds. **None of that machinery is published**: `tools/` is
+// The development repository runs `pwsh tools/task.ps1 verify`, with independent
+// layers and one result. **None of that machinery is published**: `tools/` is
 // development-only, and two of those layers (`audit`, `firmware`) cannot run without
 // material the release tree does not contain anyway. So a contributor cloning the
 // public repository had *no* verification entry point at all, and the only evidence
@@ -18,8 +18,8 @@
 //   1. `flutter pub get`            — dependencies resolve
 //   2. `dart analyze lib tool test` — the analyzer is clean
 //   3. `dart tool/conformance.dart`            — generated tables vs. the protocol
-//   4. `dart tool/verify_transport.dart`       — 333 transport assertions, pure VM
-//   5. `dart tool/verify_sync.dart`            — 182 sync assertions, pure VM
+//   4. `dart tool/verify_transport.dart`       — transport checks, pure VM
+//   5. `dart tool/verify_sync.dart`            — sync and boundary checks, pure VM
 //   6. `flutter test`               — the widget suite
 //   7. `dart tool/verify_release.dart`         — the leak scan over this repository
 //   8. `dart tool/verify_apk.dart <apk>`       — only with `--apk`; see below

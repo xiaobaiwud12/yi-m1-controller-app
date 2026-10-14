@@ -3,18 +3,18 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../../l10n/l10n.dart';
-import '../../l10n/message_text.dart';
-import '../../platform/media_store_bridge.dart';
-import '../../state/app_state.dart';
-import '../../sync/asset_group.dart';
-import '../../sync/sync_engine.dart';
-import '../../sync/sync_ledger.dart';
-import '../../transport/album.dart';
-import '../../transport/album_delete.dart';
-import '../../transport/camera_request_gate.dart';
-import '../../transport/http_transport.dart';
-import '../haptics.dart';
+import '../../../l10n/l10n.dart';
+import '../../../l10n/message_text.dart';
+import '../../../platform/media_store_bridge.dart';
+import '../../../state/app_state.dart';
+import '../../../sync/asset_group.dart';
+import '../../../sync/sync_engine.dart';
+import '../../../sync/sync_ledger.dart';
+import '../../../transport/album.dart';
+import '../../../transport/album_delete.dart';
+import '../../../transport/camera_request_gate.dart';
+import '../../../transport/http_transport.dart';
+import '../../../ui/haptics.dart';
 
 /// Album browsing, selection and sync.
 ///
@@ -26,7 +26,7 @@ import '../haptics.dart';
 /// dispatched. And it offers one quality per transfer, chosen in advance.
 ///
 /// This page implements the project's own design guide
-/// (`analysis/ce-app-competitive-spec.md`):
+/// (`analysis/RESEARCH.md#source-ce-app-competitive-spec`):
 ///
 /// * **Preview first, upgrade in place** (§D2). A grid thumbnail is fetched at
 ///   `Thumbnail`, opening an item loads `MidThumb` immediately, and `Original`
@@ -2735,7 +2735,7 @@ class _AssetViewerPageState extends State<AssetViewerPage> {
 ///
 /// One `GetFile` at `MidThumb` per photo opened: **196,495 B measured** on the real
 /// body, against the live view's ~17.5 KB/frame at ~30 fps — about **0.5 MB/s** of
-/// sustained UDP (`analysis/ce-app-competitive-spec.md` §5.3). So one preview is on the
+/// sustained UDP (`analysis/RESEARCH.md#source-ce-app-competitive-spec` §5.3). So one preview is on the
 /// order of **0.4 s** of the radio at the streaming rate, which is why it is worth
 /// serialising and not worth doing speculatively.
 class _ViewerPhoto extends StatefulWidget {

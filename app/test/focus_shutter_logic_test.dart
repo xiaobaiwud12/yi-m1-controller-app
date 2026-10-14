@@ -145,7 +145,7 @@ void main() {
     test('an off-frame reply is not something the mapper will invent a use for',
         () {
       // Real replies have carried 17710 and 63244 (see
-      // `analysis/11-liveview-state-json.md` §6). Nothing reads them any more,
+      // `analysis/PROTOCOL.md#source-11` §6). Nothing reads them any more,
       // and `isPlausible` is what says so out loud rather than a marker landing
       // nowhere near the picture.
       expect(FocusMapper.isPlausible(17710, 63244, '4:3'), isFalse);

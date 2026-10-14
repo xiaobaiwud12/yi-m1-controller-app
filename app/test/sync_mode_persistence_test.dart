@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yi_m1_controller/sync/sync_engine.dart';
-import 'package:yi_m1_controller/ui/pages/first_run_flow.dart' show syncModeFromId;
+import 'package:yi_m1_controller/sync/sync_mode.dart';
 import 'package:yi_m1_controller/platform/onboarding_prefs.dart';
 import 'package:yi_m1_controller/sync/sync_ledger.dart';
 

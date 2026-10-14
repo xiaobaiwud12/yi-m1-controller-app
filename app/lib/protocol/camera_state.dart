@@ -21,7 +21,7 @@
 /// and assumed it would need field-by-field calibration. That was wrong, and a
 /// calibration tool was written against the wrong model before anyone dumped the
 /// bytes as hex — at which point the JSON was immediately obvious. The lesson is
-/// recorded in `analysis/11-liveview-state-json.md`.
+/// recorded in `analysis/PROTOCOL.md#source-11`.
 ///
 /// ## Why this matters for the client
 ///

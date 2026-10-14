@@ -4,8 +4,10 @@
 ///
 ///   protocol/   wire formats, BLE payloads, camera state, parameter tables
 ///   transport/  BLE, HTTP, UDP live view, album, capture interlock, connection
-///   state/      the thin glue the UI binds to
-///   ui/         the screens
+///   app/        startup, composition and the application shell
+///   state/      shared state and lifecycle coordination
+///   features/   feature presentation
+///   ui/         shared controls
 ///
 /// The layering is deliberate: everything under `protocol/` and `transport/` is
 /// free of Flutter, so the parts most likely to be wrong — the wire formats —

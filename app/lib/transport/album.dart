@@ -1,7 +1,7 @@
 /// Album browsing and download — the "auto-sync photos to the phone" feature.
 ///
 /// Reverse-engineered from the firmware and cross-checked against the official
-/// app's own code.  See `analysis/07-album-sync-protocol.md` for the full writeup
+/// app's own code.  See `analysis/PROTOCOL.md#source-07` for the full writeup
 /// and the evidence.
 ///
 /// Summary of the wire protocol:

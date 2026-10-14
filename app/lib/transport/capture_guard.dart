@@ -4,8 +4,8 @@
 ///
 /// The camera's capture state machine has a firmware defect that hangs the whole
 /// device until the battery is pulled.  The root cause is now understood (see
-/// `analysis/09-firmware-mod-tiers.md` §0 and
-/// `analysis/re-imaging-and-hang-rootcause.md`):
+/// `analysis/FIRMWARE.md#source-09` §0 and
+/// `analysis/FIRMWARE.md#source-re-imaging-and-hang-rootcause`):
 ///
 /// A two-phase rendezvous uses two flag bytes in the capture-state block.  They
 /// are cleared only on the "ready" branch of the capture callback.  When a

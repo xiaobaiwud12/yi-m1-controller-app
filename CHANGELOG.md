@@ -21,6 +21,18 @@ Grouping follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.2.2] — 2026-10-14
+
+### Changed
+
+- Internal app structure now separates platform adapters, startup/navigation, feature pages,
+  the shared sync session and Android channels. Existing camera operations and screen entry points remain.
+- The Capture/Sync bottom navigation has stable automation keys and English/Chinese click regression coverage.
+  There are no new camera functions or new pages in this maintenance release.
+- Offline sync and protocol checks now return failure status on failed assertions; public EXIF checks use a privacy-safe camera metadata layout.
+- Version is 0.2.2+4; verification covers offline logic, widgets and release artifact checks.
+  Real-camera behavior has not been retested for this build.
+
 ## [0.2.1]
 
 ### Added

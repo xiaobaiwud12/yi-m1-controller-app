@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yi_m1_controller/l10n/l10n.dart';
 import 'package:yi_m1_controller/l10n/message_text.dart';
@@ -12,6 +10,8 @@ import 'package:yi_m1_controller/sync/sync_engine.dart';
 import 'package:yi_m1_controller/transport/album.dart';
 import 'package:yi_m1_controller/transport/album_delete.dart';
 import 'package:yi_m1_controller/transport/camera_connection.dart';
+
+import 'presentation_sources.dart';
 
 /// The checks that keep the message-code decision honest, plus the two catalogs that
 /// are keyed by a Flutter-free layer's own ids.
@@ -177,10 +177,7 @@ void main() {
     };
 
     String uiSource() => <String>[
-          for (final f in Directory('lib/ui')
-              .listSync(recursive: true)
-              .whereType<File>()
-              .where((f) => f.path.endsWith('.dart')))
+          for (final f in presentationSources())
             f.readAsStringSync(),
         ].join('\n');
 

@@ -23,7 +23,7 @@
 ///   reads it in the zone of whoever is looking. [V]
 /// * **The body has no timezone either.** The firmware image contains exactly one
 ///   timezone name, `GMT`, with no offset table and no DST logic
-///   (`analysis/_frag-clock.md` §D.5, negative result across three images). The
+///   (`analysis/PROTOCOL.md#source-connectivity-evidence-appendices` §D.5, negative result across three images). The
 ///   RTC is set from the app's BLE time-sync, which sends Unix epoch seconds
 ///   (`wire_format.dart`, verified against the official app). So the clock reads
 ///   the true instant and its naive date fields are formatted as GMT — the **UTC

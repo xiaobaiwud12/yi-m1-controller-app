@@ -8,7 +8,7 @@
 
 ## 发布状态
 
-当前源码版本为 **`0.2.2+4`**。已发布版本和 APK 下载请查看 [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases)。应用版本唯一来源是 `app/pubspec.yaml`；版本变化记在 `CHANGELOG.md`。本次维护包括内部架构拆分和主底栏稳定 key，没有新增页面或相机功能。
+当前源码版本为 **`0.2.3+5`**。已发布版本和 APK 下载请查看 [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases)。应用版本唯一来源是 `app/pubspec.yaml`；版本变化记在 `CHANGELOG.md`。本次维护修复全屏旋转、不同画幅下的对焦位置，以及预览失败后自动请求原图的问题。
 
 维护者确认原交付 App 可用。相机目前已损坏，因此当前源码尚未用真机相机验证。离线或模拟器检查不能证明真实相机行为。
 

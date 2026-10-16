@@ -11,9 +11,14 @@ Entries follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.3] — 2026-10-16
+
 ### Fixed
 
-- The contributor verification entry point sets a non-UTC timezone only for its sync test subprocess, so EXIF timezone-shift regressions run on UTC hosts without changing system settings. App behavior and the published APK are unchanged.
+- Live view stays in landscape while fullscreen is active, keeping the exit button visible when the phone is held upright. Leaving fullscreen allows portrait and landscape rotation again.
+- Focus coordinates use the fixed 4:3 live-view plane for every photo aspect ratio. Crop masks and the grid follow the selected photo area.
+- Failed album previews no longer fall back to downloading an original. Original files are requested only when the user explicitly starts a transfer.
+- Contributor verification runs EXIF timezone regressions on UTC hosts by setting a timezone only for the sync test subprocess.
 
 ## [0.2.2] — 2026-10-14
 

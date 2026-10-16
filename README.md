@@ -8,7 +8,7 @@ This is an independent project, not affiliated with or endorsed by the camera ma
 
 ## Release status
 
-The current source version is **`0.2.2+4`**. See [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases) for published versions and APK downloads. `app/pubspec.yaml` is the single source of the app version, and `CHANGELOG.md` records release changes. This maintenance includes an internal architecture split and stable keys for the main bottom navigation; it adds no pages or camera features.
+The current source version is **`0.2.3+5`**. See [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases) for published versions and APK downloads. `app/pubspec.yaml` is the single source of the app version, and `CHANGELOG.md` records release changes. This maintenance fixes fullscreen rotation, focus placement across aspect ratios, and unwanted original-file requests after preview failures.
 
 The maintainer confirmed that the original delivered app works. The camera is now unusable, so the current source has not been verified with a real camera. Offline and emulator checks cannot establish real-camera behavior.
 

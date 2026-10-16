@@ -3219,10 +3219,12 @@ Future<void> _verifySecondAttempts() async {
     // **here**, at `CameraAlbum`, rather than only through the page: a page-level check
     // can only see the outcome through a stub of this same class, so if this class is
     // wrong the page check agrees with it.
+    final rawRequests = <String>[];
     final server = await _albumServer((req) async {
       final data = jsonDecode(req.uri.queryParameters['data']!) as Map;
       final res = '${data['resulotion']}';
       final raw = '${data['path']}'.toUpperCase().endsWith('.DNG');
+      if (raw) rawRequests.add(res);
       if (raw && res == 'Thumbnail') {
         req.response.statusCode = 204;
         return; // no body, exactly as the camera does
@@ -3294,23 +3296,29 @@ Future<void> _verifySecondAttempts() async {
     emptyAlbum.close();
     await emptyServer.close(force: true);
 
-    // --- the grid's chain degrades *through* the 204 rather than stopping at it
-    var dngChain = <String>[];
+    // Browsing a RAW stops at its preview refusals, even though Original exists.
+    rawRequests.clear();
     Object? chainError;
     try {
-      final (bytes, res) = await album.downloadWithFallback(
-        dng,
-        chain: CameraAlbum.gridThumbnailChain,
-      );
-      dngChain = ['${res.wire}:${bytes.length}'];
+      await album.downloadWithFallback(dng,
+          chain: CameraAlbum.gridThumbnailChain);
     } on Object catch (e) {
       chainError = e;
     }
-    check('the grid chain reaches a rendition the camera will serve',
-        chainError == null && dngChain.isNotEmpty, '$chainError');
-    check('and it is the Original, after 204 at Thumbnail and 404 at MidThumb',
-        dngChain.isNotEmpty && dngChain.first.startsWith('Original:'),
-        '$dngChain');
+    check('the RAW grid reports unavailable previews',
+        chainError is AlbumException, '$chainError');
+    check('RAW browsing never requests Original after 204/404',
+        rawRequests.join(',') == 'Thumbnail,MidThumb', '$rawRequests');
+
+    // Explicit full-size transfer still uses the real Original endpoint.
+    rawRequests.clear();
+    final (rawBytes, rawRes) = await album.downloadWithFallback(dng);
+    check(
+        'explicit RAW transfer can retrieve the original',
+        rawRes == FileResolution.original &&
+            rawBytes.length == 4096 &&
+            rawRequests.join(',') == 'Original',
+        '$rawRequests, ${rawBytes.length}');
 
     // --- and a JPEG gets the small one: cheapest-first is the point of the order
     final (jpgBytes, jpgRes) = await album.downloadWithFallback(

@@ -5,7 +5,7 @@ This guide covers preparing, building, checking and publishing an app release. T
 ## Release facts
 
 - `app/pubspec.yaml` is the **only source of the app version**; Android version fields derive from it.
-- The current source version is `0.2.2+4`. See [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases) for published versions and APK downloads.
+- The current source version is `0.2.3+5`. See [GitHub Releases](https://github.com/xiaobaiwud12/yi-m1-controller-app/releases) for published versions and APK downloads.
 - Release APKs target `arm64-v8a`.
 - The application is licensed **Apache-2.0**. Consult `NOTICE` for third-party licenses and attribution, including MIT-licensed generated protocol material.
 
@@ -74,7 +74,7 @@ Release notes should include:
 - Checks performed and their limits, including the lack of real-camera verification.
 - Installation requirements and the `arm64-v8a` ABI.
 
-Describe only the maintenance work included in `0.2.2+4`: the internal architecture split and stable navigation keys. There are no new pages or camera features. Label emulator or fake-camera results as such and keep verification limits consistent with the public README. The maintainer confirmed the original delivered app works; the camera is currently unusable, so the current source has not been retested with a real camera.
+Describe the changes included in the release: fullscreen rotation, aspect-ratio focus placement and preview-only media browsing for `0.2.3+5`. Label emulator or fake-camera results as such and keep verification limits consistent with the public README. The maintainer confirmed the original delivered app works; the camera is currently unusable, so the current source has not been retested with a real camera.
 
 Users install by downloading the APK from the release page and opening it on a compatible arm64 Android device. Android may ask them to permit installation from that download source. Updates must use the same signing certificate; a corrected release must have a higher app version code.
 

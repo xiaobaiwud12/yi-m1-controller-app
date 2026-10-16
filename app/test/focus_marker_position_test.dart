@@ -99,8 +99,10 @@ void main() {
     WidgetTester tester,
     _Wire wire, {
     bool previewRunning = false,
+    Size surface = const Size(1080, 2400),
+    String aspect = '4:3',
   }) async {
-    await tester.binding.setSurfaceSize(const Size(1080, 2400));
+    await tester.binding.setSurfaceSize(surface);
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final app = AppState(
@@ -115,9 +117,9 @@ void main() {
       testPreviewRunning: previewRunning,
     );
     addTearDown(app.dispose);
-    app.setTestCameraState(const CameraState({
+    app.setTestCameraState(CameraState({
       'ExposureMode': 'M',
-      'ImageAspect': '4:3',
+      'ImageAspect': aspect,
       'BatteryLevel': '75',
       'SurplusPhotoCnts': '120',
     }));
@@ -204,7 +206,8 @@ void main() {
     expect(find.byKey(focusMarkerKey), findsOneWidget,
         reason: 'a tap that has not been answered yet is still a tap');
     final centre = tester.getCenter(find.byKey(focusMarkerKey));
-    expect((centre - tapAt).distance, lessThan(0.5), reason: '$centre vs $tapAt');
+    expect((centre - tapAt).distance, lessThan(0.5),
+        reason: '$centre vs $tapAt');
 
     await pumpRoundTrip(tester);
     expect(app.focusInFlight, isFalse);
@@ -284,30 +287,74 @@ void main() {
     expect(params['Posy'], '360');
   });
 
-  testWidgets('the centre-focus control sends Manual too', (tester) async {
-    // The same command through the other entry point.  A `Manual` tap path and
-    // an `Auto` button would be two different requests from one screen, and the
-    // button is what a user presses when the tap did not land.
-    //
-    // The control is disabled unless the preview is running — the same gate the
-    // hardware imposes — so the app is built with that state explicitly.
-    final wire = _Wire();
-    wire.script['RCDoFocus'] = [_focusReply(400, 300)];
-    final app = await pumpLive(tester, wire, previewRunning: true);
-    await tester.tap(find.byKey(const ValueKey<String>('btn-focus-centre')));
-    await pumpRoundTrip(tester);
+  // Targets from the official FocusView transform: narrow x has +40 and y
+  // spans 480; wide x spans 720 and y has -30 with a width divisor. For 16:9
+  // the centre y is round(720*9/32-30)=173; for 3:2 it is 210.
+  const centres = {
+    '4:3': (360, 240),
+    '1:1': (360, 240),
+      '16:9': (360, 240),
+      '3:2': (360, 240),
+  };
+  for (final surface in [const Size(1080, 2400), const Size(2400, 1080)]) {
+    for (final entry in centres.entries) {
+      testWidgets(
+          'centre focus matches preview centre ${entry.key} ${surface.width}',
+          (tester) async {
+        final wire = _Wire();
+        final app = await pumpLive(tester, wire,
+            previewRunning: true, surface: surface, aspect: entry.key);
+        try {
+          final box = previewBox(tester);
+          expect(box.width / box.height, closeTo(4 / 3, 1e-9),
+              reason: 'the factory preview stays 4:3 for every photo crop');
+          if (entry.key == '16:9' || entry.key == '3:2') {
+            final top = tester.getRect(find.byKey(
+                const ValueKey<String>('preview-crop-top')));
+            final bottom = tester.getRect(find.byKey(
+                const ValueKey<String>('preview-crop-bottom')));
+            final expectedBand = entry.key == '16:9'
+                ? box.height / 8 : box.height / 18;
+            expect(top.height, closeTo(expectedBand, 0.01));
+            expect(bottom.height, closeTo(expectedBand, 0.01));
+            expect(top.top, closeTo(box.top, 0.01));
+            expect(bottom.bottom, closeTo(box.bottom, 0.01));
+          } else if (entry.key == '1:1') {
+            for (final edge in ['left', 'right']) {
+              final band = tester.getRect(find.byKey(
+                  ValueKey<String>('preview-crop-$edge')));
+              expect(band.width, closeTo(box.width / 8, 0.01));
+              expect(band.height, closeTo(box.height, 0.01));
+            }
+          } else {
+            expect(find.byKey(const ValueKey<String>('preview-crop-top')),
+                findsNothing);
+            expect(find.byKey(const ValueKey<String>('preview-crop-left')),
+                findsNothing);
+          }
+          await tester.tapAt(box.center);
+          await pumpRoundTrip(tester);
+          final expected = {
+            'command': 'RCDoFocus',
+            'Mode': 'Manual',
+            'Posx': '${entry.value.$1}',
+            'Posy': '${entry.value.$2}'
+          };
+          expect(wire.count('RCDoFocus'), 1);
+          expect(wire.paramsOf('RCDoFocus'), expected);
 
-    expect(wire.count('RCDoFocus'), 1, reason: 'sent: ${wire.sent}');
-    final params = wire.paramsOf('RCDoFocus');
-    expect(params['Mode'], 'Manual');
-    expect(params['Posx'], '400');
-    expect(params['Posy'], '300');
-
-    // A running preview means a live 250 ms chrome ticker, and a widget test
-    // that ends with a pending timer fails on the binding's own invariant
-    // rather than on anything it was checking.  Stopping the preview is the
-    // dispose path a page leaving the screen takes.
-    await app.stopPreview();
-    await tester.pump(const Duration(milliseconds: 300));
-  });
+          await tester
+              .tap(find.byKey(const ValueKey<String>('btn-focus-centre')));
+          await pumpRoundTrip(tester);
+          expect(wire.count('RCDoFocus'), 2);
+          expect(wire.paramsOf('RCDoFocus'), expected,
+              reason:
+                  'the centre button must target the rendered preview centre');
+        } finally {
+          await app.stopPreview();
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      });
+    }
+  }
 }

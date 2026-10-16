@@ -3,7 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiMode;
+import 'package:flutter/services.dart'
+    show DeviceOrientation, SystemChrome, SystemUiMode;
 
 import '../../../l10n/l10n.dart';
 import '../../../l10n/message_text.dart';
@@ -55,15 +56,12 @@ class LiveViewPage extends StatefulWidget {
 }
 
 class _LiveViewPageState extends State<LiveViewPage> {
-  /// Display aspect for the preview box, derived from the camera's own
-  /// `ImageAspect`.
-  ///
-  /// This is **not** cosmetic. The focus mapping is correct only when the box's
-  /// aspect matches what the camera is actually framing: the 4:3 plane scales x
-  /// by the view width and y by the view *height*, so a box with the wrong aspect
-  /// puts the frame's content somewhere other than where the box says it is, and
-  /// every tap lands off target. It is also simply more honest — showing a 16:9
-  /// frame inside a 4:3 letterbox wastes screen and misrepresents the framing.
+  // The factory LiveViewFrameLayout fixes the preview at width * 0.75.
+  // FocusView masks this plane for other ImageAspect values; it does not
+  // resize the focus coordinate space (see its m17229a and onDraw).
+  static const double _previewAspect = 4 / 3;
+
+  /// The selected photo crop, independent of the live-view coordinate plane.
   double get _aspect {
     switch (widget.app.cameraState?.imageAspect) {
       case '16:9':
@@ -564,6 +562,20 @@ class _LiveViewPageState extends State<LiveViewPage> {
     });
   }
 
+  void _focusCentre() {
+    // Use the same AspectRatio box and protocol mapping as a centre tap.
+    // A unit-height box preserves its ratio without depending on screen pixels.
+    const ratio = _previewAspect;
+    final (x, y) = FocusMapper.toCamera(
+      localX: ratio / 2,
+      localY: 0.5,
+      viewWidth: ratio,
+      viewHeight: 1,
+      aspect: app.cameraState?.imageAspect ?? '4:3',
+    );
+    unawaited(app.focusAt(x, y));
+  }
+
   void _showFocusMarker(Offset at) {
     setState(() => _focusPoint = at);
     _focusMarkerTimer?.cancel();
@@ -607,7 +619,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
           final geometry = ViewfinderLayout(
             availableWidth: screen.maxWidth,
             availableHeight: screen.maxHeight,
-            previewAspect: _aspect,
+            previewAspect: _previewAspect,
             controlBandWant: _controlBandWidth,
           );
           final readoutWant = geometry.readoutRoom >= _readoutFullWidth
@@ -617,7 +629,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
           final layout = ViewfinderLayout(
             availableWidth: screen.maxWidth,
             availableHeight: screen.maxHeight,
-            previewAspect: _aspect,
+            previewAspect: _previewAspect,
             // Measured widths of what actually goes in each column, so the bands
             // are sized by their content instead of by the screen's height.
             //
@@ -669,6 +681,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
           final preview = _previewArea(st);
           final shutter = _ShutterBar(
             app: app,
+            onFocusCentre: _focusCentre,
             wide: screen.maxWidth > screen.maxHeight,
             // The slot the slotted column will put it in, when there is one. Null in the
             // content-sized layouts (portrait, and full screen without the dials), where
@@ -1422,7 +1435,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
             }
             return Center(
               child: AspectRatio(
-                aspectRatio: _aspect,
+                aspectRatio: _previewAspect,
                 child: LayoutBuilder(
                   builder: (context, c) => GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -1468,13 +1481,21 @@ class _LiveViewPageState extends State<LiveViewPage> {
                           errorBuilder: (context, error, stack) =>
                               const SizedBox.expand(),
                         ),
-                        if (_showGrid) const _ThirdsGrid(),
+                        if (_showGrid)
+                          Center(
+                            child: AspectRatio(
+                              aspectRatio: _aspect,
+                              child: const _ThirdsGrid(),
+                            ),
+                          ),
                         if (_focusPoint != null)
                           Positioned(
                             left: _focusPoint!.dx - 22,
                             top: _focusPoint!.dy - 22,
                             child: const _FocusMarker(),
                           ),
+                        if (_aspect != _previewAspect)
+                          IgnorePointer(child: _PreviewCropMask(aspect: _aspect)),
                       ],
                     ),
                   ),
@@ -2470,6 +2491,34 @@ class _Chip extends StatelessWidget {
   }
 }
 
+/// Factory-style opaque crop guides over the unchanged 4:3 stream.
+class _PreviewCropMask extends StatelessWidget {
+  final double aspect;
+  const _PreviewCropMask({required this.aspect});
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
+        Widget mask(String edge) => ColoredBox(
+            key: ValueKey<String>('preview-crop-$edge'), color: Colors.black);
+        if (aspect > 4 / 3) {
+          final height = (box.maxHeight - box.maxWidth / aspect) / 2;
+          return Stack(children: [
+            Positioned(left: 0, right: 0, top: 0, height: height,
+                child: mask('top')),
+            Positioned(left: 0, right: 0, bottom: 0, height: height,
+                child: mask('bottom')),
+          ]);
+        }
+        final width = (box.maxWidth - box.maxHeight * aspect) / 2;
+        return Stack(children: [
+          Positioned(left: 0, top: 0, bottom: 0, width: width,
+              child: mask('left')),
+          Positioned(right: 0, top: 0, bottom: 0, width: width,
+              child: mask('right')),
+        ]);
+      });
+}
+
 class _ThirdsGrid extends StatelessWidget {
   const _ThirdsGrid();
 
@@ -2711,6 +2760,7 @@ class _StateStrip extends StatelessWidget {
 
 class _ShutterBar extends StatelessWidget {
   final AppState app;
+  final VoidCallback onFocusCentre;
 
   /// True when the window is wider than it is tall.
   ///
@@ -2719,7 +2769,8 @@ class _ShutterBar extends StatelessWidget {
   /// without faking a media query.
   final bool wide;
 
-  const _ShutterBar({required this.app, this.wide = false, this.maxHeight});
+  const _ShutterBar({required this.app, required this.onFocusCentre,
+      this.wide = false, this.maxHeight});
 
   /// How tall the bar may be, when the caller has a slot to put it in.
   ///
@@ -2885,7 +2936,7 @@ class _ShutterBar extends StatelessWidget {
                     iconSize: _sideControlIcon,
                     constraints: const BoxConstraints.tightFor(
                         width: _sideControlSize, height: _sideControlSize),
-                    onPressed: previewing ? () => app.focusAt(400, 300) : null,
+                    onPressed: previewing ? onFocusCentre : null,
                     icon:
                         const Icon(Icons.center_focus_strong, color: Colors.white),
                   ),
@@ -3026,14 +3077,30 @@ class _ShutterBar extends StatelessWidget {
                       iconSize: _sideControlIcon,
                       constraints: const BoxConstraints.tightFor(
                           width: _sideControlSize, height: _sideControlSize),
-                      onPressed: () {
+                      onPressed: () async {
                         final next = !app.fullScreen;
                         app.fullScreen = next;
+                        // Full screen has a landscape-only exit control. Lock both
+                        // landscape directions until exit, then allow all four
+                        // orientations under the system rotation policy again.
+                        await SystemChrome.setPreferredOrientations(
+                          next
+                              ? const [
+                                  DeviceOrientation.landscapeLeft,
+                                  DeviceOrientation.landscapeRight,
+                                ]
+                              : const [
+                                  DeviceOrientation.portraitUp,
+                                  DeviceOrientation.landscapeLeft,
+                                  DeviceOrientation.portraitDown,
+                                  DeviceOrientation.landscapeRight,
+                                ],
+                        );
                         // Ask the platform too, so Android's own status and navigation
                         // bars go with the app's. `immersiveSticky` rather than
                         // `immersive`: a swipe reveals the bars temporarily instead of
                         // leaving a state the user has to hunt to undo.
-                        SystemChrome.setEnabledSystemUIMode(
+                        await SystemChrome.setEnabledSystemUIMode(
                           next
                               ? SystemUiMode.immersiveSticky
                               : SystemUiMode.edgeToEdge,

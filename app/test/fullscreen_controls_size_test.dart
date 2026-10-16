@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yi_m1_controller/protocol/camera_state.dart';
 import 'package:yi_m1_controller/features/live_view/presentation/live_view_page.dart';
 
 import 'fakes.dart';
@@ -26,12 +28,22 @@ void main() {
   const normal = Size(914, 297);
   const full = Size(914, 411);
 
-  Future<void> pump(WidgetTester tester, Size size, {required bool fullScreen}) async {
+  Future<void> pump(WidgetTester tester, Size size,
+      {required bool fullScreen, String? aspect}) async {
     await tester.binding.setSurfaceSize(size);
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final app = connectedTestAppState();
     addTearDown(app.dispose);
     app.fullScreen = fullScreen;
+    if (aspect != null) {
+      app.setTestCameraState(CameraState({
+        'ExposureMode': 'M',
+        'ImageAspect': aspect,
+        'ISOSetting': '6400',
+        'ShutterSpeed': '1/125s',
+        'Fnumber': '1.7',
+      }));
+    }
     await tester.pumpWidget(MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -52,6 +64,61 @@ void main() {
     if (f.evaluate().isEmpty) return Size.zero;
     return tester.getRect(f).size;
   }
+
+  for (final aspect in ['4:3', '3:2', '16:9', '1:1']) {
+    testWidgets('$aspect full screen preserves usable control sizes',
+        (tester) async {
+      await pump(tester, normal, fullScreen: false, aspect: aspect);
+      final normalPreview = rendered(tester, 'live-preview-area');
+      await pump(tester, full, fullScreen: true, aspect: aspect);
+      final shutter = rendered(tester, 'btn-shutter');
+      final focus = rendered(tester, 'btn-focus-centre');
+      final exit = rendered(tester, 'btn-fullscreen');
+      final preview = rendered(tester, 'live-preview-area');
+      debugPrint('  $aspect shutter=$shutter focus=$focus exit=$exit');
+      expect(shutter.shortestSide, greaterThanOrEqualTo(48));
+      expect(focus.shortestSide, greaterThanOrEqualTo(40));
+      expect(exit.shortestSide, greaterThanOrEqualTo(40));
+      expect(preview.width * preview.height,
+          greaterThan(normalPreview.width * normalPreview.height));
+    });
+  }
+
+  testWidgets('full screen locks landscape and exit restores sensor rotation',
+      (tester) async {
+    final calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform, (call) async {
+      calls.add(call);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null));
+    await pump(tester, full, fullScreen: false);
+    await tester.tap(find.byKey(const ValueKey<String>('btn-fullscreen')));
+    await tester.pump();
+    final page = tester.widget<LiveViewPage>(find.byType(LiveViewPage));
+    expect(page.app.fullScreen, isTrue);
+    final orientations = calls
+        .where((c) => c.method == 'SystemChrome.setPreferredOrientations');
+    expect(orientations.map((c) => c.arguments).toList(), [
+      ['DeviceOrientation.landscapeLeft', 'DeviceOrientation.landscapeRight'],
+    ]);
+    await tester.tap(find.byKey(const ValueKey<String>('btn-fullscreen')));
+    await tester.pump();
+    expect(page.app.fullScreen, isFalse);
+    expect(orientations.map((c) => c.arguments).toList(), [
+      ['DeviceOrientation.landscapeLeft', 'DeviceOrientation.landscapeRight'],
+      [
+        'DeviceOrientation.portraitUp', 'DeviceOrientation.landscapeLeft',
+        'DeviceOrientation.portraitDown', 'DeviceOrientation.landscapeRight',
+      ],
+    ]);
+    expect(calls.where((c) => c.method == 'SystemChrome.setEnabledSystemUIMode')
+        .map((c) => c.arguments).toList(), [
+      'SystemUiMode.immersiveSticky', 'SystemUiMode.edgeToEdge',
+    ]);
+  });
 
   testWidgets('report rendered control sizes: normal vs full screen',
       (tester) async {

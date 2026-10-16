@@ -817,80 +817,20 @@ class CameraAlbum {
     );
   }
 
-  /// The renditions a **grid** tile may use, cheapest first.
+  /// Grid browsing may request previews only, cheapest first.
   ///
-  /// ## Why the grid needs its own chain rather than `original` first
-  ///
-  /// The sync engine's chain starts at `Original` because its job is the real file.
-  /// A grid tile's job is a picture roughly 170 dp wide, so the order is inverted —
-  /// and the inversion is what makes the measured `204` cheap.
-  ///
-  /// The failure this exists for: a group whose primary is a **`.DNG`** asks for
-  /// `Thumbnail` and this firmware answers **`204` with a zero-byte body**. The grid
-  /// used to call `download()` once, at `Thumbnail`, and swallow the throw — so the
-  /// tile sat on a spinner forever with nothing in the log. With the chain it falls
-  /// through to `MidThumb`, which is the same request the viewer makes and is
-  /// known to work for a JPEG.
-  ///
-  /// `Original` is the **last** resort on purpose. It is 4.9 MB for a JPEG and
-  /// 31.9 MB for a RAW, over a radio the live view is already using (`AGENTS.md`
-  /// §4.6), so it is only worth spending when every smaller rendition is genuinely
-  /// absent. A `.DNG` answers `Thumbnail` with `204` and `MidThumb` with `404`, so
-  /// it will reach `Original` — which is correct and unavoidable: the camera has no
-  /// thumbnail of a RAW, and the only thing it will hand over is the RAW.
+  /// A RAW can refuse Thumbnail with 204 and MidThumb with 404. In that case
+  /// the tile shows no preview; its full-size file requires explicit sync.
+  /// A transient preview failure must never trigger an Original transfer.
   static const List<FileResolution> gridThumbnailChain = [
     FileResolution.thumbnail,
     FileResolution.midThumb,
-    FileResolution.original,
   ];
 
-  /// The renditions a grid tile may use for a **video**, cheapest first.
-  ///
-  /// ## Why a video stops one rung early
-  ///
-  /// A video's `Original` is the video. `Image.memory` cannot decode an MP4 at all, so
-  /// the last rung of [gridThumbnailChain] can only end in a broken-image icon — after
-  /// the camera has served the whole file over its own access point, on a
-  /// single-threaded server sharing the radio with the live view (`AGENTS.md` §4.6).
-  ///
-  /// It is worse than one wasted transfer, and that is why this is a defect rather
-  /// than a preference: the grid fetches **one tile at a time** (`_pumpThumbs`), so a
-  /// video that reaches that rung holds up **every tile behind it in the queue** — and
-  /// the tiles behind it are the ones the user is scrolling towards. Measured on the
-  /// desk before this existed (`album_thumbnails_test.dart`, "the grid never asks a
-  /// video for its full-size original"): a three-tile card with one video produced
-  ///
-  /// ```
-  /// P9150003.JPG@Thumbnail
-  /// P9150002.MP4@Thumbnail
-  /// P9150002.MP4@MidThumb
-  /// P9150002.MP4@Original     <- the video, for a 170dp tile
-  /// P9150001.JPG@Thumbnail
-  /// ```
-  ///
-  /// So a video is asked for its still renditions and nothing beyond them. The right
-  /// end state when a video has neither is the tile's own "no picture" icon, which it
-  /// already draws — with the `VIDEO` badge next to it saying what the entry is.
-  ///
-  /// ## What is *not* claimed here
-  ///
-  /// What this firmware answers for a video's `Thumbnail` is **unmeasured**
-  /// (`analysis/50` measured `.JPG` and `.DNG`; `analysis/61` shows the card carries
-  /// `video` entries, and nothing more). This chain is correct either way: if the
-  /// camera produces a frame, the first rung delivers it and the deeper ones are never
-  /// reached; if it does not, the grid stops at `MidThumb` instead of asking for the
-  /// video.
-  static const List<FileResolution> gridVideoThumbnailChain = [
-    FileResolution.thumbnail,
-    FileResolution.midThumb,
-  ];
+  /// Videos use the same preview limit; their Original is an MP4, not an image.
+  static const List<FileResolution> gridVideoThumbnailChain =
+      gridThumbnailChain;
 
-  /// The grid's chain for one file — see [gridThumbnailChain] and
-  /// [gridVideoThumbnailChain] for why a video is the shorter one.
-  ///
-  /// A method on the file rather than a second constant at the call site, so the rule
-  /// lives beside the two chains it chooses between and the UI layer has nothing to
-  /// remember.
   static List<FileResolution> gridChainFor(AlbumFile file) =>
       file.isVideo ? gridVideoThumbnailChain : gridThumbnailChain;
 }

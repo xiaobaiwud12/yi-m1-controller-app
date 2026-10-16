@@ -277,12 +277,9 @@ class _AlbumPageState extends State<AlbumPage> {
   ///   refuses an empty body outright, and this loop refuses to store one, so the
   ///   decoder cannot be handed nothing on either path.
   ///
-  /// The chain is [CameraAlbum.gridChainFor] — `Thumbnail`, then `MidThumb`, then
-  /// `Original`, except for a **video**, which stops at `MidThumb` because its
-  /// `Original` is the video itself (`CameraAlbum.gridVideoThumbnailChain`). And
-  /// `skipNoContent` is left false so a `204` still degrades to the next size: a `204`
-  /// at `Thumbnail` is the camera saying "no small thumbnail for this file", and
-  /// `MidThumb` is the same rendition the viewer asks for.
+  /// The chain is [CameraAlbum.gridChainFor]: Thumbnail, then MidThumb.
+  /// A 204 may try the next preview size, but browsing never requests Original.
+  /// A RAW with no preview settles to the existing unavailable-image icon.
   ///
   /// ## Three things the loop has to get right, and why each is written down
   ///
@@ -363,10 +360,7 @@ class _AlbumPageState extends State<AlbumPage> {
         try {
           final (bytes, _) = await album.downloadWithFallback(
             group.primary,
-            // `gridChainFor`, not the constant: a **video** is asked for its still
-            // renditions and never for its `Original`, which is the video itself — an
-            // MP4 the decoder cannot read, served over this one serial loop, in front
-            // of every tile behind it. See `CameraAlbum.gridVideoThumbnailChain`.
+            // Grid browsing is preview-only for JPEG, RAW and video.
             chain: CameraAlbum.gridChainFor(group.primary),
           );
           if (!mounted) return;

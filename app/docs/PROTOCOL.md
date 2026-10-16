@@ -306,9 +306,9 @@ HTTP 层便呈现为 404：
 
 `GetCameraStatus` 的 `data` 为
 `{"batteryLevel":"%d","SurplusPhotoCnts":"%d","lenVer":"%d.%d","lenType":"%s"}`
-外加 16 个曝光字段（`ExposureMode`/`FNumber`/`ISO`/`MeteringMode`/`FocusMode`/
-`ShutterSpeed`/`EV`/`WBModel`/`WB`/`ImageAspect`/`FocalLength`/`Flashing`/`Lens`/
-`Model`/`Attachment`/`ColorMode`）。
+2026-09-18 的 3.1-cn 完整实机留样确认这四项，值均为字符串。固件内另有 16 项曝光
+字段的静态 JSON 示例；此前将它们写成此端点“外加”字段缺少运行时归属证据，现撤回
+这一归属。不能据该样本推断所有固件版本的状态响应都相同。
 
 **注意固件原文把 `resolution` 错拼为 `resulotion`** —— 必须照抄错拼。
 

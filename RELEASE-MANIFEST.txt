@@ -1,12 +1,12 @@
 YI M1 controller - app-only release export manifest
 ===================================================
 
-generated    : 2026-10-14T17:20:20.3121475+08:00
+generated    : 2026-10-16T08:36:22.7510864+08:00
 generator    : tools/release/export_app_release.ps1 (development repository)
 source repo  : the private development repository 'yi-m1-controller' - its filesystem path is
                withheld deliberately, because this manifest is published and the
                path names one machine's account
-source HEAD  : dafa2f7 (dafa2f7e42aaee4de4358912a29fbe974f38a774)
+source HEAD  : 93b471f (93b471fb16815f521770027fce6312e51e37fef8)
 source branch: codex/android-structure-refactor
 source tree  : clean
 publishes to : https://github.com/xiaobaiwud12/yi-m1-controller-app
@@ -16,14 +16,14 @@ repository except the material listed here. This manifest records what the
 export produced; SHA256SUMS.txt records its exact content.
 
 files        : 264
-payload      : 4.09 MB
+payload      : 4.10 MB
 apache text  : tools/release/metadata/APACHE-2.0.txt sha256 cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
 
 Sizes:
-  development repository, tracked        : 6611 files, 307.6 MB
-  of which vendor / reverse-engineering  : 254.9 MB
+  development repository, tracked        : 6620 files, 307.9 MB
+  of which vendor / reverse-engineering  : 255.0 MB
   app files on the allow list            : 243 files, 3.9 MB
-  this export tree                       : 264 files, 4.09 MB
+  this export tree                       : 264 files, 4.10 MB
 
 Ship list (select.allow, app-relative, with the reason each entry exists):
   lib/**                         73 file(s)  the application: protocol, transport, sync, platform, state, ui, and the ARB files plus their generated bindings

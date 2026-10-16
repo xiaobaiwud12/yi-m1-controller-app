@@ -329,55 +329,19 @@ void main() {
         reason: 'a JPEG tile did not get a picture after a 200 with real bytes');
     expect(imagesInTile(tester, '/DCIM/100YICAM/P9150002.JPG'), 1);
   });
-  testWidgets('a .DNG whose Thumbnail is a 204 falls through to another rendition '
-      'instead of leaving a spinner', (tester) async {
+  testWidgets('a RAW without previews settles without downloading its original',
+      (tester) async {
     final app = appWith(fakeCameraThumbnail);
     addTearDown(app.dispose);
     await pumpAlbum(tester, app);
-
-    // The failure the grid used to have: one `download()` at `Thumbnail`, the throw
-    // swallowed, and the tile on a spinner for the life of the page. With the chain
-    // the 204 is not the end of the story.
-    final dng = asked.where((a) => a.startsWith('/DCIM/100YICAM/P9150003.DNG@'));
-    expect(dng, isNotEmpty,
-        reason: 'the .DNG tile was never asked about at all, so the fallback '
-            'cannot have run');
-    expect(dng.first, endsWith('@Thumbnail'),
-        reason: 'the cheapest rendition is tried first — a 204 there costs one '
-            'empty reply, and the chain only pays for more if it has to');
-    expect(dng, contains('/DCIM/100YICAM/P9150003.DNG@MidThumb'),
-        reason: 'a 204 at Thumbnail must degrade to the next size rather than '
-            'abandon the tile');
-    // The full measured column for a RAW, in order: Thumbnail 204, MidThumb 404,
-    // Original 200. Nothing here is shortened — this is the same three requests the
-    // real camera would be sent, and the reason the chain is ordered cheapest-first
-    // is that the first of them is free and usually enough.
-    //
-    // Asserted as an **exact list**, not "contains": a rebuild during the transfer once
-    // made the grid send the whole chain twice, and `contains` cannot see that. This
-    // camera serves one request at a time and has no watchdog, so a duplicated chain
-    // is the difference between a cosmetic feature and a request storm.
-    expect(dng.toList(),
-        [
-          '/DCIM/100YICAM/P9150003.DNG@Thumbnail',
-          '/DCIM/100YICAM/P9150003.DNG@MidThumb',
-          '/DCIM/100YICAM/P9150003.DNG@Original',
-        ],
-        reason: 'the .DNG was asked for more than once, or in the wrong order');
+    const path = '/DCIM/100YICAM/P9150003.DNG';
+    expect(asked.where((a) => a.startsWith('$path@')).toList(),
+        ['$path@Thumbnail', '$path@MidThumb'],
+        reason: 'RAW preview refusals must not trigger a full-size download');
+    expect(imagesInTile(tester, path), 0);
+    expect(spinnersInTile(tester, path), 0);
     expect(asked.where((a) => a.endsWith('@Thumbnail')).length, 3,
-        reason: 'each tile asks for Thumbnail exactly once, whatever else happens: '
-            '$asked');
-
-    // Settled with a picture, and **not** left on a spinner. The `Original` came back
-    // with real bytes, so the honest end state is a photo — the point is that the
-    // `204` no longer ends the story at "nothing".
-    expect(imagesInTile(tester, '/DCIM/100YICAM/P9150003.DNG'), 1,
-        reason: 'the .DNG tile reached a rendition with real bytes and still shows '
-            'nothing');
-    expect(spinnersInTile(tester, '/DCIM/100YICAM/P9150003.DNG'), 0,
-        reason: 'a tile is still spinning after the fetch chain finished');
-    // Every tile is settled, not just that one — the whole point is that the grid
-    // stops claiming to be loading.
+        reason: 'each tile must still make exactly one initial preview request');
     expect(
         find.descendant(
             of: find.byWidgetPredicate((w) =>
@@ -385,9 +349,12 @@ void main() {
                 (w.key! as ValueKey<String>).value.startsWith('album-tile-')),
             matching: find.byType(CircularProgressIndicator)),
         findsNothing);
-
-    expect(decoded.where((d) => d.length == 0), isEmpty,
-        reason: 'the 204 body must never reach a decoder');
+    expect(
+        find.descendant(
+            of: tile(path),
+            matching: find.byIcon(Icons.image_not_supported_outlined)),
+        findsOneWidget);
+    expect(decoded.where((d) => d.length == 0), isEmpty);
   });
 
   testWidgets('a thumbnail is asked for once, not on every rebuild',
@@ -429,6 +396,9 @@ void main() {
 
     expect(asked, isNotEmpty, reason: 'nothing was attempted');
     expect(asked.first, endsWith('@Thumbnail'));
+    expect(asked.where((request) => request.endsWith('@Original')), isEmpty,
+        reason: 'opening the grid must not download originals after a preview '
+            'failure; full-size transfer requires an explicit user action');
     // Every rendition failed, so the tile is not left claiming to be loading.
     expect(
         find.byIcon(Icons.image_not_supported_outlined), findsNWidgets(3),
@@ -623,19 +593,7 @@ void main() {
 
   testWidgets('the grid never asks a video for its full-size original',
       (tester) async {
-    // ## Why this is the real half of the video hypothesis
-    //
-    // The grid's chain is `Thumbnail → MidThumb → Original`, and for a `.DNG` that is
-    // right: the original is a 32 MB image, which is a lot, but it *is* an image.
-    //
-    // A video's original is the **video**. `Image.memory` cannot decode an MP4 at all,
-    // so the last rung of the chain can only produce a broken-image icon — after
-    // downloading the whole file, over the camera's own access point, on a
-    // single-threaded server sharing the radio with the live view (`AGENTS.md` §4.6).
-    // And because the fetch is **one serial loop**, a video that reaches that rung
-    // holds up every tile behind it in the queue: the tiles the user is scrolling
-    // towards are exactly the ones that wait. That is a mechanism for "the oldest few
-    // never load" which needs no guess about what the camera answers at `Thumbnail`.
+    // Missing stills must not trigger an MP4 download or delay later tiles.
     final videoPath = '/DCIM/100YICAM/P9150002.MP4';
     final card = <Object>[
       shotEntry('P9150003', 1789400003),
